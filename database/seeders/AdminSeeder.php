@@ -13,7 +13,7 @@ class AdminSeeder extends Seeder
     {
         $department = Department::firstOrCreate(
             ['name' => 'Administración General'],
-            ['physical_address' => 'Sede Principal', 'head_of_area' => 'Administrador General']
+            ['physical_address' => 'Sede Principal', 'head_of_area_id' => null]
         );
 
         $admin = User::firstOrCreate(
@@ -33,12 +33,12 @@ class AdminSeeder extends Seeder
 
         Department::firstOrCreate(
             ['name' => 'Soporte Técnico'],
-            ['physical_address' => 'Piso 1 - Oficina 102', 'head_of_area' => 'Jefe de Soporte']
+            ['physical_address' => 'Piso 1 - Oficina 102', 'head_of_area_id' => null]
         );
 
         Department::firstOrCreate(
             ['name' => 'Infraestructura'],
-            ['physical_address' => 'Piso 2 - Oficina 204', 'head_of_area' => 'Jefe de Infraestructura']
+            ['physical_address' => 'Piso 2 - Oficina 204', 'head_of_area_id' => null]
         );
 
         echo "Super Admin creado: admin@alcaldia.gob.ve / admin123\n";

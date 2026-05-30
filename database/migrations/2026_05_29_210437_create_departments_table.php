@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('physical_address')->nullable();
-            $table->string('head_of_area');
+            $table->foreignId('head_of_area_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unique('head_of_area_id');
             $table->timestamps();
             $table->softDeletes();
         });

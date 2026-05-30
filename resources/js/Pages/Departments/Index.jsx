@@ -5,11 +5,12 @@ import { Pencil, Trash2, Building } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
 
-export default function Index({ departments }) {
+export default function Index({ departments, availableAdmins }) {
     const [editingId, setEditingId] = useState(null);
-    const [form, setForm] = useState({ name: '', physical_address: '', head_of_area: '' });
+    const [form, setForm] = useState({ name: '', physical_address: '', head_of_area_id: '' });
     const [errors, setErrors] = useState({});
 
     function startEdit(dept) {
@@ -17,7 +18,7 @@ export default function Index({ departments }) {
         setForm({
             name: dept?.name || '',
             physical_address: dept?.physical_address || '',
-            head_of_area: dept?.head_of_area || '',
+            head_of_area_id: dept?.head_of_area_id?.toString() || '',
         });
         setErrors({});
     }
@@ -27,12 +28,12 @@ export default function Index({ departments }) {
         if (editingId) {
             router.put(route('departments.update', editingId), form, {
                 onError: setErrors,
-                onSuccess: () => { setEditingId(null); setForm({ name: '', physical_address: '', head_of_area: '' }); },
+                onSuccess: () => { setEditingId(null); setForm({ name: '', physical_address: '', head_of_area_id: '' }); },
             });
         } else {
             router.post(route('departments.store'), form, {
                 onError: setErrors,
-                onSuccess: () => setForm({ name: '', physical_address: '', head_of_area: '' }),
+                onSuccess: () => setForm({ name: '', physical_address: '', head_of_area_id: '' }),
             });
         }
     }
@@ -61,9 +62,14 @@ export default function Index({ departments }) {
                             <InputError message={errors.name} />
                         </div>
                         <div>
-                            <Label htmlFor="head_of_area">Jefe de Área (Administrador de Departamento)</Label>
-                            <Input id="head_of_area" value={form.head_of_area} onChange={e => setForm(f => ({ ...f, head_of_area: e.target.value }))} className="mt-1" />
-                            <InputError message={errors.head_of_area} />
+                            <Label htmlFor="head_of_area_id">Jefe de Área (Administrador de Departamento)</Label>
+                            <Select id="head_of_area_id" value={form.head_of_area_id} onChange={e => setForm(f => ({ ...f, head_of_area_id: e.target.value }))} className="mt-1">
+                                <option value="">Seleccionar administrador</option>
+                                {availableAdmins.map(u => (
+                                    <option key={u.id} value={u.id}>{u.full_name ?? u.name}</option>
+                                ))}
+                            </Select>
+                            <InputError message={errors.head_of_area_id} />
                         </div>
                         <div>
                             <Label htmlFor="physical_address">Dirección Física</Label>
@@ -96,7 +102,7 @@ export default function Index({ departments }) {
                                 <div key={dept.id} className="flex items-center justify-between p-4">
                                     <div>
                                         <p className="text-sm font-medium text-gray-900">{dept.name}</p>
-                                        <p className="text-xs text-gray-500">Jefe: {dept.head_of_area}</p>
+                                        <p className="text-xs text-gray-500">Jefe: {(dept.head_of_area?.full_name ?? dept.head_of_area?.name) || 'Sin asignar'}</p>
                                         {dept.physical_address && (
                                             <p className="text-xs text-gray-400">{dept.physical_address}</p>
                                         )}

@@ -374,10 +374,13 @@ test('non-admin cannot manage categories', function () {
 });
 
 test('super_admin can manage departments', function () {
+    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => null]);
+    $adminUser->assignRole('admin_departamento');
+
     $response = $this->actingAs($this->superAdmin)
         ->post(route('departments.store'), [
             'name' => 'Recursos Humanos',
-            'head_of_area' => 'Juan Pérez',
+            'head_of_area_id' => $adminUser->id,
             'physical_address' => 'Piso 3',
         ]);
 
@@ -386,10 +389,13 @@ test('super_admin can manage departments', function () {
 });
 
 test('non-admin cannot manage departments', function () {
+    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => null]);
+    $adminUser->assignRole('admin_departamento');
+
     $response = $this->actingAs($this->solicitante)
         ->post(route('departments.store'), [
             'name' => 'Recursos Humanos',
-            'head_of_area' => 'Juan Pérez',
+            'head_of_area_id' => $adminUser->id,
         ]);
 
     $response->assertForbidden();
@@ -399,14 +405,14 @@ test('department requires head_of_area', function () {
     $response = $this->actingAs($this->superAdmin)
         ->post(route('departments.store'), [
             'name' => 'Nuevo Depto',
-            'head_of_area' => '',
+            'head_of_area_id' => '',
         ]);
 
-    $response->assertSessionHasErrors('head_of_area');
+    $response->assertSessionHasErrors('head_of_area_id');
 });
 
 test('department with active users cannot be deleted', function () {
-    $dept = Department::factory()->create(['name' => 'Test Dept', 'head_of_area' => 'Admin Test']);
+    $dept = Department::factory()->create(['name' => 'Test Dept']);
 
     $this->solicitante->update(['department_id' => $dept->id]);
 
@@ -417,8 +423,28 @@ test('department with active users cannot be deleted', function () {
     $this->assertDatabaseHas('departments', ['id' => $dept->id]);
 });
 
+test('deleting department frees its admin', function () {
+    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => null]);
+    $adminUser->assignRole('admin_departamento');
+
+    $dept = $this->actingAs($this->superAdmin)
+        ->post(route('departments.store'), [
+            'name' => 'Test Dept',
+            'head_of_area_id' => $adminUser->id,
+            'physical_address' => 'Oficina 1',
+        ]);
+
+    $dept = Department::where('name', 'Test Dept')->first();
+    expect($adminUser->fresh()->department_id)->toBe($dept->id);
+
+    $this->actingAs($this->superAdmin)
+        ->delete(route('departments.destroy', $dept));
+
+    expect($adminUser->fresh()->department_id)->toBeNull();
+});
+
 test('only one admin per department', function () {
-    $dept = Department::factory()->create(['name' => 'Finanzas', 'head_of_area' => 'Admin Finanzas']);
+    $dept = Department::factory()->create(['name' => 'Finanzas']);
 
     $admin1 = User::factory()->create(['department_id' => $dept->id, 'is_active' => true]);
     $admin1->assignRole('admin_departamento');
@@ -432,6 +458,23 @@ test('only one admin per department', function () {
             'email' => 'otro@test.com',
             'department_id' => $dept->id,
             'role' => 'admin_departamento',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+});
+
+test('cannot create department with already-assigned admin', function () {
+    $existingDept = Department::factory()->create(['name' => 'Existente']);
+
+    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => $existingDept->id]);
+    $adminUser->assignRole('admin_departamento');
+
+    $response = $this->actingAs($this->superAdmin)
+        ->post(route('departments.store'), [
+            'name' => 'Nuevo Depto',
+            'head_of_area_id' => $adminUser->id,
+            'physical_address' => 'Oficina 2',
         ]);
 
     $response->assertRedirect();

@@ -11,7 +11,7 @@ class DepartmentFactory extends Factory
         return [
             'name' => fake()->unique()->company(),
             'physical_address' => fake()->address(),
-            'head_of_area' => fake()->name(),
+            'head_of_area_id' => null,
         ];
     }
 }
