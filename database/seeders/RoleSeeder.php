@@ -28,31 +28,33 @@ class RoleSeeder extends Seeder
             Permission::findOrCreate($permission);
         }
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         $solicitante = Role::findOrCreate('solicitante');
         $tecnico = Role::findOrCreate('tecnico');
         $adminDireccion = Role::findOrCreate('admin_departamento');
         $superAdmin = Role::findOrCreate('super_admin');
 
-        $solicitante->syncPermissions([
+        $solicitante->syncPermissions(Permission::whereIn('name', [
             'crear ticket',
-        ]);
+        ])->get());
 
-        $tecnico->syncPermissions([
+        $tecnico->syncPermissions(Permission::whereIn('name', [
             'gestionar ticket',
             'ver tickets asignados',
             'generar reportes',
-        ]);
+        ])->get());
 
-        $adminDireccion->syncPermissions([
+        $adminDireccion->syncPermissions(Permission::whereIn('name', [
             'crear ticket',
             'gestionar ticket',
             'asignar ticket',
             'ver tickets de direccion',
             'gestionar usuarios',
             'generar reportes',
-        ]);
+        ])->get());
 
-        $superAdmin->syncPermissions([
+        $superAdmin->syncPermissions(Permission::whereIn('name', [
             'crear ticket',
             'gestionar ticket',
             'asignar ticket',
@@ -60,6 +62,6 @@ class RoleSeeder extends Seeder
             'gestionar usuarios',
             'gestionar categorias',
             'generar reportes',
-        ]);
+        ])->get());
     }
 }
