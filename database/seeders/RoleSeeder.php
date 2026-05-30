@@ -32,7 +32,8 @@ class RoleSeeder extends Seeder
 
         $solicitante = Role::findOrCreate('solicitante');
         $tecnico = Role::findOrCreate('tecnico');
-        $adminDireccion = Role::findOrCreate('admin_departamento');
+        $adminDepartamento = Role::findOrCreate('admin_departamento');
+        $adminTickets = Role::findOrCreate('admin_tickets');
         $superAdmin = Role::findOrCreate('super_admin');
 
         $solicitante->syncPermissions(Permission::whereIn('name', [
@@ -45,12 +46,16 @@ class RoleSeeder extends Seeder
             'generar reportes',
         ])->get());
 
-        $adminDireccion->syncPermissions(Permission::whereIn('name', [
+        $adminDepartamento->syncPermissions(Permission::whereIn('name', [
+            'crear ticket',
+            'ver tickets de direccion',
+        ])->get());
+
+        $adminTickets->syncPermissions(Permission::whereIn('name', [
             'crear ticket',
             'gestionar ticket',
             'asignar ticket',
-            'ver tickets de direccion',
-            'gestionar usuarios',
+            'ver todos los tickets',
             'generar reportes',
         ])->get());
 

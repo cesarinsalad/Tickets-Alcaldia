@@ -48,7 +48,7 @@ export default function AuthenticatedLayout({ header, children }) {
     navItems.push({ href: route('dashboard'), label: 'Dashboard', icon: LayoutDashboard, active: route().current('dashboard') });
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });
 
-    if (user.roles?.some(r => ['super_admin', 'admin_departamento'].includes(r.name))) {
+    if (user.roles?.some(r => ['super_admin', 'admin_departamento', 'admin_tickets'].includes(r.name))) {
         navItems.push({ href: route('users.index'), label: 'Usuarios', icon: Users, active: route().current('users.*') });
     }
 

@@ -51,7 +51,7 @@ class TicketStateManager
 
     private function userCanPerformTransition(Ticket $ticket, TicketStatus $newStatus, User $user): bool
     {
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasAnyRole(['super_admin', 'admin_tickets'])) {
             return true;
         }
 
@@ -67,25 +67,16 @@ class TicketStateManager
             return in_array($newStatus->value, $tecnicoAllowed);
         }
 
-        // Reopening: Cerrado -> Abierto (Solicitante o Admin de Dirección)
+        // Reopening: Cerrado -> Abierto (creator)
         if ($newStatus === TicketStatus::Abierto && $ticket->status === TicketStatus::Cerrado) {
-            if ($user->hasRole('admin_departamento') && $user->department_id === $ticket->creator->department_id) {
-                return true;
-            }
             if ($user->id === $ticket->creator_id) {
                 return true;
             }
             return false;
         }
 
-        if ($user->hasRole('admin_departamento')) {
-            if ($user->department_id !== $ticket->creator->department_id) {
-                return false;
-            }
-            return true;
-        }
-
-        if ($user->hasRole('solicitante') && $user->id === $ticket->creator_id) {
+        // Solicitante or admin_departamento: close own resolved ticket
+        if ($user->hasAnyRole(['solicitante', 'admin_departamento']) && $user->id === $ticket->creator_id) {
             if ($newStatus === TicketStatus::Cerrado && $ticket->status === TicketStatus::Resuelto) {
                 return true;
             }

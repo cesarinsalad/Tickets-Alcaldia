@@ -36,6 +36,12 @@ beforeEach(function () {
     ]);
     $this->admin->assignRole('admin_departamento');
 
+    $this->adminTickets = User::factory()->create([
+        'department_id' => $this->department->id,
+        'is_active' => true,
+    ]);
+    $this->adminTickets->assignRole('admin_tickets');
+
     $this->superAdmin = User::factory()->create([
         'department_id' => $this->department->id,
         'is_active' => true,
@@ -93,14 +99,14 @@ test('solicitante can upload photo evidence', function () {
     Storage::disk('public')->assertExists($ticket->photo_path);
 });
 
-test('admin can assign ticket to technician', function () {
+test('admin_tickets can assign ticket to technician', function () {
     $ticket = Ticket::factory()->create([
         'creator_id' => $this->solicitante->id,
         'category_id' => $this->category->id,
         'status' => TicketStatus::Abierto,
     ]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->adminTickets)
         ->post(route('tickets.assign', $ticket), [
             'assigned_id' => $this->tecnico->id,
         ]);
@@ -110,6 +116,20 @@ test('admin can assign ticket to technician', function () {
         'id' => $ticket->id,
         'assigned_id' => $this->tecnico->id,
     ]);
+});
+
+test('admin_departamento cannot assign tickets', function () {
+    $ticket = Ticket::factory()->create([
+        'creator_id' => $this->solicitante->id,
+        'category_id' => $this->category->id,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->post(route('tickets.assign', $ticket), [
+            'assigned_id' => $this->tecnico->id,
+        ]);
+
+    $response->assertForbidden();
 });
 
 test('solicitante cannot assign tickets', function () {
@@ -209,6 +229,74 @@ test('closed ticket can be reopened by creator with motivo', function () {
     $ticket->refresh();
     expect($ticket->status)->toBe(TicketStatus::Abierto);
     expect($ticket->exit_date)->toBeNull();
+});
+
+test('admin_tickets can see all tickets', function () {
+    Ticket::factory()->count(2)->create([
+        'creator_id' => $this->solicitante->id,
+        'category_id' => $this->category->id,
+    ]);
+
+    $visible = Ticket::query()->visibleTo($this->adminTickets)->count();
+    expect($visible)->toBeGreaterThanOrEqual(2);
+});
+
+test('admin_tickets can change priority', function () {
+    $ticket = Ticket::factory()->create([
+        'creator_id' => $this->solicitante->id,
+        'category_id' => $this->category->id,
+        'priority' => \App\Enums\TicketPriority::Baja,
+        'status' => TicketStatus::Abierto,
+        'entry_date' => Carbon::parse('next monday')->setTime(8, 0, 0),
+    ]);
+
+    $response = $this->actingAs($this->adminTickets)
+        ->post(route('tickets.change-priority', $ticket), [
+            'priority' => 'critica',
+        ]);
+
+    $response->assertRedirect();
+    expect($ticket->fresh()->priority->value)->toBe('critica');
+});
+
+test('admin_tickets can add internal comment', function () {
+    $ticket = Ticket::factory()->create([
+        'creator_id' => $this->solicitante->id,
+        'category_id' => $this->category->id,
+        'assigned_id' => $this->tecnico->id,
+    ]);
+
+    $response = $this->actingAs($this->adminTickets)
+        ->post(route('tickets.comments.store', $ticket), [
+            'body' => 'Nota de prueba',
+            'is_internal' => true,
+        ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('comments', [
+        'ticket_id' => $ticket->id,
+        'is_internal' => true,
+    ]);
+});
+
+test('admin_departamento cannot add internal comment', function () {
+    $ticket = Ticket::factory()->create([
+        'creator_id' => $this->solicitante->id,
+        'category_id' => $this->category->id,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->post(route('tickets.comments.store', $ticket), [
+            'body' => 'Intento de nota interna',
+            'is_internal' => true,
+        ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('comments', [
+        'ticket_id' => $ticket->id,
+        'body' => 'Intento de nota interna',
+        'is_internal' => false,
+    ]);
 });
 
 test('solicitante can add public comment', function () {

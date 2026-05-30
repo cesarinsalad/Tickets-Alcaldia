@@ -20,7 +20,7 @@ class CommentController extends Controller
         $comment = $ticket->comments()->create([
             'user_id' => $request->user()->id,
             'body' => $validated['body'],
-            'is_internal' => $validated['is_internal'] ?? false,
+            'is_internal' => $request->user()->hasAnyRole(['solicitante', 'admin_departamento']) ? false : ($validated['is_internal'] ?? false),
         ]);
 
         if (! ($validated['is_internal'] ?? false)) {

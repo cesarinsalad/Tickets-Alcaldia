@@ -31,7 +31,7 @@ const priorityLabels = {
     critica: 'Crítica',
 };
 
-export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, priorityLabels }) {
+export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canSeeInternalComments, priorityLabels }) {
     const [comment, setComment] = useState('');
     const [isInternal, setIsInternal] = useState(false);
     const [commentErrors, setCommentErrors] = useState({});
@@ -182,15 +182,17 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             />
                             <InputError message={commentErrors.body} />
                             <div className="flex items-center gap-3">
-                                <label className="flex items-center gap-2 text-sm text-gray-600">
-                                    <input
-                                        type="checkbox"
-                                        checked={isInternal}
-                                        onChange={e => setIsInternal(e.target.checked)}
-                                        className="rounded border-gray-300"
-                                    />
-                                    Nota interna
-                                </label>
+                                {canSeeInternalComments && (
+                                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                                        <input
+                                            type="checkbox"
+                                            checked={isInternal}
+                                            onChange={e => setIsInternal(e.target.checked)}
+                                            className="rounded border-gray-300"
+                                        />
+                                        Nota interna
+                                    </label>
+                                )}
                                 <Button type="submit" size="sm" disabled={!comment.trim()}>
                                     Comentar
                                 </Button>
@@ -246,6 +248,10 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Respuesta</span>
                                     <span className="font-medium">{sla.response_deadline ? new Date(sla.response_deadline).toLocaleString('es-VE') : '—'}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-400">
+                                    <span>Plazo de respuesta</span>
+                                    <span>{sla.response_minutes >= 60 ? (sla.response_minutes / 60) + 'h' : sla.response_minutes + 'min'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Resolución</span>

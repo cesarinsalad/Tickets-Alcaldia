@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
     Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
 
-    Route::middleware(['role:admin_departamento|super_admin'])->group(function () {
+    Route::middleware(['role:admin_departamento|super_admin|admin_tickets'])->group(function () {
         Route::resource('users', UserManagementController::class)->except(['show']);
         Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/users/{user}/toggle', [UserManagementController::class, 'toggle'])->name('users.toggle');

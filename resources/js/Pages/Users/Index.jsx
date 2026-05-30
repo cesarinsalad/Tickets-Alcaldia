@@ -1,29 +1,35 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
-import { Plus, MoreHorizontal, Shield, Check, X } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Plus, Shield, Check, X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
-import { useState } from 'react';
 
 const roleLabels = {
     super_admin: 'Super Admin',
     admin_departamento: 'Admin Departamento',
+    admin_tickets: 'Admin Tickets',
     tecnico: 'Técnico',
     solicitante: 'Solicitante',
 };
 
 export default function Index({ users, departments }) {
+    const { auth } = usePage().props;
+    const currentUser = auth?.user;
+    const isSuperAdmin = currentUser?.roles?.some(r => r.name === 'super_admin');
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">Usuarios</h2>
-                    <Link href={route('users.create')}>
-                        <Button size="sm">
-                            <Plus className="h-4 w-4" />
-                            Nuevo Usuario
-                        </Button>
-                    </Link>
+                    {isSuperAdmin && (
+                        <Link href={route('users.create')}>
+                            <Button size="sm">
+                                <Plus className="h-4 w-4" />
+                                Nuevo Usuario
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             }
         >
@@ -69,36 +75,40 @@ export default function Index({ users, departments }) {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Link href={route('users.edit', user.id)}>
-                                        <Button variant="ghost" size="sm">Editar</Button>
-                                    </Link>
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('¿Cambiar estado del usuario?')) {
-                                                router.post(route('users.toggle', user.id), {}, {
-                                                    preserveState: false,
-                                                    replace: false,
-                                                });
-                                            }
-                                        }}
-                                        className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
-                                    >
-                                        {user.is_active ? 'Desactivar' : 'Activar'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('¿Restablecer contraseña? Se generará una nueva.')) {
-                                                router.post(route('users.reset-password', user.id), {}, {
-                                                    onSuccess: (page) => {
-                                                        alert('Nueva contraseña: ' + page.props.flash?.new_password);
+                                    {isSuperAdmin && (
+                                        <>
+                                            <Link href={route('users.edit', user.id)}>
+                                                <Button variant="ghost" size="sm">Editar</Button>
+                                            </Link>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('¿Cambiar estado del usuario?')) {
+                                                        router.post(route('users.toggle', user.id), {}, {
+                                                            preserveState: false,
+                                                            replace: false,
+                                                        });
                                                     }
-                                                });
-                                            }
-                                        }}
-                                        className="text-xs text-azul-institucional hover:underline px-2 py-1"
-                                    >
-                                        Resetear Contraseña
-                                    </button>
+                                                }}
+                                                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                                            >
+                                                {user.is_active ? 'Desactivar' : 'Activar'}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('¿Restablecer contraseña? Se generará una nueva.')) {
+                                                        router.post(route('users.reset-password', user.id), {}, {
+                                                            onSuccess: (page) => {
+                                                                alert('Nueva contraseña: ' + page.props.flash?.new_password);
+                                                            }
+                                                        });
+                                                    }
+                                                }}
+                                                className="text-xs text-azul-institucional hover:underline px-2 py-1"
+                                            >
+                                                Resetear Contraseña
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))}

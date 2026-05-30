@@ -19,7 +19,8 @@ class SlaCalculator
 
     public function calculateResponseDeadline(Ticket $ticket): Carbon
     {
-        return $this->calculateFrom($ticket->entry_date, $ticket->priority->slaHours());
+        $minutes = $ticket->priority->responseMinutes();
+        return $this->calculateFromMinutes($ticket->entry_date, $minutes);
     }
 
     public function calculateResolutionDeadline(Ticket $ticket): Carbon
@@ -34,7 +35,12 @@ class SlaCalculator
 
     private function calculateFrom(Carbon $entryDate, int $hours): Carbon
     {
-        return $this->addWorkingHours(clone $entryDate, $hours);
+        return $this->addWorkingTime(clone $entryDate, $hours * 60);
+    }
+
+    private function calculateFromMinutes(Carbon $entryDate, int $minutes): Carbon
+    {
+        return $this->addWorkingTime(clone $entryDate, $minutes);
     }
 
     public function isOverdue(Ticket $ticket): bool
@@ -92,9 +98,9 @@ class SlaCalculator
         return (int) min(100, max(0, ($elapsed / $total) * 100));
     }
 
-    private function addWorkingHours(Carbon $datetime, int $hours): Carbon
+    private function addWorkingTime(Carbon $datetime, int $minutes): Carbon
     {
-        $remaining = $hours;
+        $remaining = $minutes;
 
         while ($remaining > 0) {
             if (! $this->isWorkingDay($datetime)) {
@@ -113,13 +119,12 @@ class SlaCalculator
 
             $endOfDay = (clone $datetime)->setTime($this->workEnd, 0);
             $minutesToEndOfDay = $datetime->diffInMinutes($endOfDay);
-            $remainingMinutes = $remaining * 60;
 
-            if ($remainingMinutes <= $minutesToEndOfDay) {
-                $datetime->addMinutes($remainingMinutes);
+            if ($remaining <= $minutesToEndOfDay) {
+                $datetime->addMinutes($remaining);
                 $remaining = 0;
             } else {
-                $remaining -= $minutesToEndOfDay / 60;
+                $remaining -= $minutesToEndOfDay;
                 $datetime->addDay()->setTime($this->workStart, 0);
             }
         }

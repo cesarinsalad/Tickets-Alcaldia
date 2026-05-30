@@ -44,13 +44,16 @@ class DashboardController extends Controller
                 'resueltos' => (clone $baseQuery)->where('status', TicketStatus::Resuelto)->count(),
                 'cerrados' => (clone $baseQuery)->where('status', TicketStatus::Cerrado)->count(),
             ];
-        } elseif ($user->hasRole('super_admin')) {
+        } elseif ($user->hasAnyRole(['super_admin', 'admin_tickets'])) {
             $kpis = [
                 'abiertos' => Ticket::where('status', TicketStatus::Abierto)->count(),
                 'en_proceso' => Ticket::where('status', TicketStatus::EnProceso)->count(),
                 'pendiente_informacion' => Ticket::where('status', TicketStatus::PendienteInformacion)->count(),
                 'resueltos' => Ticket::where('status', TicketStatus::Resuelto)->count(),
                 'cerrados' => Ticket::where('status', TicketStatus::Cerrado)->count(),
+                'resueltos_hoy' => Ticket::where('status', TicketStatus::Resuelto)
+                    ->whereDate('exit_date', today())
+                    ->count(),
             ];
         }
 
@@ -61,6 +64,7 @@ class DashboardController extends Controller
             'solicitante' => 'Solicitante',
             'tecnico' => 'Técnico',
             'admin_departamento' => 'Administrador de Departamento',
+            'admin_tickets' => 'Administrador de Tickets',
             'super_admin' => 'Super Administrador',
         ];
 

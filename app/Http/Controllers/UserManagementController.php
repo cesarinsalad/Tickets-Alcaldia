@@ -17,7 +17,7 @@ class UserManagementController extends Controller
 
         $query = User::query()->with(['department', 'roles']);
 
-        if ($user->hasRole('admin_departamento')) {
+        if ($user->hasAnyRole(['admin_departamento', 'admin_tickets'])) {
             $query->where('department_id', $user->department_id);
         }
 
@@ -42,16 +42,18 @@ class UserManagementController extends Controller
 
     public function create()
     {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
         $departments = Department::all();
         $roles = [
             'solicitante' => 'Solicitante',
             'tecnico' => 'Técnico',
             'admin_departamento' => 'Administrador de Departamento',
+            'admin_tickets' => 'Administrador de Tickets',
+            'super_admin' => 'Super Administrador',
         ];
-
-        if (request()->user()->hasRole('super_admin')) {
-            $roles['super_admin'] = 'Super Administrador';
-        }
 
         return Inertia::render('Users/Create', [
             'departments' => $departments,
@@ -61,16 +63,18 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
         $departments = Department::all();
         $roles = [
             'solicitante' => 'Solicitante',
             'tecnico' => 'Técnico',
             'admin_departamento' => 'Administrador de Departamento',
+            'admin_tickets' => 'Administrador de Tickets',
+            'super_admin' => 'Super Administrador',
         ];
-
-        if (request()->user()->hasRole('super_admin')) {
-            $roles['super_admin'] = 'Super Administrador';
-        }
 
         $user->load('roles');
         $user->append('full_name');
@@ -84,7 +88,11 @@ class UserManagementController extends Controller
 
     public function store(Request $request)
     {
-        $allowedRoles = ['solicitante', 'tecnico', 'admin_departamento'];
+        if (! $request->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
+        $allowedRoles = ['solicitante', 'tecnico', 'admin_departamento', 'admin_tickets'];
 
         if ($request->user()->hasRole('super_admin')) {
             $allowedRoles[] = 'super_admin';
@@ -137,7 +145,11 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $allowedRoles = ['solicitante', 'tecnico', 'admin_departamento'];
+        if (! $request->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
+        $allowedRoles = ['solicitante', 'tecnico', 'admin_departamento', 'admin_tickets'];
 
         if ($request->user()->hasRole('super_admin')) {
             $allowedRoles[] = 'super_admin';
@@ -231,6 +243,10 @@ class UserManagementController extends Controller
 
     public function resetPassword(User $user)
     {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
         $password = Str::random(10);
 
         $user->update([
@@ -244,6 +260,9 @@ class UserManagementController extends Controller
 
     public function toggle(User $user)
     {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
         $user->update([
             'is_active' => ! $user->is_active,
         ]);
@@ -255,6 +274,10 @@ class UserManagementController extends Controller
 
     public function destroy(User $user)
     {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
         $user->delete();
 
         return back()->with('success', 'Usuario eliminado exitosamente.');

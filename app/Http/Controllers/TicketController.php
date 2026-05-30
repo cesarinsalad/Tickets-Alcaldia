@@ -175,6 +175,7 @@ class TicketController extends Controller
             'is_response_overdue' => $this->slaCalculator->isResponseOverdue($ticket),
             'remaining_hours' => $this->slaCalculator->remainingTime($ticket),
             'total_hours' => $ticket->priority->slaHours(),
+            'response_minutes' => $ticket->priority->responseMinutes(),
             'progress' => $this->slaCalculator->progressPercentage($ticket),
         ];
 
@@ -188,8 +189,9 @@ class TicketController extends Controller
             }
         }
 
-        $canAssign = $request->user()->hasAnyRole(['admin_departamento', 'super_admin']);
-        $canChangePriority = $request->user()->hasAnyRole(['admin_departamento', 'super_admin']);
+        $canAssign = $request->user()->hasAnyRole(['admin_tickets', 'super_admin']);
+        $canChangePriority = $request->user()->hasAnyRole(['admin_tickets', 'super_admin']);
+        $canSeeInternalComments = $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin']);
 
         $technicians = User::role('tecnico')
             ->where('is_active', true)
@@ -212,7 +214,10 @@ class TicketController extends Controller
                 'assigned' => $ticket->assigned,
                 'category' => $ticket->category,
                 'department' => $ticket->department,
-                'comments' => $ticket->comments->map(fn ($c) => [
+                'comments' => $ticket->comments
+                    ->filter(fn ($c) => $canSeeInternalComments || ! $c->is_internal)
+                    ->values()
+                    ->map(fn ($c) => [
                     'id' => $c->id,
                     'body' => $c->body,
                     'is_internal' => $c->is_internal,
@@ -230,6 +235,7 @@ class TicketController extends Controller
             'transitions' => $availableTransitions,
             'canAssign' => $canAssign,
             'canChangePriority' => $canChangePriority,
+            'canSeeInternalComments' => $canSeeInternalComments,
             'technicians' => $technicians,
             'priorityLabels' => $priorityLabels,
         ]);
@@ -298,7 +304,7 @@ class TicketController extends Controller
 
     public function changePriority(Ticket $ticket, Request $request)
     {
-        if (! $request->user()->hasAnyRole(['admin_departamento', 'super_admin'])) {
+        if (! $request->user()->hasAnyRole(['admin_tickets', 'super_admin'])) {
             abort(403, 'No autorizado.');
         }
 

@@ -39,6 +39,16 @@ enum TicketPriority: string
         };
     }
 
+    public function responseMinutes(): int
+    {
+        return match ($this) {
+            self::Baja => 480,  // 8h
+            self::Media => 240, // 4h
+            self::Alta => 60,   // 1h
+            self::Critica => 30, // 30min
+        };
+    }
+
     public function description(): string
     {
         return match ($this) {

@@ -105,7 +105,7 @@ class DemoDataSeeder extends Seeder
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]);
-            $admin->assignRole('admin_departamento');
+            $admin->assignRole($isSistemas ? 'admin_tickets' : 'admin_departamento');
             $dept->update(['head_of_area_id' => $admin->id]);
             $users[] = $admin;
 
