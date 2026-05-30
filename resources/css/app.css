@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-azul-institucional: #1E3A5F;
+  --color-azul-institucional-light: #2D5A8E;
+  --color-verde-exito: #166534;
+  --color-verde-exito-light: #DCFCE7;
+  --color-amarillo-advertencia: #854D0E;
+  --color-amarillo-advertencia-light: #FEF9C3;
+  --color-rojo-urgencia: #991B1B;
+  --color-rojo-urgencia-light: #FEE2E2;
+  --color-gris-fondo: #F8FAFC;
+  --color-gris-borde: #E2E8F0;
+}
