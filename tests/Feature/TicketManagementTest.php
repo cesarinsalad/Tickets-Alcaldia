@@ -374,13 +374,9 @@ test('non-admin cannot manage categories', function () {
 });
 
 test('super_admin can manage departments', function () {
-    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => null]);
-    $adminUser->assignRole('admin_departamento');
-
     $response = $this->actingAs($this->superAdmin)
         ->post(route('departments.store'), [
             'name' => 'Recursos Humanos',
-            'head_of_area_id' => $adminUser->id,
             'physical_address' => 'Piso 3',
         ]);
 
@@ -389,26 +385,12 @@ test('super_admin can manage departments', function () {
 });
 
 test('non-admin cannot manage departments', function () {
-    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => null]);
-    $adminUser->assignRole('admin_departamento');
-
     $response = $this->actingAs($this->solicitante)
         ->post(route('departments.store'), [
             'name' => 'Recursos Humanos',
-            'head_of_area_id' => $adminUser->id,
         ]);
 
     $response->assertForbidden();
-});
-
-test('department requires head_of_area', function () {
-    $response = $this->actingAs($this->superAdmin)
-        ->post(route('departments.store'), [
-            'name' => 'Nuevo Depto',
-            'head_of_area_id' => '',
-        ]);
-
-    $response->assertSessionHasErrors('head_of_area_id');
 });
 
 test('department with active users cannot be deleted', function () {
@@ -424,18 +406,11 @@ test('department with active users cannot be deleted', function () {
 });
 
 test('deleting department frees its admin', function () {
-    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => null]);
+    $dept = Department::factory()->create(['name' => 'Temp Dept']);
+
+    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => $dept->id]);
     $adminUser->assignRole('admin_departamento');
-
-    $dept = $this->actingAs($this->superAdmin)
-        ->post(route('departments.store'), [
-            'name' => 'Test Dept',
-            'head_of_area_id' => $adminUser->id,
-            'physical_address' => 'Oficina 1',
-        ]);
-
-    $dept = Department::where('name', 'Test Dept')->first();
-    expect($adminUser->fresh()->department_id)->toBe($dept->id);
+    $dept->update(['head_of_area_id' => $adminUser->id]);
 
     $this->actingAs($this->superAdmin)
         ->delete(route('departments.destroy', $dept));
@@ -464,19 +439,43 @@ test('only one admin per department', function () {
     $response->assertSessionHas('error');
 });
 
-test('cannot create department with already-assigned admin', function () {
-    $existingDept = Department::factory()->create(['name' => 'Existente']);
-
-    $adminUser = User::factory()->create(['is_active' => true, 'department_id' => $existingDept->id]);
-    $adminUser->assignRole('admin_departamento');
+test('creating admin_departamento assigns department head', function () {
+    $dept = Department::factory()->create(['name' => 'Test Dept', 'head_of_area_id' => null]);
 
     $response = $this->actingAs($this->superAdmin)
-        ->post(route('departments.store'), [
-            'name' => 'Nuevo Depto',
-            'head_of_area_id' => $adminUser->id,
-            'physical_address' => 'Oficina 2',
+        ->post(route('users.store'), [
+            'name' => 'Nuevo',
+            'last_name' => 'Admin',
+            'email' => 'nuevoadmin@test.com',
+            'department_id' => $dept->id,
+            'role' => 'admin_departamento',
         ]);
 
     $response->assertRedirect();
-    $response->assertSessionHas('error');
+    $user = User::where('email', 'nuevoadmin@test.com')->first();
+    expect($dept->fresh()->head_of_area_id)->toBe($user->id);
+});
+
+test('changing user from admin_departamento releases department head', function () {
+    $dept = Department::factory()->create(['name' => 'Test Dept', 'head_of_area_id' => null]);
+
+    $adminUser = User::factory()->create([
+        'is_active' => true,
+        'department_id' => $dept->id,
+        'last_name' => 'Admin',
+    ]);
+    $adminUser->assignRole('admin_departamento');
+    $dept->update(['head_of_area_id' => $adminUser->id]);
+
+    $response = $this->actingAs($this->superAdmin)
+        ->put(route('users.update', $adminUser), [
+            'name' => $adminUser->name,
+            'last_name' => 'Admin',
+            'email' => $adminUser->email,
+            'department_id' => $dept->id,
+            'role' => 'solicitante',
+        ]);
+
+    $response->assertRedirect();
+    expect($dept->fresh()->head_of_area_id)->toBeNull();
 });

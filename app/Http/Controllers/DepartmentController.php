@@ -30,26 +30,12 @@ class DepartmentController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:departments'],
             'physical_address' => ['nullable', 'string', 'max:500'],
-            'head_of_area_id' => ['required', 'exists:users,id'],
         ]);
 
-        $admin = User::where('id', $validated['head_of_area_id'])
-            ->where('is_active', true)
-            ->whereNull('department_id')
-            ->role('admin_departamento')
-            ->first();
-
-        if (! $admin) {
-            return back()->with('error', 'El usuario seleccionado no es un administrador de departamento disponible.');
-        }
-
-        $department = Department::create([
+        Department::create([
             'name' => $validated['name'],
             'physical_address' => $validated['physical_address'],
-            'head_of_area_id' => $admin->id,
         ]);
-
-        $admin->update(['department_id' => $department->id]);
 
         return back()->with('success', 'Departamento creado exitosamente.');
     }

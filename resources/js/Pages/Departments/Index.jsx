@@ -56,26 +56,28 @@ export default function Index({ departments, availableAdmins }) {
                         {editingId ? 'Editar Departamento' : 'Nuevo Departamento'}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <Label htmlFor="name">Nombre</Label>
-                            <Input id="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" />
-                            <InputError message={errors.name} />
-                        </div>
-                        <div>
-                            <Label htmlFor="head_of_area_id">Jefe de Área (Administrador de Departamento)</Label>
-                            <Select id="head_of_area_id" value={form.head_of_area_id} onChange={e => setForm(f => ({ ...f, head_of_area_id: e.target.value }))} className="mt-1">
-                                <option value="">Seleccionar administrador</option>
-                                {availableAdmins.map(u => (
-                                    <option key={u.id} value={u.id}>{u.full_name ?? u.name}</option>
-                                ))}
-                            </Select>
-                            <InputError message={errors.head_of_area_id} />
-                        </div>
-                        <div>
-                            <Label htmlFor="physical_address">Dirección Física</Label>
-                            <Input id="physical_address" value={form.physical_address} onChange={e => setForm(f => ({ ...f, physical_address: e.target.value }))} className="mt-1" />
-                            <InputError message={errors.physical_address} />
-                        </div>
+                            <div>
+                                <Label htmlFor="name">Nombre</Label>
+                                <Input id="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" />
+                                <InputError message={errors.name} />
+                            </div>
+                            <div>
+                                <Label htmlFor="physical_address">Dirección Física</Label>
+                                <Input id="physical_address" value={form.physical_address} onChange={e => setForm(f => ({ ...f, physical_address: e.target.value }))} className="mt-1" />
+                                <InputError message={errors.physical_address} />
+                            </div>
+                            {editingId && (
+                                <div>
+                                    <Label htmlFor="head_of_area_id">Jefe de Área (Administrador de Departamento)</Label>
+                                    <Select id="head_of_area_id" value={form.head_of_area_id} onChange={e => setForm(f => ({ ...f, head_of_area_id: e.target.value }))} className="mt-1">
+                                        <option value="">Sin asignar</option>
+                                        {availableAdmins.map(u => (
+                                            <option key={u.id} value={u.id}>{u.full_name ?? u.name}</option>
+                                        ))}
+                                    </Select>
+                                    <InputError message={errors.head_of_area_id} />
+                                </div>
+                            )}
                         <div className="flex items-center gap-2">
                             <Button type="submit" size="sm">
                                 {editingId ? 'Actualizar' : 'Crear'}

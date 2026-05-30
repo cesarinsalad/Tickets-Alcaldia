@@ -124,6 +124,12 @@ class UserManagementController extends Controller
 
         $user->assignRole($validated['role']);
 
+        try {
+            $this->syncDepartmentHead($user, $validated['role'], $validated['department_id']);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
         return back()
             ->with('success', "Usuario creado exitosamente.")
             ->with('new_password', $password);
@@ -158,6 +164,9 @@ class UserManagementController extends Controller
             }
         }
 
+        $oldRole = $user->getRoleNames()->first();
+        $oldDepartmentId = $user->department_id;
+
         $user->update([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'],
@@ -168,9 +177,56 @@ class UserManagementController extends Controller
 
         if ($request->filled('role')) {
             $user->syncRoles([$validated['role']]);
+
+            try {
+                if ($validated['role'] !== $oldRole) {
+                    if ($oldRole === 'admin_departamento') {
+                        $this->releaseDepartmentHead($user);
+                    }
+                    if ($validated['role'] === 'admin_departamento') {
+                        $this->assignDepartmentHead($user, $validated['department_id']);
+                    }
+                } elseif ($oldRole === 'admin_departamento' && $validated['department_id'] != $oldDepartmentId) {
+                    $this->releaseDepartmentHead($user);
+                    $this->assignDepartmentHead($user, $validated['department_id']);
+                }
+            } catch (\InvalidArgumentException $e) {
+                return back()->with('error', $e->getMessage());
+            }
         }
 
         return back()->with('success', 'Usuario actualizado exitosamente.');
+    }
+
+    private function assignDepartmentHead(User $user, int $departmentId): void
+    {
+        $department = Department::findOrFail($departmentId);
+
+        if ($department->head_of_area_id && $department->head_of_area_id !== $user->id) {
+            throw new \InvalidArgumentException('Este departamento ya tiene un Administrador de Departamento asignado.');
+        }
+
+        $department->update(['head_of_area_id' => $user->id]);
+    }
+
+    private function releaseDepartmentHead(User $user): void
+    {
+        Department::where('head_of_area_id', $user->id)->update(['head_of_area_id' => null]);
+    }
+
+    private function syncDepartmentHead(User $user, string $role, int $departmentId): void
+    {
+        if ($role !== 'admin_departamento') {
+            return;
+        }
+
+        $department = Department::findOrFail($departmentId);
+
+        if ($department->head_of_area_id && $department->head_of_area_id !== $user->id) {
+            throw new \InvalidArgumentException('Este departamento ya tiene un Administrador de Departamento asignado.');
+        }
+
+        $department->update(['head_of_area_id' => $user->id]);
     }
 
     public function resetPassword(User $user)
