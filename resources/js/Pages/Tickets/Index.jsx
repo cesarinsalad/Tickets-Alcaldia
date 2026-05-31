@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Calendar, Ticket } from 'lucide-react';
+import { Plus, Search, Ticket } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -114,24 +114,18 @@ export default function Index({ tickets, filters, categories, departments, users
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </Select>
-                        <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
-                            <Input
-                                type="date"
-                                className="w-full sm:w-36"
-                                value={filters.date_from || ''}
-                                onChange={e => applyFilters({ date_from: e.target.value })}
-                            />
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
-                            <Input
-                                type="date"
-                                className="w-full sm:w-36"
-                                value={filters.date_to || ''}
-                                onChange={e => applyFilters({ date_to: e.target.value })}
-                            />
-                        </div>
+                        <Input
+                            type="date"
+                            className="w-full sm:w-36"
+                            value={filters.date_from || ''}
+                            onChange={e => applyFilters({ date_from: e.target.value })}
+                        />
+                        <Input
+                            type="date"
+                            className="w-full sm:w-36"
+                            value={filters.date_to || ''}
+                            onChange={e => applyFilters({ date_to: e.target.value })}
+                        />
                         {filters.status || filters.priority || filters.category || filters.search || filters.date_from || filters.date_to ? (
                             <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('tickets.index'))}>
                                 Limpiar filtros
