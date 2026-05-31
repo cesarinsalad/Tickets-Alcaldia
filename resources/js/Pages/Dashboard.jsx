@@ -574,6 +574,146 @@ function AdminDeptDashboard({ extra }) {
     );
 }
 
+const progressSteps = [
+    { key: 'abierto', label: 'Abierto' },
+    { key: 'en_proceso', label: 'En Proceso' },
+    { key: 'pendiente_informacion', label: 'Pendiente de Info' },
+];
+
+function ProgressBar({ currentStatus }) {
+    const currentIdx = progressSteps.findIndex(s => s.key === currentStatus);
+    return (
+        <div className="flex items-center gap-0 w-full mt-1">
+            {progressSteps.map((step, i) => {
+                const filled = i <= currentIdx;
+                const isCurrent = i === currentIdx;
+                return (
+                    <div key={step.key} className="flex items-center flex-1 last:flex-none">
+                        <div className="flex items-center gap-1.5">
+                            <div className={`w-3 h-3 rounded-full shrink-0 ${
+                                filled
+                                    ? isCurrent
+                                        ? 'bg-azul-institucional ring-2 ring-azul-institucional/30'
+                                        : 'bg-azul-institucional'
+                                    : 'bg-gray-200'
+                            }`} />
+                            <span className={`text-[10px] leading-tight ${
+                                filled ? 'text-gray-700 font-medium' : 'text-gray-400'
+                            }`}>
+                                {step.label}
+                            </span>
+                        </div>
+                        {i < progressSteps.length - 1 && (
+                            <div className={`flex-1 h-0.5 mx-1.5 ${
+                                i < currentIdx ? 'bg-azul-institucional' : 'bg-gray-200'
+                            }`} />
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function SolicitanteDashboard({ extra }) {
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-center">
+                <Link href={route('tickets.create')}>
+                    <Button size="lg" className="px-8 py-6 text-base gap-3 shadow-md hover:shadow-lg transition-shadow">
+                        <Plus className="h-6 w-6" />
+                        Crear Nuevo Reporte de Incidencia
+                    </Button>
+                </Link>
+            </div>
+
+            {extra.my_active_tickets.length > 0 && (
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Mis Tickets en Curso</h3>
+                    <div className="space-y-4">
+                        {extra.my_active_tickets.map(t => (
+                            <Link
+                                key={t.id}
+                                href={route('tickets.show', t.id)}
+                                className="block rounded-md border border-gris-borde p-4 hover:border-azul-institucional hover:shadow-sm transition-all"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-xs font-mono text-gray-400">{t.code}</span>
+                                            <span className="text-xs text-gray-400">{t.category}</span>
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-900 mt-0.5">{t.title}</p>
+                                    </div>
+                                    <span className="text-xs text-gray-400 whitespace-nowrap">{t.entry_date}</span>
+                                </div>
+                                <ProgressBar currentStatus={t.status} />
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {extra.pending_receipt.length > 0 && (
+                <div className="rounded-lg border border-verde-exito/30 bg-white">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-verde-exito/20 bg-green-50/50">
+                        <CheckCircle className="h-4 w-4 text-verde-exito" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Constancias Pendientes</h3>
+                    </div>
+                    <div className="divide-y divide-gris-borde">
+                        {extra.pending_receipt.map(t => (
+                            <div key={t.id} className="flex items-center justify-between px-5 py-4">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-mono text-gray-400">{t.code}</span>
+                                        <span className="h-1.5 w-1.5 rounded-full bg-verde-exito" />
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-900 mt-0.5">{t.title}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Resuelto por: {t.assigned_name || '—'} &middot; {t.exit_date}
+                                    </p>
+                                </div>
+                                <a href={route('tickets.receipt', t.id)} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" size="sm" className="shrink-0">
+                                        <CheckCircle className="h-3.5 w-3.5" />
+                                        Generar Constancia
+                                    </Button>
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {extra.my_active_tickets.length === 0 && extra.pending_receipt.length === 0 && (
+                <div className="rounded-lg border border-gris-borde bg-white p-12 text-center text-gray-500">
+                    <CheckCircle className="mx-auto h-10 w-10 text-gray-300 mb-3" />
+                    <p className="text-lg font-medium">No tienes tickets activos</p>
+                    <p className="text-sm mt-1">Si tienes un problema técnico, crea un nuevo reporte de incidencia.</p>
+                </div>
+            )}
+
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
+                    {extra.user_department && (
+                        <p className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
+                        </p>
+                    )}
+                    {extra.unreadNotifications > 0 && (
+                        <p className="text-amarillo-advertencia">
+                            Tienes {extra.unreadNotifications} notificaciones sin leer.
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Dashboard({ stats, unreadNotifications }) {
     const { kpis, role } = stats;
 
@@ -608,6 +748,10 @@ export default function Dashboard({ stats, unreadNotifications }) {
                 />
             ) : stats.is_tecnico ? (
                 <TecnicoDashboard
+                    extra={{ ...stats, unreadNotifications }}
+                />
+            ) : stats.is_solicitante ? (
+                <SolicitanteDashboard
                     extra={{ ...stats, unreadNotifications }}
                 />
             ) : (

@@ -21,11 +21,50 @@ class DashboardController extends Controller
 
         if ($user->hasRole('solicitante')) {
             $baseQuery = Ticket::query()->visibleTo($user);
+            $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
             $kpis = [
                 'abiertos' => (clone $baseQuery)->where('status', TicketStatus::Abierto)->count(),
                 'en_proceso' => (clone $baseQuery)->where('status', TicketStatus::EnProceso)->count(),
                 'resueltos' => (clone $baseQuery)->where('status', TicketStatus::Resuelto)->count(),
+            ];
+
+            $myActiveTickets = (clone $baseQuery)
+                ->whereIn('status', $activeStatuses)
+                ->with(['category'])
+                ->latest()
+                ->take(15)
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'title' => $t->title,
+                    'status' => $t->status->value,
+                    'status_label' => $t->status->label(),
+                    'priority' => $t->priority->value,
+                    'priority_label' => $t->priority->label(),
+                    'category' => $t->category?->name,
+                    'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+                ]);
+
+            $pendingReceipt = (clone $baseQuery)
+                ->where('status', TicketStatus::Resuelto)
+                ->with(['assigned', 'category'])
+                ->latest('exit_date')
+                ->take(10)
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'title' => $t->title,
+                    'assigned_name' => $t->assigned?->full_name,
+                    'exit_date' => $t->exit_date?->format('d/m/Y H:i'),
+                ]);
+
+            $extra = [
+                'is_solicitante' => true,
+                'my_active_tickets' => $myActiveTickets,
+                'pending_receipt' => $pendingReceipt,
             ];
         } elseif ($user->hasRole('tecnico')) {
             $baseQuery = Ticket::query()->visibleTo($user);
