@@ -5,7 +5,6 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
-import { Select } from '@/Components/ui/select';
 import { ChevronDown } from 'lucide-react';
 import InputError from '@/Components/InputError';
 
@@ -22,11 +21,16 @@ export default function Create({ categories, priorities }) {
     const [photoPreview, setPhotoPreview] = useState(null);
     const [categoryOpen, setCategoryOpen] = useState(false);
     const categoryRef = useRef(null);
+    const [priorityOpen, setPriorityOpen] = useState(false);
+    const priorityRef = useRef(null);
 
     useEffect(() => {
         function handleClickOutside(e) {
             if (categoryRef.current && !categoryRef.current.contains(e.target)) {
                 setCategoryOpen(false);
+            }
+            if (priorityRef.current && !priorityRef.current.contains(e.target)) {
+                setPriorityOpen(false);
             }
         }
         document.addEventListener('mousedown', handleClickOutside);
@@ -34,6 +38,7 @@ export default function Create({ categories, priorities }) {
     }, []);
 
     const selectedCategory = categories.find(c => c.id === parseInt(values.category_id));
+    const selectedPriority = priorities.find(p => p.value === values.priority);
 
     function handleChange(e) {
         const { name, value, files } = e.target;
@@ -100,20 +105,40 @@ export default function Create({ categories, priorities }) {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="sm:col-span-2">
                                 <Label htmlFor="priority">Prioridad</Label>
-                                <Select
-                                    id="priority"
-                                    name="priority"
-                                    value={values.priority}
-                                    onChange={handleChange}
-                                    className="mt-1"
-                                >
-                                    <option value="">Selecciona una prioridad</option>
-                                    {priorities.map(p => (
-                                        <option key={p.value} value={p.value}>
-                                            {p.label} — {p.description}
-                                        </option>
-                                    ))}
-                                </Select>
+                                <div className="relative mt-1" ref={priorityRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPriorityOpen(!priorityOpen)}
+                                        className="flex h-9 w-full items-center justify-between rounded-md border border-gris-borde bg-white px-3 py-1 text-sm shadow-sm transition-colors hover:border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-azul-institucional"
+                                    >
+                                        <span className={values.priority ? 'text-gray-900' : 'text-gray-400'}>
+                                            {selectedPriority?.label || 'Selecciona una prioridad'}
+                                        </span>
+                                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                    {priorityOpen && (
+                                        <div className="absolute z-50 mt-1 w-full rounded-md border border-gris-borde bg-white p-1 shadow-md">
+                                            {priorities.map(p => (
+                                                <button
+                                                    key={p.value}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setValues(v => ({ ...v, priority: p.value }));
+                                                        setPriorityOpen(false);
+                                                    }}
+                                                    className={`w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100 ${
+                                                        values.priority === p.value ? 'bg-blue-50' : ''
+                                                    }`}
+                                                >
+                                                    <span className="font-medium text-gray-900">{p.label}</span>
+                                                    {p.description && (
+                                                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{p.description}</p>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 <InputError message={errors.priority} />
                             </div>
 
