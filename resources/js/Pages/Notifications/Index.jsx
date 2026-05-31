@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Bell, BellOff, CheckCheck } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import Pagination from '@/Components/Pagination';
@@ -7,6 +7,17 @@ import Pagination from '@/Components/Pagination';
 export default function Index({ notifications }) {
     function markAllRead() {
         router.post(route('notifications.read-all'));
+    }
+
+    function handleNotifClick(notif) {
+        if (notif.read_at) {
+            if (notif.ticket_id) router.visit(route('tickets.show', notif.ticket_id));
+            return;
+        }
+
+        router.post(route('notifications.read', notif.id), {}, {
+            onFinish: () => notif.ticket_id && router.visit(route('tickets.show', notif.ticket_id)),
+        });
     }
 
     return (
@@ -32,24 +43,24 @@ export default function Index({ notifications }) {
                 ) : (
                     <div className="rounded-lg border border-gris-borde bg-white divide-y divide-gris-borde">
                         {notifications.data.map(notif => (
-                            <div key={notif.id} className={`flex items-start gap-3 p-4 ${!notif.read_at ? 'bg-blue-50/50' : ''}`}>
-                                <Bell className={`h-5 w-5 mt-0.5 ${!notif.read_at ? 'text-azul-institucional' : 'text-gray-400'}`} />
+                            <button
+                                key={notif.id}
+                                type="button"
+                                onClick={() => handleNotifClick(notif)}
+                                className={`flex items-start gap-3 p-4 w-full text-left hover:bg-gray-50 transition-colors ${!notif.read_at ? 'bg-blue-50/50' : ''}`}
+                            >
+                                <Bell className={`h-5 w-5 mt-0.5 shrink-0 ${!notif.read_at ? 'text-azul-institucional' : 'text-gray-400'}`} />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-medium text-gray-900">{notif.title}</p>
                                         {!notif.read_at && (
-                                            <span className="h-2 w-2 rounded-full bg-azul-institucional" />
+                                            <span className="h-2 w-2 rounded-full bg-azul-institucional shrink-0" />
                                         )}
                                     </div>
                                     <p className="text-sm text-gray-600">{notif.message}</p>
                                     <p className="text-xs text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString('es-VE')}</p>
                                 </div>
-                                {notif.ticket_id && (
-                                    <Link href={route('tickets.show', notif.ticket_id)} className="text-xs text-azul-institucional hover:underline whitespace-nowrap">
-                                        Ver ticket
-                                    </Link>
-                                )}
-                            </div>
+                            </button>
                         ))}
                     </div>
                 )}
