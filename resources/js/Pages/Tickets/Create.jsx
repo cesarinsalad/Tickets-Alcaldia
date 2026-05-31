@@ -1,11 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select } from '@/Components/ui/select';
+import { ChevronDown } from 'lucide-react';
 import InputError from '@/Components/InputError';
 
 export default function Create({ categories, priorities }) {
@@ -19,6 +20,20 @@ export default function Create({ categories, priorities }) {
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
     const [photoPreview, setPhotoPreview] = useState(null);
+    const [categoryOpen, setCategoryOpen] = useState(false);
+    const categoryRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (categoryRef.current && !categoryRef.current.contains(e.target)) {
+                setCategoryOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const selectedCategory = categories.find(c => c.id === parseInt(values.category_id));
 
     function handleChange(e) {
         const { name, value, files } = e.target;
@@ -104,23 +119,40 @@ export default function Create({ categories, priorities }) {
 
                             <div>
                                 <Label htmlFor="category_id">Categoría</Label>
-                                <Select
-                                    id="category_id"
-                                    name="category_id"
-                                    value={values.category_id}
-                                    onChange={handleChange}
-                                    className="mt-1"
-                                >
-                                    <option value="">Selecciona una categoría</option>
-                                    {categories.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                    ))}
-                                </Select>
-                                {values.category_id && (
-                                    <p className="mt-1.5 text-xs text-gray-500 italic leading-relaxed">
-                                        {categories.find(c => c.id === parseInt(values.category_id))?.description}
-                                    </p>
-                                )}
+                                <div className="relative mt-1" ref={categoryRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCategoryOpen(!categoryOpen)}
+                                        className="flex h-9 w-full items-center justify-between rounded-md border border-gris-borde bg-white px-3 py-1 text-sm shadow-sm transition-colors hover:border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-azul-institucional"
+                                    >
+                                        <span className={values.category_id ? 'text-gray-900' : 'text-gray-400'}>
+                                            {selectedCategory?.name || 'Selecciona una categoría'}
+                                        </span>
+                                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                    {categoryOpen && (
+                                        <div className="absolute z-50 mt-1 w-full rounded-md border border-gris-borde bg-white p-1 shadow-md">
+                                            {categories.map(c => (
+                                                <button
+                                                    key={c.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setValues(v => ({ ...v, category_id: String(c.id) }));
+                                                        setCategoryOpen(false);
+                                                    }}
+                                                    className={`w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100 ${
+                                                        values.category_id === String(c.id) ? 'bg-blue-50' : ''
+                                                    }`}
+                                                >
+                                                    <span className="font-medium text-gray-900">{c.name}</span>
+                                                    {c.description && (
+                                                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{c.description}</p>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 <InputError message={errors.category_id} />
                             </div>
                         </div>
