@@ -28,6 +28,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const unreadCount = auth?.unread_notifications ?? 0;
+    const latestNotifications = auth?.latest_notifications ?? [];
     const [mobileOpen, setMobileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -108,11 +109,31 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 Ver todas
                                             </Link>
                                         </div>
-                                        <div className="max-h-64 overflow-y-auto p-2">
-                                            {unreadCount === 0 ? (
+                                        <div className="max-h-80 overflow-y-auto p-2">
+                                            {latestNotifications.length === 0 ? (
                                                 <p className="text-sm text-gray-500 text-center py-4">No hay notificaciones nuevas</p>
                                             ) : (
-                                                <p className="text-sm text-gray-500 text-center py-4">{unreadCount} notificaciones sin leer</p>
+                                                latestNotifications.map(notif => (
+                                                    <Link
+                                                        key={notif.id}
+                                                        href={notif.ticket_id ? route('tickets.show', notif.ticket_id) : route('notifications.index')}
+                                                        onClick={() => setNotifOpen(false)}
+                                                        className={`block rounded-sm px-3 py-2 text-sm hover:bg-gray-100 ${
+                                                            !notif.read_at ? 'bg-blue-50/50' : ''
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-start gap-2">
+                                                            <Bell className={`h-4 w-4 mt-0.5 shrink-0 ${!notif.read_at ? 'text-azul-institucional' : 'text-gray-400'}`} />
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="font-medium text-gray-900 truncate">{notif.title}</p>
+                                                                <p className="text-xs text-gray-500 truncate">{notif.message}</p>
+                                                                <p className="text-xs text-gray-400 mt-0.5">
+                                                                    {new Date(notif.created_at).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                ))
                                             )}
                                         </div>
                                     </div>

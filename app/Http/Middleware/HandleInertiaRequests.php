@@ -27,6 +27,11 @@ class HandleInertiaRequests extends Middleware
             $auth = [
                 'user' => $user,
                 'unread_notifications' => $user->notifications()->unread()->count(),
+                'latest_notifications' => $user->notifications()
+                    ->with('ticket')
+                    ->latest()
+                    ->take(5)
+                    ->get(),
             ];
         }
 
