@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
@@ -95,19 +95,19 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                         </Badge>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Link href={route('tickets.report', ticket.id)} target="_blank">
+                        <a href={route('tickets.report', ticket.id)} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" size="sm">
                                 <FileText className="h-4 w-4" />
                                 Reporte
                             </Button>
-                        </Link>
-                        {ticket.status === 'resuelto' && (
-                            <Link href={route('tickets.receipt', ticket.id)} target="_blank">
+                        </a>
+                        {['resuelto', 'cerrado'].includes(ticket.status) && (
+                            <a href={route('tickets.receipt', ticket.id)} target="_blank" rel="noopener noreferrer">
                                 <Button variant="outline" size="sm">
                                     <Printer className="h-4 w-4" />
                                     Constancia
                                 </Button>
-                            </Link>
+                            </a>
                         )}
                     </div>
                 </div>
@@ -248,10 +248,6 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Respuesta</span>
                                     <span className="font-medium">{sla.response_deadline ? new Date(sla.response_deadline).toLocaleString('es-VE') : '—'}</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-400">
-                                    <span>Plazo de respuesta</span>
-                                    <span>{sla.response_minutes >= 60 ? (sla.response_minutes / 60) + 'h' : sla.response_minutes + 'min'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Resolución</span>

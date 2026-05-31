@@ -1,8 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Plus, Shield, Check, X } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Search, Shield, Check, X, Trash2 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
+import { Input } from '@/Components/ui/input';
+import { Select } from '@/Components/ui/select';
+import Pagination from '@/Components/Pagination';
 
 const roleLabels = {
     super_admin: 'Super Admin',
@@ -12,10 +16,23 @@ const roleLabels = {
     solicitante: 'Solicitante',
 };
 
-export default function Index({ users, departments }) {
+export default function Index({ users, departments, roles, filters }) {
     const { auth } = usePage().props;
     const currentUser = auth?.user;
     const isSuperAdmin = currentUser?.roles?.some(r => r.name === 'super_admin');
+    const [search, setSearch] = useState(filters.search || '');
+
+    function applyFilters(overrides = {}) {
+        const params = { ...filters, ...overrides };
+        const clean = {};
+        Object.entries(params).forEach(([k, v]) => { if (v) clean[k] = v; });
+        router.get(route('users.index'), clean, { preserveState: true, replace: true });
+    }
+
+    function handleSearch(e) {
+        e.preventDefault();
+        applyFilters({ search });
+    }
 
     return (
         <AuthenticatedLayout
@@ -35,106 +52,157 @@ export default function Index({ users, departments }) {
         >
             <Head title="Usuarios" />
 
-            <div className="rounded-lg border border-gris-borde bg-white">
-                {users.data.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500">
-                        <Shield className="mx-auto h-10 w-10 text-gray-300 mb-3" />
-                        <p className="text-lg font-medium">No hay usuarios</p>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-gris-borde">
-                        <div className="hidden sm:grid sm:grid-cols-6 gap-4 p-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            <div className="col-span-2">Usuario</div>
-                            <div>Rol</div>
-                            <div>Departamento</div>
-                            <div>Estado</div>
-                            <div>Acciones</div>
+            <div className="space-y-4">
+                <div className="rounded-lg border border-gris-borde bg-white p-4">
+                    <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <Input
+                                className="pl-9"
+                                placeholder="Buscar por nombre, apellido o email..."
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                            />
                         </div>
-                        {users.data.map(user => (
-                            <div key={user.id} className="grid grid-cols-1 sm:grid-cols-6 gap-2 sm:gap-4 p-4 items-center hover:bg-gris-fondo">
-                                <div className="col-span-2">
-                                    <p className="text-sm font-medium text-gray-900">{user.full_name ?? user.name}</p>
-                                    <p className="text-xs text-gray-500">{user.email}</p>
-                                    {user.phone_number && <p className="text-xs text-gray-400">{user.phone_number}</p>}
-                                </div>
-                                <div>
-                                    {user.roles?.map(role => (
-                                        <Badge key={role.id ?? role.name} variant="secondary" className="text-xs">
-                                            {roleLabels[role.name] || role.name}
-                                        </Badge>
-                                    ))}
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    {user.department?.name || '—'}
-                                </div>
-                                <div>
-                                    {user.is_active ? (
-                                        <Badge variant="success" className="text-xs"><Check className="h-3 w-3" /> Activo</Badge>
-                                    ) : (
-                                        <Badge variant="danger" className="text-xs"><X className="h-3 w-3" /> Inactivo</Badge>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    {isSuperAdmin && (
-                                        <>
-                                            <Link href={route('users.edit', user.id)}>
-                                                <Button variant="ghost" size="sm">Editar</Button>
-                                            </Link>
-                                            <button
-                                                onClick={() => {
-                                                    if (confirm('¿Cambiar estado del usuario?')) {
-                                                        router.post(route('users.toggle', user.id), {}, {
-                                                            preserveState: false,
-                                                            replace: false,
-                                                        });
-                                                    }
-                                                }}
-                                                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
-                                            >
-                                                {user.is_active ? 'Desactivar' : 'Activar'}
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    if (confirm('¿Restablecer contraseña? Se generará una nueva.')) {
-                                                        router.post(route('users.reset-password', user.id), {}, {
-                                                            onSuccess: (page) => {
-                                                                alert('Nueva contraseña: ' + page.props.flash?.new_password);
-                                                            }
-                                                        });
-                                                    }
-                                                }}
-                                                className="text-xs text-azul-institucional hover:underline px-2 py-1"
-                                            >
-                                                Resetear Contraseña
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {users.meta && users.meta.last_page > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-4">
-                    {users.meta.links.map((link, i) => (
-                        <button
-                            key={i}
-                            onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
-                            disabled={!link.url}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                            className={`px-3 py-1 text-sm rounded-md border border-gris-borde ${
-                                link.active
-                                    ? 'bg-azul-institucional text-white border-azul-institucional'
-                                    : link.url
-                                    ? 'bg-white text-gray-700 hover:bg-gris-fondo'
-                                    : 'text-gray-400 cursor-not-allowed'
-                            }`}
-                        />
-                    ))}
+                        <Select
+                            className="w-full sm:w-40"
+                            value={filters.role || ''}
+                            onChange={e => applyFilters({ role: e.target.value })}
+                        >
+                            <option value="">Todos los roles</option>
+                            {roles.map(r => (
+                                <option key={r.value} value={r.value}>{r.label}</option>
+                            ))}
+                        </Select>
+                        <Select
+                            className="w-full sm:w-44"
+                            value={filters.department || ''}
+                            onChange={e => applyFilters({ department: e.target.value })}
+                        >
+                            <option value="">Todos los departamentos</option>
+                            {departments.map(d => (
+                                <option key={d.id} value={d.id}>{d.name}</option>
+                            ))}
+                        </Select>
+                        <Select
+                            className="w-full sm:w-36"
+                            value={filters.status || ''}
+                            onChange={e => applyFilters({ status: e.target.value })}
+                        >
+                            <option value="">Todos los estados</option>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </Select>
+                        {Object.keys(filters).some(k => k !== 'per_page' && filters[k]) && (
+                            <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('users.index'))}>
+                                Limpiar filtros
+                            </Button>
+                        )}
+                    </form>
                 </div>
-            )}
+
+                <div className="rounded-lg border border-gris-borde bg-white">
+                    {users.data.length === 0 ? (
+                        <div className="p-12 text-center text-gray-500">
+                            <Shield className="mx-auto h-10 w-10 text-gray-300 mb-3" />
+                            <p className="text-lg font-medium">No se encontraron usuarios</p>
+                            <p className="text-sm mt-1">Ajusta los filtros de búsqueda o crea un nuevo usuario.</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gris-borde">
+                            <div className="hidden sm:grid sm:grid-cols-6 gap-4 p-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                <div className="col-span-2">Usuario</div>
+                                <div>Rol</div>
+                                <div>Departamento</div>
+                                <div>Estado</div>
+                                <div>Acciones</div>
+                            </div>
+                            {users.data.map(user => (
+                                <div key={user.id} className="grid grid-cols-1 sm:grid-cols-6 gap-2 sm:gap-4 p-4 items-center hover:bg-gris-fondo">
+                                    <div className="col-span-2">
+                                        <p className="text-sm font-medium text-gray-900">{user.full_name ?? user.name}</p>
+                                        <p className="text-xs text-gray-500">{user.email}</p>
+                                        {user.phone_number && <p className="text-xs text-gray-400">{user.phone_number}</p>}
+                                    </div>
+                                    <div>
+                                        {user.roles?.map(role => (
+                                            <Badge key={role.id ?? role.name} variant="secondary" className="text-xs">
+                                                {roleLabels[role.name] || role.name}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                        {user.department?.name || '—'}
+                                    </div>
+                                    <div>
+                                        {user.is_active ? (
+                                            <Badge variant="success" className="text-xs"><Check className="h-3 w-3" /> Activo</Badge>
+                                        ) : (
+                                            <Badge variant="danger" className="text-xs"><X className="h-3 w-3" /> Inactivo</Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        {isSuperAdmin && (
+                                            <>
+                                                <Link href={route('users.edit', user.id)}>
+                                                    <Button variant="ghost" size="sm">Editar</Button>
+                                                </Link>
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('¿Cambiar estado del usuario?')) {
+                                                            router.post(route('users.toggle', user.id), {}, {
+                                                                preserveState: false,
+                                                                replace: false,
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                                                >
+                                                    {user.is_active ? 'Desactivar' : 'Activar'}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('¿Restablecer contraseña? Se generará una nueva.')) {
+                                                            router.post(route('users.reset-password', user.id), {}, {
+                                                                onSuccess: (page) => {
+                                                                    alert('Nueva contraseña: ' + page.props.flash?.new_password);
+                                                                }
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="text-xs text-azul-institucional hover:underline px-2 py-1"
+                                                >
+                                                    Resetear Contraseña
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('¿Eliminar este usuario permanentemente?')) {
+                                                            router.delete(route('users.destroy', user.id), {
+                                                                preserveState: false,
+                                                                replace: false,
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1"
+                                                >
+                                                    <Trash2 className="h-3 w-3 inline" />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <Pagination
+                    links={users.links}
+                    perPage={filters.per_page || 10}
+                    total={users.total}
+                    onPerPageChange={(val) => applyFilters({ per_page: val })}
+                />
+            </div>
         </AuthenticatedLayout>
     );
 }

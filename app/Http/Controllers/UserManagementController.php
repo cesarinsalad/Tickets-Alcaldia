@@ -30,13 +30,40 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->orderBy('name')->paginate(15)->withQueryString();
+        if ($request->filled('role')) {
+            $query->role($request->input('role'));
+        }
+
+        if ($request->filled('department')) {
+            $query->where('department_id', $request->input('department'));
+        }
+
+        if ($request->filled('status')) {
+            $isActive = $request->input('status') === 'activo';
+            $query->where('is_active', $isActive);
+        }
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
         $departments = Department::all();
+
+        $roles = collect([
+            ['value' => 'solicitante', 'label' => 'Solicitante'],
+            ['value' => 'tecnico', 'label' => 'Técnico'],
+            ['value' => 'admin_departamento', 'label' => 'Administrador de Departamento'],
+            ['value' => 'admin_tickets', 'label' => 'Administrador de Tickets'],
+            ['value' => 'super_admin', 'label' => 'Super Administrador'],
+        ]);
 
         return Inertia::render('Users/Index', [
             'users' => $users,
             'departments' => $departments,
-            'filters' => $request->only(['search']),
+            'roles' => $roles,
+            'filters' => $request->only(['search', 'role', 'department', 'status', 'per_page']),
         ]);
     }
 
@@ -277,6 +304,8 @@ class UserManagementController extends Controller
         if (! request()->user()->hasRole('super_admin')) {
             abort(403, 'No autorizado.');
         }
+
+        Department::where('head_of_area_id', $user->id)->update(['head_of_area_id' => null]);
 
         $user->delete();
 

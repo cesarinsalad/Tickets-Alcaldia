@@ -9,20 +9,31 @@ use Inertia\Inertia;
 
 class DepartmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $departments = Department::with('headOfArea')->withCount('users')->orderBy('name')->get();
+        $query = Department::query()->with('headOfArea')->withCount('users');
 
-        $availableAdmins = User::role('admin_departamento')
-            ->whereNull('department_id')
-            ->where('is_active', true)
-            ->get()
-            ->append('full_name');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'ilike', "%{$search}%");
+        }
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $departments = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
         return Inertia::render('Departments/Index', [
             'departments' => $departments,
-            'availableAdmins' => $availableAdmins,
+            'filters' => $request->only(['search', 'per_page']),
         ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Departments/Create');
     }
 
     public function store(Request $request)
@@ -37,7 +48,33 @@ class DepartmentController extends Controller
             'physical_address' => $validated['physical_address'],
         ]);
 
-        return back()->with('success', 'Departamento creado exitosamente.');
+        return redirect()->route('departments.index')
+            ->with('success', 'Departamento creado exitosamente.');
+    }
+
+    public function edit(Department $department)
+    {
+        $department->load('headOfArea');
+
+        $availableAdmins = User::role('admin_departamento')
+            ->where('is_active', true)
+            ->where(function ($q) use ($department) {
+                $q->whereNull('department_id')
+                    ->orWhere('id', $department->head_of_area_id);
+            })
+            ->whereNotIn('id', function ($q) use ($department) {
+                $q->select('head_of_area_id')
+                    ->from('departments')
+                    ->whereNotNull('head_of_area_id')
+                    ->where('id', '!=', $department->id);
+            })
+            ->get()
+            ->append('full_name');
+
+        return Inertia::render('Departments/Edit', [
+            'department' => $department,
+            'availableAdmins' => $availableAdmins,
+        ]);
     }
 
     public function update(Request $request, Department $department)
@@ -55,6 +92,14 @@ class DepartmentController extends Controller
             }
 
             if ($validated['head_of_area_id']) {
+                $alreadyHead = Department::where('head_of_area_id', $validated['head_of_area_id'])
+                    ->where('id', '!=', $department->id)
+                    ->exists();
+
+                if ($alreadyHead) {
+                    return back()->with('error', 'El usuario seleccionado ya es jefe de otro departamento.');
+                }
+
                 $newAdmin = User::where('id', $validated['head_of_area_id'])
                     ->where('is_active', true)
                     ->whereNull('department_id')
@@ -75,7 +120,8 @@ class DepartmentController extends Controller
             'head_of_area_id' => $validated['head_of_area_id'],
         ]);
 
-        return back()->with('success', 'Departamento actualizado exitosamente.');
+        return redirect()->route('departments.index')
+            ->with('success', 'Departamento actualizado exitosamente.');
     }
 
     public function destroy(Department $department)

@@ -30,6 +30,8 @@ export default function Create({ departments, roles }) {
             onError: (err) => { setErrors(err); setProcessing(false); },
             onSuccess: (page) => {
                 setProcessing(false);
+                setValues({ name: '', last_name: '', email: '', phone_number: '', department_id: '', role: 'solicitante' });
+                setErrors({});
                 if (page.props.flash?.new_password) {
                     alert('Usuario creado. Contraseña temporal: ' + page.props.flash.new_password);
                 }
