@@ -60,6 +60,51 @@ class DashboardController extends Controller
                     ->whereDate('exit_date', today())
                     ->count(),
             ];
+
+            $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
+
+            $extra = [
+                'is_admin_tickets' => true,
+                'unassigned_tickets' => Ticket::whereIn('status', $activeStatuses)->whereNull('assigned_id')->count(),
+                'sla_expired' => Ticket::whereIn('status', $activeStatuses)
+                    ->whereNotNull('sla_resolution_deadline')
+                    ->where('sla_resolution_deadline', '<', now())
+                    ->count(),
+                'sla_at_risk' => Ticket::whereIn('status', $activeStatuses)
+                    ->whereNotNull('sla_resolution_deadline')
+                    ->where('sla_resolution_deadline', '>', now())
+                    ->whereRaw("EXTRACT(EPOCH FROM (sla_resolution_deadline - NOW())) / GREATEST(EXTRACT(EPOCH FROM (sla_resolution_deadline - entry_date)), 1) <= 0.25")
+                    ->count(),
+                'new_tickets' => Ticket::with(['creator.department', 'category'])
+                    ->where('status', TicketStatus::Abierto)
+                    ->latest()
+                    ->take(10)
+                    ->get()
+                    ->map(fn($t) => [
+                        'id' => $t->id,
+                        'code' => $t->code,
+                        'title' => $t->title,
+                        'priority' => $t->priority->value,
+                        'priority_label' => $t->priority->label(),
+                        'creator_name' => $t->creator->full_name,
+                        'department' => $t->creator->department?->name,
+                        'category' => $t->category?->name,
+                        'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+                    ]),
+                'technician_workload' => User::role('tecnico')
+                    ->where('is_active', true)
+                    ->withCount(['assignedTickets' => function ($q) use ($activeStatuses) {
+                        $q->whereIn('status', $activeStatuses);
+                    }])
+                    ->orderByDesc('assigned_tickets_count')
+                    ->get()
+                    ->map(fn($u) => [
+                        'id' => $u->id,
+                        'name' => $u->full_name,
+                        'department' => $u->department?->name,
+                        'tickets_count' => $u->assigned_tickets_count,
+                    ]),
+            ];
         } elseif ($user->hasRole('super_admin')) {
             $kpis = [
                 'abiertos' => Ticket::where('status', TicketStatus::Abierto)->count(),
@@ -144,64 +189,6 @@ class DashboardController extends Controller
                 'top_departments' => $topDepartments,
                 'category_distribution' => $categoryDistribution,
                 'critical_expired' => $criticalExpired,
-            ];
-        } elseif ($user->hasRole('admin_tickets')) {
-            $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
-            $activeStatusValues = array_map(fn($s) => $s->value, $activeStatuses);
-
-            $unassigned = Ticket::whereIn('status', $activeStatuses)
-                ->whereNull('assigned_id')
-                ->count();
-
-            $slaExpired = Ticket::whereIn('status', $activeStatuses)
-                ->whereNotNull('sla_resolution_deadline')
-                ->where('sla_resolution_deadline', '<', now())
-                ->count();
-
-            $slaAtRisk = Ticket::whereIn('status', $activeStatuses)
-                ->whereNotNull('sla_resolution_deadline')
-                ->where('sla_resolution_deadline', '>', now())
-                ->whereRaw("EXTRACT(EPOCH FROM (sla_resolution_deadline - NOW())) / GREATEST(EXTRACT(EPOCH FROM (sla_resolution_deadline - entry_date)), 1) <= 0.25")
-                ->count();
-
-            $newTickets = Ticket::with(['creator.department', 'category'])
-                ->where('status', TicketStatus::Abierto)
-                ->latest()
-                ->take(10)
-                ->get()
-                ->map(fn($t) => [
-                    'id' => $t->id,
-                    'code' => $t->code,
-                    'title' => $t->title,
-                    'priority' => $t->priority->value,
-                    'priority_label' => $t->priority->label(),
-                    'creator_name' => $t->creator->full_name,
-                    'department' => $t->creator->department?->name,
-                    'category' => $t->category?->name,
-                    'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
-                ]);
-
-            $technicianWorkload = User::role('tecnico')
-                ->where('is_active', true)
-                ->withCount(['assignedTickets' => function ($q) use ($activeStatuses) {
-                    $q->whereIn('status', $activeStatuses);
-                }])
-                ->orderByDesc('assigned_tickets_count')
-                ->get()
-                ->map(fn($u) => [
-                    'id' => $u->id,
-                    'name' => $u->full_name,
-                    'department' => $u->department?->name,
-                    'tickets_count' => $u->assigned_tickets_count,
-                ]);
-
-            $extra = [
-                'is_admin_tickets' => true,
-                'unassigned_tickets' => $unassigned,
-                'sla_at_risk' => $slaAtRisk,
-                'sla_expired' => $slaExpired,
-                'new_tickets' => $newTickets,
-                'technician_workload' => $technicianWorkload,
             ];
         }
 
