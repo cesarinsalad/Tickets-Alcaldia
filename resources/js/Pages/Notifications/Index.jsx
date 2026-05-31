@@ -25,10 +25,10 @@ export default function Index({ notifications }) {
             header={
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">Notificaciones</h2>
-                    <Button variant="outline" size="sm" onClick={markAllRead}>
-                        <CheckCheck className="h-4 w-4" />
-                        Marcar todas como leídas
-                    </Button>
+                        <Button variant="outline" size="sm" onClick={markAllRead}>
+                            <CheckCheck className="h-4 w-4" />
+                            Limpiar bandeja
+                        </Button>
                 </div>
             }
         >

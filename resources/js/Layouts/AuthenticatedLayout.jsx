@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, XCircle, Trash2 } from 'lucide-react';
+import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, XCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/Components/ui/dropdown';
 import { Badge } from '@/Components/ui/badge';
 
@@ -54,12 +54,6 @@ export default function AuthenticatedLayout({ header, children }) {
 
         router.post(route('notifications.read', notif.id), {}, {
             onFinish: () => router.visit(notif.ticket_id ? route('tickets.show', notif.ticket_id) : route('notifications.index')),
-        });
-    }
-
-    function clearAllNotifications() {
-        router.post(route('notifications.read-all'), {}, {
-            onSuccess: () => setNotifOpen(false),
         });
     }
 
@@ -125,12 +119,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <div className="flex items-center justify-between px-4 py-2 border-b border-gris-borde">
                                             <span className="text-sm font-medium text-gray-900">Notificaciones</span>
                                             <div className="flex items-center gap-2">
-                                                {unreadCount > 0 && (
-                                                    <button onClick={clearAllNotifications} className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
-                                                        <Trash2 className="h-3 w-3" />
-                                                        Limpiar
-                                                    </button>
-                                                )}
                                                 <Link href={route('notifications.index')} className="text-xs text-azul-institucional hover:underline">
                                                     Ver todas
                                                 </Link>
