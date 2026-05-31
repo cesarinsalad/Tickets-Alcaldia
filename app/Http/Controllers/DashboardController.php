@@ -29,6 +29,8 @@ class DashboardController extends Controller
             ];
         } elseif ($user->hasRole('tecnico')) {
             $baseQuery = Ticket::query()->visibleTo($user);
+            $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
+            $activeStatusValues = array_map(fn($s) => $s->value, $activeStatuses);
 
             $kpis = [
                 'abiertos_asignados' => (clone $baseQuery)->where('status', TicketStatus::Abierto)->count(),
@@ -38,6 +40,65 @@ class DashboardController extends Controller
                     ->where('status', TicketStatus::Resuelto)
                     ->whereDate('exit_date', today())
                     ->count(),
+            ];
+
+            $assignedQuery = Ticket::where('assigned_id', $user->id);
+
+            $slaAtRisk = (clone $assignedQuery)
+                ->whereIn('status', $activeStatuses)
+                ->whereNotNull('sla_resolution_deadline')
+                ->where('sla_resolution_deadline', '>', now())
+                ->whereRaw("EXTRACT(EPOCH FROM (sla_resolution_deadline - NOW())) / GREATEST(EXTRACT(EPOCH FROM (sla_resolution_deadline - entry_date)), 1) <= 0.25")
+                ->count();
+
+            $slaExpired = (clone $assignedQuery)
+                ->whereIn('status', $activeStatuses)
+                ->whereNotNull('sla_resolution_deadline')
+                ->where('sla_resolution_deadline', '<', now())
+                ->count();
+
+            $myQueue = (clone $assignedQuery)
+                ->whereIn('status', $activeStatuses)
+                ->with(['category', 'creator.department'])
+                ->orderBy('sla_resolution_deadline')
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'title' => $t->title,
+                    'status' => $t->status->value,
+                    'status_label' => $t->status->label(),
+                    'priority' => $t->priority->value,
+                    'priority_label' => $t->priority->label(),
+                    'creator_name' => $t->creator->full_name,
+                    'department' => $t->creator->department?->name,
+                    'category' => $t->category?->name,
+                    'sla_deadline' => $t->sla_resolution_deadline?->format('d/m/Y H:i'),
+                    'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+                ]);
+
+            $recentlyClosed = (clone $assignedQuery)
+                ->whereIn('status', [TicketStatus::Resuelto, TicketStatus::Cerrado])
+                ->latest('exit_date')
+                ->take(10)
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'title' => $t->title,
+                    'status' => $t->status->value,
+                    'status_label' => $t->status->label(),
+                    'exit_date' => $t->exit_date?->format('d/m/Y H:i'),
+                    'priority' => $t->priority->value,
+                    'priority_label' => $t->priority->label(),
+                ]);
+
+            $extra = [
+                'is_tecnico' => true,
+                'sla_at_risk' => $slaAtRisk,
+                'sla_expired' => $slaExpired,
+                'my_queue' => $myQueue,
+                'recently_closed' => $recentlyClosed,
             ];
         } elseif ($user->hasRole('admin_departamento')) {
             $baseQuery = Ticket::query()->visibleTo($user);
