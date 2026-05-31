@@ -22,12 +22,26 @@ class CategoryController extends Controller
             $query->where('name', 'ilike', "%{$search}%");
         }
 
-        $categories = $query->orderBy('name')->get();
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $categories = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'per_page']),
         ]);
+    }
+
+    public function create()
+    {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
+        return Inertia::render('Categories/Create');
     }
 
     public function store(Request $request)
@@ -38,12 +52,24 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:categories'],
-            'estimated_hours' => ['nullable', 'integer', 'min:1'],
+            'description' => ['nullable', 'string', 'max:1000'],
         ]);
 
         Category::create($validated);
 
-        return back()->with('success', 'Categoría creada exitosamente.');
+        return redirect()->route('categories.index')
+            ->with('success', 'Categoría creada exitosamente.');
+    }
+
+    public function edit(Category $category)
+    {
+        if (! request()->user()->hasRole('super_admin')) {
+            abort(403, 'No autorizado.');
+        }
+
+        return Inertia::render('Categories/Edit', [
+            'category' => $category,
+        ]);
     }
 
     public function update(Request $request, Category $category)
@@ -59,7 +85,8 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return back()->with('success', 'Categoría actualizada exitosamente.');
+        return redirect()->route('categories.index')
+            ->with('success', 'Categoría actualizada exitosamente.');
     }
 
     public function destroy(Category $category)

@@ -41,8 +41,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware(['role:super_admin'])->group(function () {
-        Route::resource('categories', CategoryController::class)->except(['show', 'edit']);
-        Route::resource('departments', DepartmentController::class)->except(['show', 'edit']);
+        Route::resource('categories', CategoryController::class)->except(['show']);
+        Route::resource('departments', DepartmentController::class)->except(['show']);
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

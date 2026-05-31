@@ -1,41 +1,20 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Pencil, Trash2, Building } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Building } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
-import { Select } from '@/Components/ui/select';
-import InputError from '@/Components/InputError';
+import Pagination from '@/Components/Pagination';
 
-export default function Index({ departments, availableAdmins }) {
-    const [editingId, setEditingId] = useState(null);
-    const [form, setForm] = useState({ name: '', physical_address: '', head_of_area_id: '' });
-    const [errors, setErrors] = useState({});
+export default function Index({ departments, filters }) {
+    const [search, setSearch] = useState(filters.search || '');
 
-    function startEdit(dept) {
-        setEditingId(dept?.id || null);
-        setForm({
-            name: dept?.name || '',
-            physical_address: dept?.physical_address || '',
-            head_of_area_id: dept?.head_of_area_id?.toString() || '',
-        });
-        setErrors({});
-    }
-
-    function handleSubmit(e) {
+    function handleSearch(e) {
         e.preventDefault();
-        if (editingId) {
-            router.put(route('departments.update', editingId), form, {
-                onError: setErrors,
-                onSuccess: () => { setEditingId(null); setForm({ name: '', physical_address: '', head_of_area_id: '' }); },
-            });
-        } else {
-            router.post(route('departments.store'), form, {
-                onError: setErrors,
-                onSuccess: () => setForm({ name: '', physical_address: '', head_of_area_id: '' }),
-            });
-        }
+        const params = { ...filters, search };
+        const clean = {};
+        Object.entries(params).forEach(([k, v]) => { if (v) clean[k] = v; });
+        router.get(route('departments.index'), clean, { preserveState: true, replace: true });
     }
 
     function handleDelete(id) {
@@ -46,53 +25,43 @@ export default function Index({ departments, availableAdmins }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold text-gray-900">Departamentos</h2>}
+            header={
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">Departamentos</h2>
+                    <Link href={route('departments.create')}>
+                        <Button size="sm">
+                            <Plus className="h-4 w-4" />
+                            Nuevo Departamento
+                        </Button>
+                    </Link>
+                </div>
+            }
         >
             <Head title="Departamentos" />
 
-            <div className="max-w-3xl space-y-6">
-                <div className="rounded-lg border border-gris-borde bg-white p-6">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
-                        {editingId ? 'Editar Departamento' : 'Nuevo Departamento'}
-                    </h3>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <Label htmlFor="name">Nombre</Label>
-                                <Input id="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" />
-                                <InputError message={errors.name} />
-                            </div>
-                            <div>
-                                <Label htmlFor="physical_address">Dirección Física</Label>
-                                <Input id="physical_address" value={form.physical_address} onChange={e => setForm(f => ({ ...f, physical_address: e.target.value }))} className="mt-1" />
-                                <InputError message={errors.physical_address} />
-                            </div>
-                            {editingId && (
-                                <div>
-                                    <Label htmlFor="head_of_area_id">Jefe de Área (Administrador de Departamento)</Label>
-                                    <Select id="head_of_area_id" value={form.head_of_area_id} onChange={e => setForm(f => ({ ...f, head_of_area_id: e.target.value }))} className="mt-1">
-                                        <option value="">Sin asignar</option>
-                                        {availableAdmins.map(u => (
-                                            <option key={u.id} value={u.id}>{u.full_name ?? u.name}</option>
-                                        ))}
-                                    </Select>
-                                    <InputError message={errors.head_of_area_id} />
-                                </div>
-                            )}
-                        <div className="flex items-center gap-2">
-                            <Button type="submit" size="sm">
-                                {editingId ? 'Actualizar' : 'Crear'}
-                            </Button>
-                            {editingId && (
-                                <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(null)}>
-                                    Cancelar
-                                </Button>
-                            )}
+            <div className="space-y-4">
+                <div className="rounded-lg border border-gris-borde bg-white p-4">
+                    <form onSubmit={handleSearch} className="flex gap-3">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <Input
+                                className="pl-9"
+                                placeholder="Buscar por nombre de departamento..."
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                            />
                         </div>
+                        <Button type="submit" size="sm">Buscar</Button>
+                        {filters.search && (
+                            <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(''); router.get(route('departments.index')); }}>
+                                Limpiar
+                            </Button>
+                        )}
                     </form>
                 </div>
 
                 <div className="rounded-lg border border-gris-borde bg-white">
-                    {departments.length === 0 ? (
+                    {departments.data.length === 0 ? (
                         <div className="p-12 text-center text-gray-500">
                             <Building className="mx-auto h-10 w-10 text-gray-300 mb-3" />
                             <p className="text-lg font-medium">No hay departamentos</p>
@@ -100,22 +69,30 @@ export default function Index({ departments, availableAdmins }) {
                         </div>
                     ) : (
                         <div className="divide-y divide-gris-borde">
-                            {departments.map(dept => (
-                                <div key={dept.id} className="flex items-center justify-between p-4">
-                                    <div>
+                            <div className="hidden sm:grid sm:grid-cols-5 gap-4 p-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                <div className="col-span-2">Nombre</div>
+                                <div>Jefe</div>
+                                <div>Dirección</div>
+                                <div>Acciones</div>
+                            </div>
+                            {departments.data.map(dept => (
+                                <div key={dept.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 p-4 items-center hover:bg-gris-fondo">
+                                    <div className="col-span-2">
                                         <p className="text-sm font-medium text-gray-900">{dept.name}</p>
-                                        <p className="text-xs text-gray-500">Jefe: {(dept.head_of_area?.full_name ?? dept.head_of_area?.name) || 'Sin asignar'}</p>
-                                        {dept.physical_address && (
-                                            <p className="text-xs text-gray-400">{dept.physical_address}</p>
-                                        )}
-                                        {dept.users_count !== undefined && (
-                                            <p className="text-xs text-gray-400">{dept.users_count} usuario(s)</p>
-                                        )}
+                                        <p className="text-xs text-gray-400">{dept.users_count} usuario(s)</p>
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                        {(dept.head_of_area?.full_name ?? dept.head_of_area?.name) || '—'}
+                                    </div>
+                                    <div className="text-sm text-gray-600 truncate">
+                                        {dept.physical_address || '—'}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Button variant="ghost" size="sm" onClick={() => startEdit(dept)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
+                                        <Link href={route('departments.edit', dept.id)}>
+                                            <Button variant="ghost" size="sm">
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
                                         <Button variant="ghost" size="sm" onClick={() => handleDelete(dept.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
@@ -125,6 +102,15 @@ export default function Index({ departments, availableAdmins }) {
                         </div>
                     )}
                 </div>
+
+                <Pagination
+                    links={departments.links}
+                    perPage={filters.per_page || 10}
+                    total={departments.total}
+                    onPerPageChange={(val) => {
+                        router.get(route('departments.index'), { ...filters, per_page: val }, { preserveState: true, replace: true });
+                    }}
+                />
             </div>
         </AuthenticatedLayout>
     );
