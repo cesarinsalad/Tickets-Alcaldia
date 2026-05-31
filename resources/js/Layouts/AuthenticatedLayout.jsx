@@ -1,6 +1,6 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, XCircle } from 'lucide-react';
+import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, XCircle, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/Components/ui/dropdown';
 import { Badge } from '@/Components/ui/badge';
 
@@ -43,6 +43,25 @@ export default function AuthenticatedLayout({ header, children }) {
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
+
+    function handleNotifClick(notif) {
+        setNotifOpen(false);
+
+        if (notif.read_at) {
+            router.visit(notif.ticket_id ? route('tickets.show', notif.ticket_id) : route('notifications.index'));
+            return;
+        }
+
+        router.post(route('notifications.read', notif.id), {}, {
+            onFinish: () => router.visit(notif.ticket_id ? route('tickets.show', notif.ticket_id) : route('notifications.index')),
+        });
+    }
+
+    function clearAllNotifications() {
+        router.post(route('notifications.read-all'), {}, {
+            onSuccess: () => setNotifOpen(false),
+        });
+    }
 
     const navItems = [];
 
@@ -105,20 +124,28 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <div className="absolute right-0 top-full mt-1 w-80 rounded-md border border-gris-borde bg-white shadow-lg z-50">
                                         <div className="flex items-center justify-between px-4 py-2 border-b border-gris-borde">
                                             <span className="text-sm font-medium text-gray-900">Notificaciones</span>
-                                            <Link href={route('notifications.index')} className="text-xs text-azul-institucional hover:underline">
-                                                Ver todas
-                                            </Link>
+                                            <div className="flex items-center gap-2">
+                                                {unreadCount > 0 && (
+                                                    <button onClick={clearAllNotifications} className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1">
+                                                        <Trash2 className="h-3 w-3" />
+                                                        Limpiar
+                                                    </button>
+                                                )}
+                                                <Link href={route('notifications.index')} className="text-xs text-azul-institucional hover:underline">
+                                                    Ver todas
+                                                </Link>
+                                            </div>
                                         </div>
                                         <div className="max-h-80 overflow-y-auto p-2">
                                             {latestNotifications.length === 0 ? (
                                                 <p className="text-sm text-gray-500 text-center py-4">No hay notificaciones nuevas</p>
                                             ) : (
                                                 latestNotifications.map(notif => (
-                                                    <Link
+                                                    <button
                                                         key={notif.id}
-                                                        href={notif.ticket_id ? route('tickets.show', notif.ticket_id) : route('notifications.index')}
-                                                        onClick={() => setNotifOpen(false)}
-                                                        className={`block rounded-sm px-3 py-2 text-sm hover:bg-gray-100 ${
+                                                        type="button"
+                                                        onClick={() => handleNotifClick(notif)}
+                                                        className={`block w-full text-left rounded-sm px-3 py-2 text-sm hover:bg-gray-100 ${
                                                             !notif.read_at ? 'bg-blue-50/50' : ''
                                                         }`}
                                                     >
@@ -132,7 +159,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                    </Link>
+                                                    </button>
                                                 ))
                                             )}
                                         </div>
