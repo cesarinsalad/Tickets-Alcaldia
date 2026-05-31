@@ -336,6 +336,110 @@ function RoleDashboard({ kpis, role, unreadNotifications, userDepartment }) {
     );
 }
 
+const statusBadgeMap = {
+    abierto: 'default',
+    en_proceso: 'orange',
+    pendiente_informacion: 'warning',
+    resuelto: 'success',
+    cerrado: 'gray',
+};
+
+const statusLabelMap = {
+    abierto: 'Abierto',
+    en_proceso: 'En Proceso',
+    pendiente_informacion: 'Pendiente de Info',
+    resuelto: 'Resuelto',
+    cerrado: 'Cerrado',
+};
+
+function AdminDeptDashboard({ extra }) {
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <KpiCard icon={Ticket} label="Total Tickets del Equipo" value={extra.total_department_tickets} color="blue" />
+                <KpiCard icon={Clock} label="Tiempo Promedio de Espera" value={extra.avg_wait_hours ? `${extra.avg_wait_hours}h` : '—'} color="orange" />
+                <KpiCard icon={CheckCircle} label="Tickets Activos" value={extra.dept_active_tickets.length} color="yellow" />
+            </div>
+
+            <div className="rounded-lg border border-gris-borde bg-white">
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
+                    <Ticket className="h-4 w-4 text-azul-institucional" />
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Tickets Activos del Departamento</h3>
+                </div>
+                {extra.dept_active_tickets.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <th className="px-5 py-3 font-medium">Código</th>
+                                    <th className="px-5 py-3 font-medium">Título</th>
+                                    <th className="px-5 py-3 font-medium">Solicitante</th>
+                                    <th className="px-5 py-3 font-medium">Estado</th>
+                                    <th className="px-5 py-3 font-medium">Categoría</th>
+                                    <th className="px-5 py-3 font-medium">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {extra.dept_active_tickets.map(t => (
+                                    <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-5 py-3">
+                                            <Link href={route('tickets.show', t.id)} className="font-mono text-xs text-azul-institucional hover:underline">
+                                                {t.code}
+                                            </Link>
+                                        </td>
+                                        <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
+                                        <td className="px-5 py-3 text-gray-600">{t.creator_name}</td>
+                                        <td className="px-5 py-3">
+                                            <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
+                                        </td>
+                                        <td className="px-5 py-3 text-gray-600">{t.category || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-500 text-xs">{t.entry_date}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-sm text-gray-500 text-center py-10">No hay tickets activos en tu departamento.</p>
+                )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Acceso rápido</h3>
+                    <div className="space-y-2">
+                        <Link href={route('tickets.create')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
+                            <Plus className="h-4 w-4 text-azul-institucional" />
+                            Crear nuevo ticket
+                        </Link>
+                        <Link href={route('tickets.index')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
+                            <Ticket className="h-4 w-4 text-azul-institucional" />
+                            Ver todos los tickets
+                        </Link>
+                    </div>
+                </div>
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                    <div className="space-y-3 text-sm text-gray-600">
+                        <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
+                        {extra.user_department && (
+                            <p className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-gray-400" />
+                                Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
+                            </p>
+                        )}
+                        {extra.unreadNotifications > 0 && (
+                            <p className="text-amarillo-advertencia">
+                                Tienes {extra.unreadNotifications} notificaciones sin leer.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Dashboard({ stats, unreadNotifications }) {
     const { kpis, role } = stats;
 
@@ -362,6 +466,10 @@ export default function Dashboard({ stats, unreadNotifications }) {
                 />
             ) : stats.is_admin_tickets ? (
                 <AdminTicketsDashboard
+                    extra={{ ...stats, unreadNotifications }}
+                />
+            ) : stats.is_admin_dept ? (
+                <AdminDeptDashboard
                     extra={{ ...stats, unreadNotifications }}
                 />
             ) : (

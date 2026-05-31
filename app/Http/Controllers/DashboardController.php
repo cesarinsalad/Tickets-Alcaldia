@@ -41,6 +41,7 @@ class DashboardController extends Controller
             ];
         } elseif ($user->hasRole('admin_departamento')) {
             $baseQuery = Ticket::query()->visibleTo($user);
+            $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
             $kpis = [
                 'abiertos' => (clone $baseQuery)->where('status', TicketStatus::Abierto)->count(),
@@ -48,6 +49,43 @@ class DashboardController extends Controller
                 'pendiente_informacion' => (clone $baseQuery)->where('status', TicketStatus::PendienteInformacion)->count(),
                 'resueltos' => (clone $baseQuery)->where('status', TicketStatus::Resuelto)->count(),
                 'cerrados' => (clone $baseQuery)->where('status', TicketStatus::Cerrado)->count(),
+            ];
+
+            $totalResolved = (clone $baseQuery)->where('status', TicketStatus::Resuelto)
+                ->whereNotNull('exit_date')
+                ->whereNotNull('entry_date');
+
+            $avgWait = (clone $totalResolved)
+                ->selectRaw('AVG(EXTRACT(EPOCH FROM (exit_date - entry_date)) / 3600) as avg_hours')
+                ->first()
+                ->avg_hours;
+
+            $activeList = (clone $baseQuery)
+                ->whereIn('status', $activeStatuses)
+                ->with(['category', 'creator'])
+                ->latest()
+                ->take(20)
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'title' => $t->title,
+                    'status' => $t->status->value,
+                    'status_label' => $t->status->label(),
+                    'priority' => $t->priority->value,
+                    'priority_label' => $t->priority->label(),
+                    'creator_name' => $t->creator->full_name,
+                    'category' => $t->category?->name,
+                    'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+                ]);
+
+            $totalDepartment = (clone $baseQuery)->count();
+
+            $extra = [
+                'is_admin_dept' => true,
+                'total_department_tickets' => $totalDepartment,
+                'avg_wait_hours' => $avgWait ? round((float) $avgWait, 1) : null,
+                'dept_active_tickets' => $activeList,
             ];
         } elseif ($user->hasRole('admin_tickets')) {
             $kpis = [
