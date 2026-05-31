@@ -117,7 +117,7 @@ export default function Create({ categories, priorities }) {
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
                                     </button>
                                     {priorityOpen && (
-                                        <div className="absolute z-50 mt-1 w-full rounded-md border border-gris-borde bg-white p-1 shadow-md">
+                                        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gris-borde bg-white p-1 shadow-md">
                                             {priorities.map(p => (
                                                 <button
                                                     key={p.value}
@@ -156,7 +156,7 @@ export default function Create({ categories, priorities }) {
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
                                     </button>
                                     {categoryOpen && (
-                                        <div className="absolute z-50 mt-1 w-full rounded-md border border-gris-borde bg-white p-1 shadow-md">
+                                        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gris-borde bg-white p-1 shadow-md">
                                             {categories.map(c => (
                                                 <button
                                                     key={c.id}
