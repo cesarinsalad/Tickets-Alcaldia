@@ -2,10 +2,12 @@ import { cn } from "@/lib/utils"
 
 const variants = {
   default: "bg-azul-institucional text-white",
-  secondary: "bg-gray-100 text-gray-800",
+  secondary: "bg-gray-200 text-gray-800",
   success: "bg-verde-exito-light text-verde-exito",
   warning: "bg-amarillo-advertencia-light text-amarillo-advertencia",
   danger: "bg-rojo-urgencia-light text-rojo-urgencia",
+  orange: "bg-orange-100 text-orange-800",
+  gray: "bg-gray-300 text-gray-800",
   outline: "border border-gris-borde text-gray-700",
 }
 

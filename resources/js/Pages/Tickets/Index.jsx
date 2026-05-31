@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Filter, Ticket } from 'lucide-react';
+import { Plus, Search, Calendar, Ticket } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -9,10 +9,10 @@ import { Badge } from '@/Components/ui/badge';
 import Pagination from '@/Components/Pagination';
 
 const statusColors = {
-    abierto: 'blue',
+    abierto: 'default',
     en_proceso: 'orange',
-    pendiente_informacion: 'yellow',
-    resuelto: 'green',
+    pendiente_informacion: 'warning',
+    resuelto: 'success',
     cerrado: 'gray',
 };
 
@@ -26,8 +26,8 @@ const statusLabels = {
 
 const priorityColors = {
     baja: 'secondary',
-    media: 'warning',
-    alta: 'orange',
+    media: 'orange',
+    alta: 'danger',
     critica: 'danger',
 };
 
@@ -114,7 +114,25 @@ export default function Index({ tickets, filters, categories, departments, users
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </Select>
-                        {filters.status || filters.priority || filters.category || filters.search ? (
+                        <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+                            <Input
+                                type="date"
+                                className="w-full sm:w-36"
+                                value={filters.date_from || ''}
+                                onChange={e => applyFilters({ date_from: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+                            <Input
+                                type="date"
+                                className="w-full sm:w-36"
+                                value={filters.date_to || ''}
+                                onChange={e => applyFilters({ date_to: e.target.value })}
+                            />
+                        </div>
+                        {filters.status || filters.priority || filters.category || filters.search || filters.date_from || filters.date_to ? (
                             <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('tickets.index'))}>
                                 Limpiar filtros
                             </Button>
@@ -140,6 +158,9 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-xs font-mono text-gray-500">{ticket.code}</span>
+                                            {ticket.category && (
+                                                <span className="text-xs text-gray-400">{ticket.category.name}</span>
+                                            )}
                                             <Badge variant={statusColors[ticket.status] || 'default'}>
                                                 {statusLabels[ticket.status] || ticket.status}
                                             </Badge>
