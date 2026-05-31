@@ -67,7 +67,12 @@ class TicketController extends Controller
             $query->whereDate('entry_date', '<=', $request->input('date_to'));
         }
 
-        $tickets = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $tickets = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         $categories = Category::all();
         $departments = Department::all();
@@ -79,7 +84,7 @@ class TicketController extends Controller
             'departments' => $departments,
             'users' => $users,
             'filters' => $request->only([
-                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to',
+                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to', 'per_page',
             ]),
             'statuses' => collect(TicketStatus::cases())->map(fn ($s) => [
                 'value' => $s->value,

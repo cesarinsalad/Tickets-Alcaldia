@@ -6,6 +6,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import { Badge } from '@/Components/ui/badge';
+import Pagination from '@/Components/Pagination';
 
 const statusColors = {
     abierto: 'blue',
@@ -164,25 +165,12 @@ export default function Index({ tickets, filters, categories, departments, users
                     )}
                 </div>
 
-                {tickets.meta && tickets.meta.last_page > 1 && (
-                    <div className="flex items-center justify-center gap-2">
-                        {tickets.meta.links.map((link, i) => (
-                            <button
-                                key={i}
-                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
-                                disabled={!link.url}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                className={`px-3 py-1 text-sm rounded-md border border-gris-borde ${
-                                    link.active
-                                        ? 'bg-azul-institucional text-white border-azul-institucional'
-                                        : link.url
-                                        ? 'bg-white text-gray-700 hover:bg-gris-fondo'
-                                        : 'text-gray-400 cursor-not-allowed'
-                                }`}
-                            />
-                        ))}
-                    </div>
-                )}
+                <Pagination
+                    links={tickets.links}
+                    perPage={filters.per_page || 10}
+                    total={tickets.total}
+                    onPerPageChange={(val) => applyFilters({ per_page: val })}
+                />
             </div>
         </AuthenticatedLayout>
     );

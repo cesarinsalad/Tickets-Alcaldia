@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Bell, BellOff, CheckCheck } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
+import Pagination from '@/Components/Pagination';
 
 export default function Index({ notifications }) {
     function markAllRead() {
@@ -53,25 +54,12 @@ export default function Index({ notifications }) {
                     </div>
                 )}
 
-                {notifications.meta && notifications.meta.last_page > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-4">
-                        {notifications.meta.links.map((link, i) => (
-                            <button
-                                key={i}
-                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
-                                disabled={!link.url}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                className={`px-3 py-1 text-sm rounded-md border border-gris-borde ${
-                                    link.active
-                                        ? 'bg-azul-institucional text-white border-azul-institucional'
-                                        : link.url
-                                        ? 'bg-white text-gray-700 hover:bg-gris-fondo'
-                                        : 'text-gray-400 cursor-not-allowed'
-                                }`}
-                            />
-                        ))}
-                    </div>
-                )}
+                <Pagination
+                    links={notifications.links}
+                    perPage={10}
+                    total={notifications.total}
+                    onPerPageChange={() => {}}
+                />
             </div>
         </AuthenticatedLayout>
     );
