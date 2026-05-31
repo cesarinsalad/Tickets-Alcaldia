@@ -30,7 +30,7 @@ class HandleInertiaRequests extends Middleware
                 'latest_notifications' => $user->notifications()
                     ->with('ticket')
                     ->latest()
-                    ->take(5)
+                    ->take(3)
                     ->get(),
             ];
         }
