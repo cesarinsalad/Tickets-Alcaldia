@@ -116,6 +116,11 @@ export default function Create({ categories, priorities }) {
                                         <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
                                 </Select>
+                                {values.category_id && (
+                                    <p className="mt-1.5 text-xs text-gray-500 italic leading-relaxed">
+                                        {categories.find(c => c.id === parseInt(values.category_id))?.description}
+                                    </p>
+                                )}
                                 <InputError message={errors.category_id} />
                             </div>
                         </div>
