@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#2C3E50', '#34495E', '#4A6274', '#5D7B8A', '#7A9BAE', '#4A6741', '#5C7A52', '#6E8F63', '#84A578', '#9BBF8E'];
+const COLORS = ['#1E3A5F', '#2B4E78', '#3B6396', '#4F7BB8', '#6795D4', '#4A6741', '#5C7A52', '#6E8F63', '#84A578', '#9BBF8E'];
 
 export default function SimpleDonutChart({ data }) {
     const total = data.reduce((sum, d) => sum + d.count, 0);
