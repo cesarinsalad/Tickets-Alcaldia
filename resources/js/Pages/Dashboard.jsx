@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, Users, AlertOctagon, Building2 } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -98,11 +98,9 @@ function SuperAdminDashboard({ kpis, extra }) {
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
                                 {extra.critical_expired.map(t => (
-                                    <tr key={t.id} className="hover:bg-red-50/30 transition-colors">
+                                    <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-red-50/30 transition-colors cursor-pointer">
                                         <td className="px-5 py-3">
-                                            <Link href={route('tickets.show', t.id)} className="font-mono text-azul-institucional hover:underline">
-                                                {t.code}
-                                            </Link>
+                                            <span className="font-mono text-azul-institucional">{t.code}</span>
                                         </td>
                                         <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
                                         <td className="px-5 py-3">
