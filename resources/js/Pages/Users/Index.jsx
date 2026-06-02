@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Shield, Check, X, Trash2 } from 'lucide-react';
+import { Plus, Search, Shield, Check, X, Trash2, Pencil, Key, UserCheck, UserX } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
@@ -141,11 +141,13 @@ export default function Index({ users, departments, roles, filters }) {
                                             <Badge variant="danger" className="text-xs"><X className="h-3 w-3" /> Inactivo</Badge>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-0.5 justify-end">
                                         {isSuperAdmin && (
                                             <>
                                                 <Link href={route('users.edit', user.id)}>
-                                                    <Button variant="ghost" size="sm">Editar</Button>
+                                                    <Button variant="ghost" size="icon-sm" title="Editar">
+                                                        <Pencil className="h-3.5 w-3.5" />
+                                                    </Button>
                                                 </Link>
                                                 <button
                                                     onClick={() => {
@@ -156,9 +158,10 @@ export default function Index({ users, departments, roles, filters }) {
                                                             });
                                                         }
                                                     }}
-                                                    className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                                                    title={user.is_active ? 'Desactivar' : 'Activar'}
+                                                    className="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                                                 >
-                                                    {user.is_active ? 'Desactivar' : 'Activar'}
+                                                    {user.is_active ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
                                                 </button>
                                                 <button
                                                     onClick={() => {
@@ -170,9 +173,10 @@ export default function Index({ users, departments, roles, filters }) {
                                                             });
                                                         }
                                                     }}
-                                                    className="text-xs text-azul-institucional hover:underline px-2 py-1"
+                                                    title="Restablecer contraseña"
+                                                    className="inline-flex items-center justify-center rounded-md p-1.5 text-azul-institucional hover:bg-blue-50 transition-colors"
                                                 >
-                                                    Resetear Contraseña
+                                                    <Key className="h-3.5 w-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={() => {
@@ -183,9 +187,10 @@ export default function Index({ users, departments, roles, filters }) {
                                                             });
                                                         }
                                                     }}
-                                                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1"
+                                                    title="Eliminar"
+                                                    className="inline-flex items-center justify-center rounded-md p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
                                                 >
-                                                    <Trash2 className="h-3 w-3 inline" />
+                                                    <Trash2 className="h-3.5 w-3.5" />
                                                 </button>
                                             </>
                                         )}

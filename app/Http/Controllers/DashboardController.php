@@ -326,7 +326,7 @@ class DashboardController extends Controller
                 'is_superadmin' => true,
                 'active_tickets' => Ticket::whereIn('status', $activeStatuses)->count(),
                 'resolved_this_month' => $resolvedThisMonth,
-                'sla_pct' => $resolvedThisMonth > 0 ? round(($withinSla / $resolvedThisMonth) * 100) : 100,
+                'sla_pct' => $resolvedThisMonth > 0 ? round(($withinSla / $resolvedThisMonth) * 100) : null,
                 'active_technicians' => User::role('tecnico')->where('is_active', true)->count(),
                 'top_departments' => $topDepartments,
                 'category_distribution' => $categoryDistribution,

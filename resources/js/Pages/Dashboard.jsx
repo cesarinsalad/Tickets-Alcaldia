@@ -23,7 +23,7 @@ const statusLabels = {
     cerrado: 'Cerrado',
 };
 
-function KpiCard({ icon: Icon, label, value, color, href }) {
+function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
     const colors = {
         blue: 'border-l-azul-institucional bg-blue-50/50',
         orange: 'border-l-amber-500 bg-amber-50/50',
@@ -40,6 +40,7 @@ function KpiCard({ icon: Icon, label, value, color, href }) {
                 <Icon className="h-5 w-5 text-gray-400" />
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+            {subtitle && <p className="mt-0.5 text-xs text-gray-400 leading-tight">{subtitle}</p>}
         </div>
     );
 
@@ -51,10 +52,10 @@ function SuperAdminDashboard({ kpis, extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard icon={Ticket} label="Activos" value={extra.active_tickets} color="blue" />
-                <KpiCard icon={CheckCircle} label="Resueltos del Mes" value={extra.resolved_this_month} color="green" />
-                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={`${extra.sla_pct}%`} color="orange" />
-                <KpiCard icon={Users} label="Técnicos Activos" value={extra.active_technicians} color="gray" />
+                <KpiCard icon={Ticket} label="Activos" value={extra.active_tickets} color="blue" subtitle="Tickets sin resolver" />
+                <KpiCard icon={CheckCircle} label="Resueltos del Mes" value={extra.resolved_this_month} color="green" subtitle="Cerrados exitosamente este mes" />
+                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets cerrados dentro de su plazo en este mes" />
+                <KpiCard icon={Users} label="Técnicos Activos" value={extra.active_technicians} color="gray" subtitle="Habilitados para asignaciones" />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -163,9 +164,9 @@ function AdminTicketsDashboard({ extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard icon={Circle} label="Sin Asignar" value={extra.unassigned_tickets} color="blue" href={route('tickets.index', { status: 'abierto' })} />
-                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" />
-                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" href={route('tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Circle} label="Sin Asignar" value={extra.unassigned_tickets} color="blue" subtitle="Pendientes de técnico" href={route('tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" subtitle="Menos del 30% del tiempo restante" />
+                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" subtitle="Superaron el plazo de resolución" href={route('tickets.index', { status: 'abierto' })} />
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
@@ -280,25 +281,25 @@ function RoleDashboard({ kpis, role, unreadNotifications, userDepartment }) {
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {kpis.open !== undefined && (
-                    <KpiCard icon={Circle} label="Abiertos" value={kpis.open} color="blue" href={route('tickets.index', { status: 'abierto' })} />
+                    <KpiCard icon={Circle} label="Abiertos" value={kpis.open} color="blue" subtitle="Sin atención" href={route('tickets.index', { status: 'abierto' })} />
                 )}
                 {kpis.in_process !== undefined && (
-                    <KpiCard icon={Clock} label="En Proceso" value={kpis.in_process} color="orange" href={route('tickets.index', { status: 'en_proceso' })} />
+                    <KpiCard icon={Clock} label="En Proceso" value={kpis.in_process} color="orange" subtitle="Siendo atendidos" href={route('tickets.index', { status: 'en_proceso' })} />
                 )}
                 {kpis.pending_info !== undefined && (
-                    <KpiCard icon={AlertTriangle} label="Pendientes de Info" value={kpis.pending_info} color="yellow" href={route('tickets.index', { status: 'pendiente_informacion' })} />
+                    <KpiCard icon={AlertTriangle} label="Pendientes de Info" value={kpis.pending_info} color="yellow" subtitle="Requieren información del solicitante" href={route('tickets.index', { status: 'pendiente_informacion' })} />
                 )}
                 {kpis.resolved !== undefined && (
-                    <KpiCard icon={CheckCircle} label="Resueltos" value={kpis.resolved} color="green" href={route('tickets.index', { status: 'resuelto' })} />
+                    <KpiCard icon={CheckCircle} label="Resueltos" value={kpis.resolved} color="green" subtitle="Con solución aplicada" href={route('tickets.index', { status: 'resuelto' })} />
                 )}
                 {kpis.closed !== undefined && (
-                    <KpiCard icon={CheckCircle} label="Cerrados" value={kpis.closed} color="gray" href={route('tickets.index', { status: 'cerrado' })} />
+                    <KpiCard icon={CheckCircle} label="Cerrados" value={kpis.closed} color="gray" subtitle="Finalizados" href={route('tickets.index', { status: 'cerrado' })} />
                 )}
                 {kpis.resolved_today !== undefined && (
-                    <KpiCard icon={CheckCircle} label="Resueltos Hoy" value={kpis.resolved_today} color="green" />
+                    <KpiCard icon={CheckCircle} label="Resueltos Hoy" value={kpis.resolved_today} color="green" subtitle="Del día actual" />
                 )}
                 {kpis.total !== undefined && (
-                    <KpiCard icon={Ticket} label="Total" value={kpis.total} color="blue" />
+                    <KpiCard icon={Ticket} label="Total" value={kpis.total} color="blue" subtitle="Visibles según tu rol" />
                 )}
             </div>
 
@@ -358,8 +359,8 @@ function TecnicoDashboard({ extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" />
-                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" />
+                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" subtitle="Tus tickets con menos del 30% restante" />
+                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" subtitle="Tus tickets que superaron el plazo" />
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
@@ -495,9 +496,9 @@ function AdminDeptDashboard({ extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard icon={Ticket} label="Total Tickets del Equipo" value={extra.total_department_tickets} color="blue" />
-                <KpiCard icon={Clock} label="Tiempo Promedio de Espera" value={extra.avg_wait_hours ? `${extra.avg_wait_hours}h` : '—'} color="orange" />
-                <KpiCard icon={CheckCircle} label="Tickets Activos" value={extra.dept_active_tickets.length} color="yellow" />
+                <KpiCard icon={Ticket} label="Total Tickets del Equipo" value={extra.total_department_tickets} color="blue" subtitle="Creados por tu departamento" />
+                <KpiCard icon={Clock} label="Tiempo Promedio de Espera" value={extra.avg_wait_hours ? `${extra.avg_wait_hours}h` : '—'} color="orange" subtitle="Horas entre creación y cierre" />
+                <KpiCard icon={CheckCircle} label="Tickets Activos" value={extra.dept_active_tickets.length} color="yellow" subtitle="Aún sin resolver en tu departamento" />
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
