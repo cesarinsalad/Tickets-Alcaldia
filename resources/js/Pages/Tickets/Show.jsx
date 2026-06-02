@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer } from 'lucide-react';
+import RelativeTime from '@/Components/RelativeTime';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Textarea } from '@/Components/ui/textarea';
@@ -242,46 +243,52 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                         <div className="rounded-lg border border-gris-borde bg-white p-6">
                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
                                 <Clock className="h-4 w-4" />
-                                SLA
+                                Tiempos de atención
                             </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Respuesta</span>
-                                    <span className="font-medium">{sla.response_deadline ? new Date(sla.response_deadline).toLocaleString('es-VE') : '—'}</span>
+                            <div className="space-y-4 text-sm">
+                                <div>
+                                    <RelativeTime
+                                        deadline={sla.response_deadline}
+                                        entryDate={ticket.entry_date}
+                                        label="Responder antes de:"
+                                    />
+                                </div>
+                                <div>
+                                    <RelativeTime
+                                        deadline={sla.resolution_deadline}
+                                        entryDate={ticket.entry_date}
+                                        label="Resolución esperada:"
+                                    />
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500">Resolución</span>
-                                    <span className="font-medium">{sla.resolution_deadline ? new Date(sla.resolution_deadline).toLocaleString('es-VE') : '—'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Horas totales</span>
+                                    <span className="text-gray-500">Tiempo máximo asignado</span>
                                     <span className="font-medium">{sla.total_hours}h</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500">Progreso</span>
+                                    <span className="text-gray-500">Avance</span>
                                     <Badge variant={slaColor}>{sla.progress}%</Badge>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500">Horas restantes</span>
+                                    <span className="text-gray-500">Tiempo restante</span>
                                     <span className="font-medium">{sla.remaining_hours}h</span>
                                 </div>
                                 {sla.is_overdue && (
                                     <div className="flex items-center gap-1 text-rojo-urgencia">
                                         <AlertTriangle className="h-4 w-4" />
-                                        <span className="text-xs font-medium">SLA de resolución vencido</span>
+                                        <span className="text-xs font-medium">Tiempo de solución vencido</span>
                                     </div>
                                 )}
                                 {sla.is_response_overdue && !sla.is_overdue && (
                                     <div className="flex items-center gap-1 text-amarillo-advertencia">
                                         <AlertTriangle className="h-4 w-4" />
-                                        <span className="text-xs font-medium">SLA de respuesta vencido</span>
+                                        <span className="text-xs font-medium">Tiempo de respuesta vencido</span>
                                     </div>
                                 )}
                             </div>
                             <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all ${
-                                        sla.is_overdue ? 'bg-rojo-urgencia' : sla.progress > 75 ? 'bg-yellow-500' : 'bg-verde-exito'
+                                        sla.is_overdue ? 'bg-rojo-urgencia' : sla.progress > 70 ? 'bg-yellow-500' : 'bg-verde-exito'
                                     }`}
                                     style={{ width: `${Math.min(sla.progress, 100)}%` }}
                                 />

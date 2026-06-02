@@ -5,6 +5,8 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import SimpleBarChart from '@/Components/SimpleBarChart';
 import SimpleDonutChart from '@/Components/SimpleDonutChart';
+import RelativeTime from '@/Components/RelativeTime';
+import TimeProgressBar from '@/Components/TimeProgressBar';
 
 const priorityBadgeMap = {
     critica: 'danger',
@@ -51,7 +53,7 @@ function SuperAdminDashboard({ kpis, extra }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <KpiCard icon={Ticket} label="Activos" value={extra.active_tickets} color="blue" />
                 <KpiCard icon={CheckCircle} label="Resueltos del Mes" value={extra.resolved_this_month} color="green" />
-                <KpiCard icon={TrendingUp} label="Cumplimiento SLA" value={`${extra.sla_pct}%`} color="orange" />
+                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={`${extra.sla_pct}%`} color="orange" />
                 <KpiCard icon={Users} label="Técnicos Activos" value={extra.active_technicians} color="gray" />
             </div>
 
@@ -90,7 +92,7 @@ function SuperAdminDashboard({ kpis, extra }) {
                                     <th className="px-5 py-3 font-medium">Estado</th>
                                     <th className="px-5 py-3 font-medium">Departamento</th>
                                     <th className="px-5 py-3 font-medium">Asignado</th>
-                                    <th className="px-5 py-3 font-medium">Límite SLA</th>
+                                    <th className="px-5 py-3 font-medium">Vencimiento</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
@@ -108,7 +110,7 @@ function SuperAdminDashboard({ kpis, extra }) {
                                         <td className="px-5 py-3 text-gray-600">{statusLabels[t.status] || t.status}</td>
                                         <td className="px-5 py-3 text-gray-600">{t.department || '—'}</td>
                                         <td className="px-5 py-3 text-gray-600">{t.assigned || '—'}</td>
-                                        <td className="px-5 py-3 text-gray-600">{t.sla_deadline || '—'}</td>
+                                        <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -162,8 +164,8 @@ function AdminTicketsDashboard({ extra }) {
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard icon={Circle} label="Sin Asignar" value={extra.unassigned_tickets} color="blue" href={route('tickets.index', { status: 'abierto' })} />
-                <KpiCard icon={Clock} label="SLA en Riesgo" value={extra.sla_at_risk} color="yellow" />
-                <KpiCard icon={AlertTriangle} label="SLA Vencido" value={extra.sla_expired} color="red" href={route('tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" />
+                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" href={route('tickets.index', { status: 'abierto' })} />
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
@@ -356,8 +358,8 @@ function TecnicoDashboard({ extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <KpiCard icon={Clock} label="SLAs en Riesgo" value={extra.sla_at_risk} color="yellow" />
-                <KpiCard icon={AlertTriangle} label="Tickets Vencidos" value={extra.sla_expired} color="red" />
+                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" />
+                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" />
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
@@ -375,7 +377,7 @@ function TecnicoDashboard({ extra }) {
                                     <th className="px-5 py-3 font-medium">Solicitante</th>
                                     <th className="px-5 py-3 font-medium">Prioridad</th>
                                     <th className="px-5 py-3 font-medium">Estado</th>
-                                    <th className="px-5 py-3 font-medium">Límite SLA</th>
+                                    <th className="px-5 py-3 font-medium">Vencimiento</th>
                                     <th className="px-5 py-3 font-medium">Acción</th>
                                 </tr>
                             </thead>
@@ -383,7 +385,10 @@ function TecnicoDashboard({ extra }) {
                                 {extra.my_queue.map(t => (
                                     <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-5 py-3 font-mono text-xs text-gray-500">{t.code}</td>
-                                        <td className="px-5 py-3 text-gray-900 max-w-[180px] truncate">{t.title}</td>
+                                        <td className="px-5 py-3 max-w-[180px]">
+                                                <span className="text-gray-900 text-sm truncate block">{t.title}</span>
+                                                <TimeProgressBar deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} />
+                                            </td>
                                         <td className="px-5 py-3 text-gray-600">{t.creator_name}</td>
                                         <td className="px-5 py-3">
                                             <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
@@ -391,7 +396,7 @@ function TecnicoDashboard({ extra }) {
                                         <td className="px-5 py-3">
                                             <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
                                         </td>
-                                        <td className={`px-5 py-3 text-xs ${t.sla_deadline ? 'text-gray-600' : 'text-gray-400'}`}>{t.sla_deadline || '—'}</td>
+                                        <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
                                         <td className="px-5 py-3">
                                             <Link href={route('tickets.show', t.id)}>
                                                 <Button variant="outline" size="sm">Transicionar</Button>

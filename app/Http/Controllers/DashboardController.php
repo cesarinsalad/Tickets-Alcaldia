@@ -113,6 +113,8 @@ class DashboardController extends Controller
                     'department' => $t->creator->department?->name,
                     'category' => $t->category?->name,
                     'sla_deadline' => $t->sla_resolution_deadline?->format('d/m/Y H:i'),
+                    'sla_deadline_raw' => $t->sla_resolution_deadline?->toIso8601String(),
+                    'entry_date_raw' => $t->entry_date?->toIso8601String(),
                     'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
                 ]);
 
@@ -316,6 +318,8 @@ class DashboardController extends Controller
                     'category' => $t->category?->name,
                     'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
                     'sla_deadline' => $t->sla_resolution_deadline?->format('d/m/Y H:i'),
+                    'sla_deadline_raw' => $t->sla_resolution_deadline?->toIso8601String(),
+                    'entry_date_raw' => $t->entry_date?->toIso8601String(),
                 ]);
 
             $extra = [
