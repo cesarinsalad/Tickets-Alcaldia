@@ -1,58 +1,173 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <h1>Sistema de Tickets</h1>
+  <p>Sistema de gestión de incidencias técnicas para entes gubernamentales</p>
+  <p>
+    <a href="#características">Características</a> •
+    <a href="#stack-tecnológico">Stack</a> •
+    <a href="#roles-y-permisos">Roles</a> •
+    <a href="#instalación">Instalación</a> •
+    <a href="#uso">Uso</a>
+  </p>
+</div>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+Sistema web para la gestión de tickets de soporte técnico diseñado para una alcaldía. Permite a empleados municipales reportar incidencias técnicas, a técnicos dar seguimiento, y a administradores supervisar los tiempos de respuesta y resolución.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Características
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Creación de tickets** con prioridad, categoría y foto adjunta.
+- **Máquina de estados** con 5 estados: `Abierto → En Proceso → Pendiente de Info → Resuelto → Cerrado`.
+- **SLA (Acuerdo de Nivel de Servicio)** con cálculo basado en horas laborables (lun–vie 08:00–15:00).
+  - Límites por prioridad: Crítica (1h), Alta (4h), Media (24h), Baja (72h).
+- **Notificaciones** automáticas al crear, asignar o cambiar estado de un ticket.
+- **Panel de control** con KPIs, gráficos y cola de trabajo por rol.
+- **Generación de PDFs**: reporte de ticket y constancia de satisfacción.
+- **Roles y permisos** con 5 niveles de acceso.
+- **Interfaz en español**, zona horaria `America/Caracas`.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Stack Tecnológico
 
-## Learning Laravel
+| Capa | Tecnología |
+|------|-----------|
+| **Backend** | Laravel 13 + PHP 8.3 |
+| **Frontend** | React 18 + Inertia.js 2 + Tailwind CSS 4 |
+| **Base de datos** | PostgreSQL 16 (o SQLite en desarrollo) |
+| **Autenticación** | Laravel Breeze + Sanctum |
+| **Roles** | Spatie Laravel Permission |
+| **PDF** | barryvdh/laravel-dompdf |
+| **Gráficos** | Recharts |
+| **UI** | Radix UI + Lucide Icons + Shadcn/ui |
+| **Testing** | Pest PHP |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Roles y Permisos
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Rol | Descripción | Permisos clave |
+|-----|------------|----------------|
+| **Solicitante** | Empleado municipal | Crear tickets, ver sus tickets, cerrar resueltos, generar constancia |
+| **Técnico** | Soporte técnico | Ver tickets asignados, transicionar estados, comentar (público e interno) |
+| **Admin Departamento** | Jefe de departamento | Ver tickets de su depto, cerrar tickets propios, ver usuarios |
+| **Admin Tickets** | Coordinador de Informática | Ver todos los tickets, asignar técnicos, cambiar prioridad, notas internas, ver usuarios (solo lectura) |
+| **Super Admin** | Administrador general | CRUD completo de usuarios, categorías, departamentos; todos los permisos anteriores |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Estados del Ticket
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+Abierto ──────────► En Proceso ────────► Resuelto ────────► Cerrado
+     │                    │                                   │
+     └──► Pendiente de   └► Pendiente de                      └──► Abierto
+          Info             Info                                   (reapertura)
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Instalación
 
-## Contributing
+### Requisitos
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- PHP 8.3+
+- Composer
+- Node.js 20+
+- PostgreSQL 16 (o SQLite para desarrollo local)
 
-## Code of Conduct
+### Pasos
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+# 1. Clonar el repositorio
+git clone <repositorio> sistema-tickets
+cd sistema-tickets
 
-## Security Vulnerabilities
+# 2. Instalar dependencias PHP
+composer install
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 3. Instalar dependencias JavaScript
+npm install
 
-## License
+# 4. Copiar y configurar variables de entorno
+cp .env.example .env
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Editar `.env`:
+
+```env
+APP_NAME="Sistema de Tickets"
+APP_LOCALE=es
+APP_TIMEZONE=America/Caracas
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=sistema_tickets
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password
+```
+*Para desarrollo con SQLite, dejar `DB_CONNECTION=sqlite` y crear `database/database.sqlite`.*
+
+```bash
+# 5. Ejecutar migraciones
+php artisan migrate
+
+# 6. Poblar la base de datos con datos de demostración
+php artisan db:seed
+
+# 7. Compilar assets frontend
+npm run build
+
+# 8. Iniciar servidor de desarrollo
+php artisan serve
+```
+
+### Usuario administrador por defecto
+
+| Email | Contraseña |
+|-------|-----------|
+| admin@alcaldia.gob.ve | admin123 |
+
+### Datos de demostración
+
+El seeder `DemoDataSeeder` genera:
+- **10 departamentos** (Informática, Recursos Humanos, Contraloría, etc.)
+- **10 categorías** (Hardware, Software, Red, etc.)
+- **~50 usuarios** con roles distribuidos
+- **105 tickets** con estados, prioridades y fechas variadas
+- **Comentarios** y **notificaciones** asociadas
+
+## Uso
+
+### Solicitar permisos de archivos
+
+```bash
+chmod -R 775 storage bootstrap/cache
+```
+
+### Generar PDFs (rutas directas, no Inertia)
+
+Los PDFs deben abrirse con `<a href="...">` en lugar de `<Link>` de Inertia:
+
+```html
+<a href="{{ route('tickets.report', $ticket->id) }}" target="_blank">
+  Reporte
+</a>
+<a href="{{ route('tickets.receipt', $ticket->id) }}" target="_blank">
+  Constancia
+</a>
+```
+
+### Compilar assets en desarrollo
+
+```bash
+npm run dev
+```
+
+### Ejecutar pruebas
+
+```bash
+php artisan test
+```
+
+## Capturas de Pantalla
+
+*(pendiente)*
+
+## Licencia
+
+MIT
