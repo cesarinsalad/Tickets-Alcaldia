@@ -73,7 +73,7 @@ Abierto ──────────► En Proceso ────────►
 ```bash
 # 1. Clonar el repositorio
 git clone <repositorio> sistema-tickets
-cd sistema-tickets
+cd Tickets-Alcaldia
 
 # 2. Instalar dependencias PHP
 composer install
