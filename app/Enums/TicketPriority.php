@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum TicketPriority: string
 {
+    case SinDefinir = 'sin_definir';
     case Baja = 'baja';
     case Media = 'media';
     case Alta = 'alta';
@@ -12,6 +13,7 @@ enum TicketPriority: string
     public function label(): string
     {
         return match ($this) {
+            self::SinDefinir => 'Sin definir',
             self::Baja => 'Baja',
             self::Media => 'Media',
             self::Alta => 'Alta',
@@ -22,6 +24,7 @@ enum TicketPriority: string
     public function color(): string
     {
         return match ($this) {
+            self::SinDefinir => 'gray',
             self::Baja => 'gray',
             self::Media => 'yellow',
             self::Alta => 'orange',
@@ -32,6 +35,7 @@ enum TicketPriority: string
     public function slaHours(): int
     {
         return match ($this) {
+            self::SinDefinir => 0,
             self::Baja => 72,
             self::Media => 24,
             self::Alta => 4,
@@ -42,16 +46,18 @@ enum TicketPriority: string
     public function responseMinutes(): int
     {
         return match ($this) {
-            self::Baja => 480,  // 8h
-            self::Media => 240, // 4h
-            self::Alta => 60,   // 1h
-            self::Critica => 30, // 30min
+            self::SinDefinir => 0,
+            self::Baja => 480,
+            self::Media => 240,
+            self::Alta => 60,
+            self::Critica => 30,
         };
     }
 
     public function description(): string
     {
         return match ($this) {
+            self::SinDefinir => 'Pendiente de clasificación por el administrador.',
             self::Baja => 'Duda general o solicitud de insumos.',
             self::Media => 'Un equipo falla, pero hay alternativas temporales.',
             self::Alta => 'No puedo realizar mis tareas principales.',

@@ -119,8 +119,8 @@ class TicketController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'priority' => ['required', 'string', 'in:baja,media,alta,critica'],
-            'category_id' => ['required', 'exists:categories,id'],
+            'priority' => ['nullable', 'string', 'in:sin_definir,baja,media,alta,critica'],
+            'category_id' => ['nullable', 'exists:categories,id'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
@@ -128,10 +128,10 @@ class TicketController extends Controller
         $ticket->code = Ticket::generateCode();
         $ticket->title = $validated['title'];
         $ticket->description = $validated['description'];
-        $ticket->priority = TicketPriority::from($validated['priority']);
+        $ticket->priority = TicketPriority::from($validated['priority'] ?? 'sin_definir');
         $ticket->status = TicketStatus::Abierto;
         $ticket->creator_id = $request->user()->id;
-        $ticket->category_id = $validated['category_id'];
+        $ticket->category_id = $validated['category_id'] ?? null;
         $ticket->entry_date = now();
 
         if ($request->hasFile('photo')) {
@@ -140,9 +140,11 @@ class TicketController extends Controller
 
         $ticket->save();
 
-        $ticket->sla_response_deadline = $this->slaCalculator->calculateResponseDeadline($ticket);
-        $ticket->sla_resolution_deadline = $this->slaCalculator->calculateResolutionDeadline($ticket);
-        $ticket->save();
+        if ($ticket->priority !== TicketPriority::SinDefinir) {
+            $ticket->sla_response_deadline = $this->slaCalculator->calculateResponseDeadline($ticket);
+            $ticket->sla_resolution_deadline = $this->slaCalculator->calculateResolutionDeadline($ticket);
+            $ticket->save();
+        }
 
         $admins = User::role('admin_departamento')
             ->where('department_id', $request->user()->department_id)
@@ -196,7 +198,9 @@ class TicketController extends Controller
 
         $canAssign = $request->user()->hasAnyRole(['admin_tickets', 'super_admin']);
         $canChangePriority = $request->user()->hasAnyRole(['admin_tickets', 'super_admin']);
+        $canChangeCategory = $request->user()->hasAnyRole(['admin_tickets', 'super_admin']);
         $canSeeInternalComments = $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin']);
+        $canUploadPhoto = ! $request->user()->hasRole('solicitante');
 
         $technicians = User::role('tecnico')
             ->where('is_active', true)
@@ -225,6 +229,7 @@ class TicketController extends Controller
                     ->map(fn ($c) => [
                     'id' => $c->id,
                     'body' => $c->body,
+                    'photo_url' => $c->photo_url,
                     'is_internal' => $c->is_internal,
                     'created_at' => $c->created_at,
                     'user' => $c->user,
@@ -240,8 +245,11 @@ class TicketController extends Controller
             'transitions' => $availableTransitions,
             'canAssign' => $canAssign,
             'canChangePriority' => $canChangePriority,
+            'canChangeCategory' => $canChangeCategory,
+            'canUploadPhoto' => $canUploadPhoto,
             'canSeeInternalComments' => $canSeeInternalComments,
             'technicians' => $technicians,
+            'categories' => Category::all(),
             'priorityLabels' => $priorityLabels,
         ]);
     }
@@ -322,11 +330,27 @@ class TicketController extends Controller
 
         $ticket->priority = $newPriority;
 
-        // Recalculate resolution deadline from the ORIGINAL entry_date with new priority
+        $ticket->sla_response_deadline = $this->slaCalculator->calculateResponseDeadline($ticket);
         $ticket->sla_resolution_deadline = $this->slaCalculator->recalculateResolutionDeadline($ticket, $newPriority);
         $ticket->save();
 
         return back()->with('success', "Prioridad cambiada de {$oldPriority->label()} a {$newPriority->label()}.");
+    }
+
+    public function changeCategory(Ticket $ticket, Request $request)
+    {
+        if (! $request->user()->hasAnyRole(['admin_tickets', 'super_admin'])) {
+            abort(403, 'No autorizado.');
+        }
+
+        $validated = $request->validate([
+            'category_id' => ['required', 'exists:categories,id'],
+        ]);
+
+        $ticket->category_id = $validated['category_id'];
+        $ticket->save();
+
+        return back()->with('success', 'Categoría actualizada correctamente.');
     }
 
     public function destroy(Ticket $ticket)
