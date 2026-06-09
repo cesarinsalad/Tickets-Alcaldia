@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Enums\TicketPriority;
+use App\Models\Setting;
+use App\Models\SlaConfiguration;
 use App\Models\Ticket;
 use Carbon\Carbon;
 
@@ -13,24 +15,36 @@ class SlaCalculator
 
     public function __construct()
     {
-        $this->workStart = 8;
-        $this->workEnd = 15;
+        $this->workStart = (int) (Setting::get('work_start', '08:00') ? explode(':', Setting::get('work_start', '08:00'))[0] ?? 8 : 8);
+        $this->workEnd = (int) (Setting::get('work_end', '15:00') ? explode(':', Setting::get('work_end', '15:00'))[0] ?? 15 : 15);
     }
 
     public function calculateResponseDeadline(Ticket $ticket): Carbon
     {
-        $minutes = $ticket->priority->responseMinutes();
+        $minutes = $this->getResponseMinutes($ticket->priority);
         return $this->calculateFromMinutes($ticket->entry_date, $minutes);
     }
 
     public function calculateResolutionDeadline(Ticket $ticket): Carbon
     {
-        return $this->calculateFrom($ticket->entry_date, $ticket->priority->slaHours());
+        return $this->calculateFrom($ticket->entry_date, $this->getResolutionHours($ticket->priority));
     }
 
     public function recalculateResolutionDeadline(Ticket $ticket, TicketPriority $newPriority): Carbon
     {
-        return $this->calculateFrom($ticket->entry_date, $newPriority->slaHours());
+        return $this->calculateFrom($ticket->entry_date, $this->getResolutionHours($newPriority));
+    }
+
+    private function getResponseMinutes(TicketPriority $priority): int
+    {
+        $config = SlaConfiguration::where('priority', $priority->value)->first();
+        return $config ? $config->response_minutes : $priority->responseMinutes();
+    }
+
+    private function getResolutionHours(TicketPriority $priority): int
+    {
+        $config = SlaConfiguration::where('priority', $priority->value)->first();
+        return $config ? $config->resolution_hours : $priority->slaHours();
     }
 
     private function calculateFrom(Carbon $entryDate, int $hours): Carbon
@@ -88,7 +102,7 @@ class SlaCalculator
             return 0;
         }
 
-        $total = $ticket->priority->slaHours();
+        $total = $this->getResolutionHours($ticket->priority);
         if ($total <= 0) {
             return 100;
         }
@@ -162,6 +176,8 @@ class SlaCalculator
 
     private function isWorkingDay(Carbon $date): bool
     {
-        return $date->isWeekday();
+        $workDays = Setting::get('work_days', 'monday,tuesday,wednesday,thursday,friday');
+        $days = array_map('trim', explode(',', $workDays));
+        return in_array(strtolower($date->englishDayOfWeek), $days);
     }
 }
