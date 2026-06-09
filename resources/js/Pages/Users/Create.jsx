@@ -11,6 +11,7 @@ export default function Create({ departments, roles }) {
     const [values, setValues] = useState({
         name: '',
         last_name: '',
+        position: '',
         email: '',
         phone_number: '',
         department_id: '',
@@ -30,7 +31,7 @@ export default function Create({ departments, roles }) {
             onError: (err) => { setErrors(err); setProcessing(false); },
             onSuccess: (page) => {
                 setProcessing(false);
-                setValues({ name: '', last_name: '', email: '', phone_number: '', department_id: '', role: 'solicitante' });
+                setValues({ name: '', last_name: '', position: '', email: '', phone_number: '', department_id: '', role: 'solicitante' });
                 setErrors({});
                 if (page.props.flash?.new_password) {
                     alert('Usuario creado. Contraseña temporal: ' + page.props.flash.new_password);
@@ -45,7 +46,7 @@ export default function Create({ departments, roles }) {
         >
             <Head title="Nuevo Usuario" />
 
-            <div className="max-w-xl">
+            <div className="">
                 <div className="rounded-lg border border-gris-borde bg-white p-6">
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -59,16 +60,21 @@ export default function Create({ departments, roles }) {
                                 <Input id="last_name" name="last_name" value={values.last_name} onChange={handleChange} className="mt-1" />
                                 <InputError message={errors.last_name} />
                             </div>
+                            <div>
+                                <Label htmlFor="position">Cargo</Label>
+                                <Input id="position" name="position" value={values.position} onChange={handleChange} className="mt-1" placeholder="Ej: Jefe de Servicios Públicos" />
+                                <InputError message={errors.position} />
+                            </div>
+                            <div>
+                                <Label htmlFor="phone_number">Teléfono</Label>
+                                <Input id="phone_number" name="phone_number" value={values.phone_number} onChange={handleChange} className="mt-1" />
+                                <InputError message={errors.phone_number} />
+                            </div>
                         </div>
                         <div>
                             <Label htmlFor="email">Correo Electrónico</Label>
                             <Input id="email" type="email" name="email" value={values.email} onChange={handleChange} className="mt-1" />
                             <InputError message={errors.email} />
-                        </div>
-                        <div>
-                            <Label htmlFor="phone_number">Teléfono</Label>
-                            <Input id="phone_number" name="phone_number" value={values.phone_number} onChange={handleChange} className="mt-1" />
-                            <InputError message={errors.phone_number} />
                         </div>
                         <div>
                             <Label htmlFor="department_id">Departamento</Label>

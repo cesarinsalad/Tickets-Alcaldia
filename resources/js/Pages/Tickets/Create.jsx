@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -9,6 +9,8 @@ import { ChevronDown } from 'lucide-react';
 import InputError from '@/Components/InputError';
 
 export default function Create({ categories, priorities }) {
+    const { auth } = usePage().props;
+    const isSolicitante = auth?.user?.roles?.some(r => r.name === 'solicitante');
     const [values, setValues] = useState({
         title: '',
         description: '',
@@ -72,7 +74,7 @@ export default function Create({ categories, priorities }) {
         >
             <Head title="Nuevo Ticket" />
 
-            <div className="max-w-2xl">
+            <div className="">
                 <div className="rounded-lg border border-gris-borde bg-white p-6">
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
@@ -102,85 +104,87 @@ export default function Create({ categories, priorities }) {
                             <InputError message={errors.description} />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div className="sm:col-span-2">
-                                <Label htmlFor="priority">Prioridad</Label>
-                                <div className="relative mt-1" ref={priorityRef}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPriorityOpen(!priorityOpen)}
-                                        className="flex h-9 w-full items-center justify-between rounded-md border border-gris-borde bg-white px-3 py-1 text-sm shadow-sm transition-colors hover:border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-azul-institucional"
-                                    >
-                                        <span className={values.priority ? 'text-gray-900' : 'text-gray-400'}>
-                                            {selectedPriority?.label || 'Selecciona una prioridad'}
-                                        </span>
-                                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                                    </button>
-                                    {priorityOpen && (
-                                        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gris-borde bg-white p-1 shadow-md">
-                                            {priorities.map(p => (
-                                                <button
-                                                    key={p.value}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setValues(v => ({ ...v, priority: p.value }));
-                                                        setPriorityOpen(false);
-                                                    }}
-                                                    className={`w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100 ${
-                                                        values.priority === p.value ? 'bg-blue-50' : ''
-                                                    }`}
-                                                >
-                                                    <span className="font-medium text-gray-900">{p.label}</span>
-                                                    {p.description && (
-                                                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{p.description}</p>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
+                        {!isSolicitante && (
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="sm:col-span-2">
+                                    <Label htmlFor="priority">Prioridad</Label>
+                                    <div className="relative mt-1" ref={priorityRef}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPriorityOpen(!priorityOpen)}
+                                            className="flex h-9 w-full items-center justify-between rounded-md border border-gris-borde bg-white px-3 py-1 text-sm shadow-sm transition-colors hover:border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-azul-institucional"
+                                        >
+                                            <span className={values.priority ? 'text-gray-900' : 'text-gray-400'}>
+                                                {selectedPriority?.label || 'Selecciona una prioridad'}
+                                            </span>
+                                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                                        </button>
+                                        {priorityOpen && (
+                                            <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gris-borde bg-white p-1 shadow-md">
+                                                {priorities.map(p => (
+                                                    <button
+                                                        key={p.value}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setValues(v => ({ ...v, priority: p.value }));
+                                                            setPriorityOpen(false);
+                                                        }}
+                                                        className={`w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100 ${
+                                                            values.priority === p.value ? 'bg-blue-50' : ''
+                                                        }`}
+                                                    >
+                                                        <span className="font-medium text-gray-900">{p.label}</span>
+                                                        {p.description && (
+                                                            <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{p.description}</p>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <InputError message={errors.priority} />
                                 </div>
-                                <InputError message={errors.priority} />
-                            </div>
 
-                            <div>
-                                <Label htmlFor="category_id">Categoría</Label>
-                                <div className="relative mt-1" ref={categoryRef}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCategoryOpen(!categoryOpen)}
-                                        className="flex h-9 w-full items-center justify-between rounded-md border border-gris-borde bg-white px-3 py-1 text-sm shadow-sm transition-colors hover:border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-azul-institucional"
-                                    >
-                                        <span className={values.category_id ? 'text-gray-900' : 'text-gray-400'}>
-                                            {selectedCategory?.name || 'Selecciona una categoría'}
-                                        </span>
-                                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                                    </button>
-                                    {categoryOpen && (
-                                        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gris-borde bg-white p-1 shadow-md">
-                                            {categories.map(c => (
-                                                <button
-                                                    key={c.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setValues(v => ({ ...v, category_id: String(c.id) }));
-                                                        setCategoryOpen(false);
-                                                    }}
-                                                    className={`w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100 ${
-                                                        values.category_id === String(c.id) ? 'bg-blue-50' : ''
-                                                    }`}
-                                                >
-                                                    <span className="font-medium text-gray-900">{c.name}</span>
-                                                    {c.description && (
-                                                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{c.description}</p>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
+                                <div>
+                                    <Label htmlFor="category_id">Categoría</Label>
+                                    <div className="relative mt-1" ref={categoryRef}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCategoryOpen(!categoryOpen)}
+                                            className="flex h-9 w-full items-center justify-between rounded-md border border-gris-borde bg-white px-3 py-1 text-sm shadow-sm transition-colors hover:border-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-azul-institucional"
+                                        >
+                                            <span className={values.category_id ? 'text-gray-900' : 'text-gray-400'}>
+                                                {selectedCategory?.name || 'Selecciona una categoría'}
+                                            </span>
+                                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                                        </button>
+                                        {categoryOpen && (
+                                            <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-gris-borde bg-white p-1 shadow-md">
+                                                {categories.map(c => (
+                                                    <button
+                                                        key={c.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setValues(v => ({ ...v, category_id: String(c.id) }));
+                                                            setCategoryOpen(false);
+                                                        }}
+                                                        className={`w-full rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100 ${
+                                                            values.category_id === String(c.id) ? 'bg-blue-50' : ''
+                                                        }`}
+                                                    >
+                                                        <span className="font-medium text-gray-900">{c.name}</span>
+                                                        {c.description && (
+                                                            <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{c.description}</p>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <InputError message={errors.category_id} />
                                 </div>
-                                <InputError message={errors.category_id} />
                             </div>
-                        </div>
+                        )}
 
                         <div>
                             <Label htmlFor="photo">Evidencia Fotográfica</Label>
