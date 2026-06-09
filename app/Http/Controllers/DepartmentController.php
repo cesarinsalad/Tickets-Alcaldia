@@ -25,8 +25,14 @@ class DepartmentController extends Controller
 
         $departments = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
+        $availableAdmins = User::role('admin_departamento')
+            ->where('is_active', true)
+            ->get()
+            ->append('full_name');
+
         return Inertia::render('Departments/Index', [
             'departments' => $departments,
+            'availableAdmins' => $availableAdmins,
             'filters' => $request->only(['search', 'per_page']),
         ]);
     }

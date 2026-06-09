@@ -1,13 +1,96 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Building } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Building, X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { Select } from '@/Components/ui/select';
+import InputError from '@/Components/InputError';
 import Pagination from '@/Components/Pagination';
 
-export default function Index({ departments, filters }) {
+function DepartmentModal({ mode, dept, availableAdmins, onClose }) {
+    const isEdit = mode === 'edit';
+    const [form, setForm] = useState({
+        name: isEdit ? (dept?.name || '') : '',
+        physical_address: isEdit ? (dept?.physical_address || '') : '',
+        head_of_area_id: isEdit ? (dept?.head_of_area_id?.toString() || '') : '',
+    });
+    const [errors, setErrors] = useState({});
+    const [processing, setProcessing] = useState(false);
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        setProcessing(true);
+
+        const payload = { ...form };
+        if (!isEdit) delete payload.head_of_area_id;
+
+        if (isEdit) {
+            router.put(route('departments.update', dept.id), payload, {
+                onError: (err) => { setErrors(err); setProcessing(false); },
+                onSuccess: () => { setProcessing(false); onClose(); },
+            });
+        } else {
+            router.post(route('departments.store'), payload, {
+                onError: (err) => { setErrors(err); setProcessing(false); },
+                onSuccess: () => { setProcessing(false); onClose(); },
+            });
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        {isEdit ? 'Editar Departamento' : 'Nuevo Departamento'}
+                    </h2>
+                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <Label htmlFor="dept_name">Nombre</Label>
+                        <Input id="dept_name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" />
+                        <InputError message={errors.name} />
+                    </div>
+                    <div>
+                        <Label htmlFor="dept_address">Dirección Física</Label>
+                        <Input id="dept_address" value={form.physical_address} onChange={e => setForm(f => ({ ...f, physical_address: e.target.value }))} className="mt-1" />
+                        <InputError message={errors.physical_address} />
+                    </div>
+                    {isEdit && (
+                        <div>
+                            <Label htmlFor="dept_head">Jefe de Área</Label>
+                            <Select id="dept_head" value={form.head_of_area_id} onChange={e => setForm(f => ({ ...f, head_of_area_id: e.target.value }))} className="mt-1">
+                                <option value="">Sin asignar</option>
+                                {availableAdmins?.map(u => (
+                                    <option key={u.id} value={u.id}>{u.full_name ?? u.name}</option>
+                                ))}
+                            </Select>
+                            <InputError message={errors.head_of_area_id} />
+                        </div>
+                    )}
+                    <div className="flex items-center gap-3 pt-2">
+                        <Button type="submit" disabled={processing}>
+                            {processing ? (isEdit ? 'Guardando...' : 'Creando...') : (isEdit ? 'Guardar Cambios' : 'Crear Departamento')}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={onClose}>
+                            Cancelar
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+export default function Index({ departments, filters, availableAdmins }) {
     const [search, setSearch] = useState(filters.search || '');
+    const [modal, setModal] = useState(null);
 
     function handleSearch(e) {
         e.preventDefault();
@@ -28,16 +111,23 @@ export default function Index({ departments, filters }) {
             header={
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">Departamentos</h2>
-                    <Link href={route('departments.create')}>
-                        <Button size="sm">
-                            <Plus className="h-4 w-4" />
-                            Nuevo Departamento
-                        </Button>
-                    </Link>
+                    <Button size="sm" onClick={() => setModal('create')}>
+                        <Plus className="h-4 w-4" />
+                        Nuevo Departamento
+                    </Button>
                 </div>
             }
         >
             <Head title="Departamentos" />
+
+            {modal && (
+                <DepartmentModal
+                    mode={modal === 'create' ? 'create' : 'edit'}
+                    dept={modal !== 'create' ? modal : null}
+                    availableAdmins={availableAdmins}
+                    onClose={() => setModal(null)}
+                />
+            )}
 
             <div className="space-y-4">
                 <div className="rounded-lg border border-gris-borde bg-white p-4">
@@ -88,11 +178,9 @@ export default function Index({ departments, filters }) {
                                         {dept.physical_address || '—'}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Link href={route('departments.edit', dept.id)}>
-                                            <Button variant="ghost" size="sm">
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
+                                        <Button variant="ghost" size="sm" onClick={() => setModal(dept)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                         <Button variant="ghost" size="sm" onClick={() => handleDelete(dept.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
