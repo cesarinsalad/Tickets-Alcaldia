@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -16,11 +17,19 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+
+        $dateFrom = $request->filled('date_from')
+            ? Carbon::parse($request->input('date_from'))->startOfDay()
+            : now()->startOfMonth();
+        $dateTo = $request->filled('date_to')
+            ? Carbon::parse($request->input('date_to'))->endOfDay()
+            : now()->endOfMonth();
+
         $kpis = [];
         $extra = [];
 
         if ($user->hasRole('solicitante')) {
-            $baseQuery = Ticket::query()->visibleTo($user);
+            $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
             $kpis = [
@@ -67,7 +76,7 @@ class DashboardController extends Controller
                 'pending_receipt' => $pendingReceipt,
             ];
         } elseif ($user->hasRole('tecnico')) {
-            $baseQuery = Ticket::query()->visibleTo($user);
+            $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
             $activeStatusValues = array_map(fn($s) => $s->value, $activeStatuses);
 
@@ -81,7 +90,7 @@ class DashboardController extends Controller
                     ->count(),
             ];
 
-            $assignedQuery = Ticket::where('assigned_id', $user->id);
+            $assignedQuery = Ticket::where('assigned_id', $user->id)->whereBetween('entry_date', [$dateFrom, $dateTo]);
 
             $slaAtRisk = (clone $assignedQuery)
                 ->whereIn('status', $activeStatuses)
@@ -142,7 +151,7 @@ class DashboardController extends Controller
                 'recently_closed' => $recentlyClosed,
             ];
         } elseif ($user->hasRole('admin_departamento')) {
-            $baseQuery = Ticket::query()->visibleTo($user);
+            $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
             $kpis = [
@@ -190,13 +199,14 @@ class DashboardController extends Controller
                 'dept_active_tickets' => $activeList,
             ];
         } elseif ($user->hasRole('admin_tickets')) {
+            $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $kpis = [
-                'abiertos' => Ticket::where('status', TicketStatus::Abierto)->count(),
-                'en_proceso' => Ticket::where('status', TicketStatus::EnProceso)->count(),
-                'pendiente_informacion' => Ticket::where('status', TicketStatus::PendienteInformacion)->count(),
-                'resueltos' => Ticket::where('status', TicketStatus::Resuelto)->count(),
-                'cerrados' => Ticket::where('status', TicketStatus::Cerrado)->count(),
-                'resueltos_hoy' => Ticket::where('status', TicketStatus::Resuelto)
+                'abiertos' => (clone $ticketQuery)->where('status', TicketStatus::Abierto)->count(),
+                'en_proceso' => (clone $ticketQuery)->where('status', TicketStatus::EnProceso)->count(),
+                'pendiente_informacion' => (clone $ticketQuery)->where('status', TicketStatus::PendienteInformacion)->count(),
+                'resueltos' => (clone $ticketQuery)->where('status', TicketStatus::Resuelto)->count(),
+                'cerrados' => (clone $ticketQuery)->where('status', TicketStatus::Cerrado)->count(),
+                'resueltos_hoy' => (clone $ticketQuery)->where('status', TicketStatus::Resuelto)
                     ->whereDate('exit_date', today())
                     ->count(),
             ];
@@ -205,17 +215,17 @@ class DashboardController extends Controller
 
             $extra = [
                 'is_admin_tickets' => true,
-                'unassigned_tickets' => Ticket::whereIn('status', $activeStatuses)->whereNull('assigned_id')->count(),
-                'sla_expired' => Ticket::whereIn('status', $activeStatuses)
+                'unassigned_tickets' => (clone $ticketQuery)->whereIn('status', $activeStatuses)->whereNull('assigned_id')->count(),
+                'sla_expired' => (clone $ticketQuery)->whereIn('status', $activeStatuses)
                     ->whereNotNull('sla_resolution_deadline')
                     ->where('sla_resolution_deadline', '<', now())
                     ->count(),
-                'sla_at_risk' => Ticket::whereIn('status', $activeStatuses)
+                'sla_at_risk' => (clone $ticketQuery)->whereIn('status', $activeStatuses)
                     ->whereNotNull('sla_resolution_deadline')
                     ->where('sla_resolution_deadline', '>', now())
                     ->whereRaw("EXTRACT(EPOCH FROM (sla_resolution_deadline - NOW())) / GREATEST(EXTRACT(EPOCH FROM (sla_resolution_deadline - entry_date)), 1) <= 0.25")
                     ->count(),
-                'new_tickets' => Ticket::with(['creator.department', 'category'])
+                'new_tickets' => (clone $ticketQuery)->with(['creator.department', 'category'])
                     ->where('status', TicketStatus::Abierto)
                     ->latest()
                     ->take(10)
@@ -246,13 +256,14 @@ class DashboardController extends Controller
                     ]),
             ];
         } elseif ($user->hasRole('super_admin')) {
+            $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $kpis = [
-                'abiertos' => Ticket::where('status', TicketStatus::Abierto)->count(),
-                'en_proceso' => Ticket::where('status', TicketStatus::EnProceso)->count(),
-                'pendiente_informacion' => Ticket::where('status', TicketStatus::PendienteInformacion)->count(),
-                'resueltos' => Ticket::where('status', TicketStatus::Resuelto)->count(),
-                'cerrados' => Ticket::where('status', TicketStatus::Cerrado)->count(),
-                'resueltos_hoy' => Ticket::where('status', TicketStatus::Resuelto)
+                'abiertos' => (clone $ticketQuery)->where('status', TicketStatus::Abierto)->count(),
+                'en_proceso' => (clone $ticketQuery)->where('status', TicketStatus::EnProceso)->count(),
+                'pendiente_informacion' => (clone $ticketQuery)->where('status', TicketStatus::PendienteInformacion)->count(),
+                'resueltos' => (clone $ticketQuery)->where('status', TicketStatus::Resuelto)->count(),
+                'cerrados' => (clone $ticketQuery)->where('status', TicketStatus::Cerrado)->count(),
+                'resueltos_hoy' => (clone $ticketQuery)->where('status', TicketStatus::Resuelto)
                     ->whereDate('exit_date', today())
                     ->count(),
             ];
@@ -293,7 +304,27 @@ class DashboardController extends Controller
                 ->values()
                 ->map(fn($c) => ['name' => $c->name, 'count' => $c->tickets_count]);
 
-            $criticalExpired = Ticket::with(['creator.department', 'category', 'assigned'])
+            $criticalSort = $request->input('critical_sort', 'entry_date');
+            $criticalDir = $request->input('critical_dir', 'desc');
+            $allowedSorts = ['code', 'title', 'priority', 'status', 'entry_date', 'sla_resolution_deadline', 'assigned'];
+
+            if (! in_array($criticalSort, $allowedSorts)) {
+                $criticalSort = 'entry_date';
+            }
+            if (! in_array($criticalDir, ['asc', 'desc'])) {
+                $criticalDir = 'desc';
+            }
+
+            $criticalSortMap = [
+                'priority' => 'priority',
+                'status' => 'status',
+                'entry_date' => 'entry_date',
+                'sla_resolution_deadline' => 'sla_resolution_deadline',
+                'code' => 'code',
+                'title' => 'title',
+            ];
+
+            $criticalPaginator = (clone $ticketQuery)->with(['creator.department', 'category', 'assigned'])
                 ->whereIn('status', $activeStatuses)
                 ->where(function ($q) {
                     $q->where('priority', TicketPriority::Critica)
@@ -302,10 +333,18 @@ class DashboardController extends Controller
                                 ->where('sla_resolution_deadline', '<', now());
                         });
                 })
-                ->latest()
-                ->take(10)
-                ->get()
-                ->map(fn($t) => [
+                ->when($criticalSort === 'assigned', function ($q) use ($criticalDir) {
+                    $q->leftJoin('users as assigned_users', 'tickets.assigned_id', '=', 'assigned_users.id')
+                        ->orderBy('assigned_users.name', $criticalDir)
+                        ->select('tickets.*');
+                }, function ($q) use ($criticalSortMap, $criticalSort, $criticalDir) {
+                    $q->orderBy($criticalSortMap[$criticalSort], $criticalDir);
+                })
+                ->paginate(10, ['*'], 'critical_page')
+                ->withQueryString();
+
+            $criticalExpired = [
+                'data' => $criticalPaginator->getCollection()->map(fn($t) => [
                     'id' => $t->id,
                     'code' => $t->code,
                     'title' => $t->title,
@@ -320,17 +359,23 @@ class DashboardController extends Controller
                     'sla_deadline' => $t->sla_resolution_deadline?->format('d/m/Y H:i'),
                     'sla_deadline_raw' => $t->sla_resolution_deadline?->toIso8601String(),
                     'entry_date_raw' => $t->entry_date?->toIso8601String(),
-                ]);
+                ])->values()->toArray(),
+                'links' => $criticalPaginator->toArray()['links'] ?? [],
+                'total' => $criticalPaginator->total(),
+                'per_page' => $criticalPaginator->perPage(),
+            ];
 
             $extra = [
                 'is_superadmin' => true,
-                'active_tickets' => Ticket::whereIn('status', $activeStatuses)->count(),
+                'active_tickets' => (clone $ticketQuery)->whereIn('status', $activeStatuses)->count(),
                 'resolved_this_month' => $resolvedThisMonth,
                 'sla_pct' => $resolvedThisMonth > 0 ? round(($withinSla / $resolvedThisMonth) * 100) : null,
                 'active_technicians' => User::role('tecnico')->where('is_active', true)->count(),
                 'top_departments' => $topDepartments,
                 'category_distribution' => $categoryDistribution,
                 'critical_expired' => $criticalExpired,
+                'critical_sort' => $criticalSort,
+                'critical_dir' => $criticalDir,
             ];
         }
 
@@ -360,6 +405,8 @@ class DashboardController extends Controller
                 'kpis' => $normalizedKpis,
                 'role' => $roleLabels[$role] ?? $role,
                 'user_department' => $user->department?->name,
+                'date_from' => $dateFrom->toDateString(),
+                'date_to' => $dateTo->toDateString(),
             ], $extra),
             'unreadNotifications' => $unreadNotifications,
         ]);

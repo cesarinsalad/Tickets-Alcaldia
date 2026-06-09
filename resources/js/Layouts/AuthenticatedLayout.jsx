@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, XCircle } from 'lucide-react';
+import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, XCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/Components/ui/dropdown';
 import { Badge } from '@/Components/ui/badge';
 
@@ -61,6 +61,9 @@ export default function AuthenticatedLayout({ header, children }) {
 
     navItems.push({ href: route('dashboard'), label: 'Dashboard', icon: LayoutDashboard, active: route().current('dashboard') });
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });
+    if (user.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name))) {
+        navItems.push({ href: route('knowledge.index'), label: 'Base de Conocimiento', icon: BookOpen, active: route().current('knowledge.*') });
+    }
 
     if (user.roles?.some(r => ['super_admin', 'admin_departamento', 'admin_tickets'].includes(r.name))) {
         navItems.push({ href: route('users.index'), label: 'Usuarios', icon: Users, active: route().current('users.*') });
@@ -69,6 +72,8 @@ export default function AuthenticatedLayout({ header, children }) {
     if (user.roles?.some(r => r.name === 'super_admin')) {
         navItems.push({ href: route('categories.index'), label: 'Categorías', icon: FolderTree, active: route().current('categories.*') });
         navItems.push({ href: route('departments.index'), label: 'Departamentos', icon: Building2, active: route().current('departments.*') });
+        navItems.push({ href: route('roles.index'), label: 'Roles y Permisos', icon: Shield, active: route().current('roles.*') });
+        navItems.push({ href: route('sla.index'), label: 'Tiempos de Respuesta', icon: Clock, active: route().current('sla.*') });
     }
 
     return (
@@ -87,13 +92,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <Link
                                             key={item.href}
                                             href={item.href}
-                                            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                                            className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                                                 item.active
                                                     ? 'bg-white/15 text-white'
                                                     : 'text-blue-100 hover:bg-white/10 hover:text-white'
                                             }`}
                                         >
-                                            <Icon className="h-4 w-4" />
+                                            <Icon className="h-3.5 w-3.5" />
                                             {item.label}
                                         </Link>
                                     );

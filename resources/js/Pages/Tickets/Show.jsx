@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree } from 'lucide-react';
 import RelativeTime from '@/Components/RelativeTime';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -19,6 +19,7 @@ const statusColors = {
 };
 
 const priorityColors = {
+    sin_definir: 'gray',
     baja: 'secondary',
     media: 'warning',
     alta: 'danger',
@@ -26,30 +27,36 @@ const priorityColors = {
 };
 
 const priorityLabels = {
+    sin_definir: 'Sin definir',
     baja: 'Baja',
     media: 'Media',
     alta: 'Alta',
     critica: 'Crítica',
 };
 
-export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canSeeInternalComments, priorityLabels }) {
+export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canChangeCategory, canUploadPhoto, canSeeInternalComments, categories, priorityLabels }) {
     const [comment, setComment] = useState('');
+    const [commentPhoto, setCommentPhoto] = useState(null);
+    const [commentPhotoPreview, setCommentPhotoPreview] = useState(null);
     const [isInternal, setIsInternal] = useState(false);
     const [commentErrors, setCommentErrors] = useState({});
     const [assignTo, setAssignTo] = useState(ticket.assigned_id || '');
     const [transitionStatus, setTransitionStatus] = useState('');
     const [reopenReason, setReopenReason] = useState('');
     const [newPriority, setNewPriority] = useState('');
+    const [newCategory, setNewCategory] = useState('');
     const [errors, setErrors] = useState({});
 
     function submitComment(e) {
         e.preventDefault();
-        router.post(route('tickets.comments.store', ticket.id), {
-            body: comment,
-            is_internal: isInternal,
-        }, {
+        const formData = new FormData();
+        formData.append('body', comment);
+        formData.append('is_internal', isInternal ? '1' : '0');
+        if (commentPhoto) formData.append('photo', commentPhoto);
+
+        router.post(route('tickets.comments.store', ticket.id), formData, {
             onError: (err) => setCommentErrors(err),
-            onSuccess: () => { setComment(''); setCommentErrors({}); },
+            onSuccess: () => { setComment(''); setCommentPhoto(null); setCommentPhotoPreview(null); setCommentErrors({}); },
         });
     }
 
@@ -79,6 +86,16 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
         }, {
             onError: (err) => setErrors(err),
             onSuccess: () => { setNewPriority(''); setErrors({}); },
+        });
+    }
+
+    function handleChangeCategory() {
+        if (!newCategory) return;
+        router.post(route('tickets.change-category', ticket.id), {
+            category_id: newCategory,
+        }, {
+            onError: (err) => setErrors(err),
+            onSuccess: () => { setNewCategory(''); setErrors({}); },
         });
     }
 
@@ -142,6 +159,24 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                         </div>
                     )}
 
+                    {canChangeCategory && (
+                        <div className="rounded-lg border border-gris-borde bg-white p-6">
+                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                <FolderTree className="h-4 w-4" />
+                                Cambiar Categoría
+                            </h3>
+                            <Select value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+                                <option value="">Seleccionar categoría</option>
+                                {categories?.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </Select>
+                            <Button size="sm" className="mt-2 w-full" onClick={handleChangeCategory} disabled={!newCategory}>
+                                Cambiar Categoría
+                            </Button>
+                        </div>
+                    )}
+
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
@@ -169,6 +204,9 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                             <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('es-VE')}</span>
                                         </div>
                                         <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.body}</p>
+                                        {c.photo_url && (
+                                            <img src={c.photo_url} alt="Evidencia adjunta" className="mt-2 max-h-64 rounded-md border border-gris-borde" />
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -182,6 +220,24 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                 rows={3}
                             />
                             <InputError message={commentErrors.body} />
+                            {canUploadPhoto && (
+                                <div>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={e => {
+                                            const file = e.target.files?.[0];
+                                            setCommentPhoto(file || null);
+                                            setCommentPhotoPreview(file ? URL.createObjectURL(file) : null);
+                                        }}
+                                        className="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                                    />
+                                    {commentPhotoPreview && (
+                                        <img src={commentPhotoPreview} alt="Vista previa" className="mt-2 max-h-32 rounded-md border border-gris-borde" />
+                                    )}
+                                    <InputError message={commentErrors.photo} />
+                                </div>
+                            )}
                             <div className="flex items-center gap-3">
                                 {canSeeInternalComments && (
                                     <label className="flex items-center gap-2 text-sm text-gray-600">
@@ -194,7 +250,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                         Nota interna
                                     </label>
                                 )}
-                                <Button type="submit" size="sm" disabled={!comment.trim()}>
+                                <Button type="submit" size="sm" disabled={!comment.trim() && !commentPhoto}>
                                     Comentar
                                 </Button>
                             </div>
@@ -220,7 +276,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             </div>
                             <div>
                                 <dt className="text-gray-500">Categoría</dt>
-                                <dd className="text-gray-900">{ticket.category?.name || '—'}</dd>
+                                <dd className="text-gray-900">{ticket.category?.name || 'Sin categoría'}</dd>
                             </div>
                             <div>
                                 <dt className="text-gray-500">Asignado a</dt>

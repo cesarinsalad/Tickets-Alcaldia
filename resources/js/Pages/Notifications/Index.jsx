@@ -34,7 +34,7 @@ export default function Index({ notifications }) {
         >
             <Head title="Notificaciones" />
 
-            <div className="max-w-2xl">
+            <div className="">
                 {notifications.data.length === 0 ? (
                     <div className="rounded-lg border border-gris-borde bg-white p-12 text-center text-gray-500">
                         <BellOff className="mx-auto h-10 w-10 text-gray-300 mb-3" />

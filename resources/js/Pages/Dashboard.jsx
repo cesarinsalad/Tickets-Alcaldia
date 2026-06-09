@@ -1,10 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, Users, AlertOctagon, Building2 } from 'lucide-react';
+import { useState } from 'react';
+import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, Users, AlertOctagon, Building2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
 import SimpleBarChart from '@/Components/SimpleBarChart';
 import SimpleDonutChart from '@/Components/SimpleDonutChart';
+import Pagination from '@/Components/Pagination';
 import RelativeTime from '@/Components/RelativeTime';
 import TimeProgressBar from '@/Components/TimeProgressBar';
 
@@ -13,6 +16,7 @@ const priorityBadgeMap = {
     alta: 'orange',
     media: 'warning',
     baja: 'secondary',
+    sin_definir: 'gray',
 };
 
 const statusLabels = {
@@ -49,6 +53,34 @@ function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
 }
 
 function SuperAdminDashboard({ kpis, extra }) {
+    const crit = extra.critical_expired;
+    const sort = extra.critical_sort || 'entry_date';
+    const dir = extra.critical_dir || 'desc';
+
+    function handleSort(col) {
+        const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
+        router.get(route('dashboard'), {
+            date_from: extra.date_from,
+            date_to: extra.date_to,
+            critical_sort: col,
+            critical_dir: newDir,
+            critical_page: 1,
+        }, { preserveState: true, replace: true });
+    }
+
+    function SortIcon({ col }) {
+        if (sort !== col) return null;
+        return dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
+    }
+
+    function SortHeader({ col, children }) {
+        return (
+            <th className="px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort(col)}>
+                {children}
+                <SortIcon col={col} />
+            </th>
+        );
+    }
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -77,7 +109,7 @@ function SuperAdminDashboard({ kpis, extra }) {
                 </div>
             </div>
 
-            {extra.critical_expired.length > 0 && (
+            {crit.data?.length > 0 && (
                 <div className="rounded-lg border border-red-200 bg-white">
                     <div className="flex items-center gap-2 px-5 py-3 border-b border-red-100 bg-red-50/50">
                         <AlertOctagon className="h-4 w-4 text-red-600" />
@@ -87,17 +119,17 @@ function SuperAdminDashboard({ kpis, extra }) {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <th className="px-5 py-3 font-medium">Código</th>
-                                    <th className="px-5 py-3 font-medium">Título</th>
-                                    <th className="px-5 py-3 font-medium">Prioridad</th>
-                                    <th className="px-5 py-3 font-medium">Estado</th>
+                                    <SortHeader col="code">Código</SortHeader>
+                                    <SortHeader col="title">Título</SortHeader>
+                                    <SortHeader col="priority">Prioridad</SortHeader>
+                                    <SortHeader col="status">Estado</SortHeader>
                                     <th className="px-5 py-3 font-medium">Departamento</th>
-                                    <th className="px-5 py-3 font-medium">Asignado</th>
-                                    <th className="px-5 py-3 font-medium">Vencimiento</th>
+                                    <SortHeader col="assigned">Asignado</SortHeader>
+                                    <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
-                                {extra.critical_expired.map(t => (
+                                {crit.data.map(t => (
                                     <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-red-50/30 transition-colors cursor-pointer">
                                         <td className="px-5 py-3">
                                             <span className="font-mono text-azul-institucional">{t.code}</span>
@@ -115,6 +147,16 @@ function SuperAdminDashboard({ kpis, extra }) {
                             </tbody>
                         </table>
                     </div>
+                    {crit.links && crit.links.length > 3 && (
+                        <div className="px-5 py-3 border-t border-gris-borde">
+                            <Pagination
+                                links={crit.links}
+                                total={crit.total}
+                                perPage={crit.per_page || 10}
+                                onPerPageChange={() => {}}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -719,19 +761,54 @@ function SolicitanteDashboard({ extra }) {
 }
 
 export default function Dashboard({ stats, unreadNotifications }) {
-    const { kpis, role } = stats;
+    const { kpis, role, date_from, date_to } = stats;
+    const [from, setFrom] = useState(date_from || '');
+    const [to, setTo] = useState(date_to || '');
+
+    function applyDates() {
+        router.get(route('dashboard'), { date_from: from, date_to: to }, { preserveState: true, replace: true });
+    }
+
+    function clearDates() {
+        setFrom('');
+        setTo('');
+        router.get(route('dashboard'), {}, { preserveState: true, replace: true });
+    }
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
-                    <Link href={route('tickets.create')}>
-                        <Button size="sm">
-                            <Plus className="h-4 w-4" />
-                            Nuevo Ticket
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            value={from}
+                            onChange={e => setFrom(e.target.value)}
+                            className="w-36 text-sm"
+                        />
+                        <span className="text-gray-400 text-sm">—</span>
+                        <Input
+                            type="date"
+                            value={to}
+                            onChange={e => setTo(e.target.value)}
+                            className="w-36 text-sm"
+                        />
+                        <Button size="sm" variant="outline" onClick={applyDates}>
+                            Aplicar
                         </Button>
-                    </Link>
+                        {(from || to) && (
+                            <Button size="sm" variant="ghost" onClick={clearDates}>
+                                Limpiar
+                            </Button>
+                        )}
+                        <Link href={route('tickets.create')}>
+                            <Button size="sm">
+                                <Plus className="h-4 w-4" />
+                                Nuevo Ticket
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             }
         >
