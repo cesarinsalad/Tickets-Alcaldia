@@ -13,13 +13,24 @@ class CommentController extends Controller
         $ticket->load('creator');
 
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['required_without:photo', 'nullable', 'string', 'max:5000'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'is_internal' => ['boolean'],
         ]);
 
+        if (! $validated['body'] && ! $request->hasFile('photo')) {
+            return back()->withErrors(['body' => 'Debes escribir un comentario o adjuntar una imagen.']);
+        }
+
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('comments/photos', 'public');
+        }
+
         $comment = $ticket->comments()->create([
             'user_id' => $request->user()->id,
-            'body' => $validated['body'],
+            'body' => $validated['body'] ?? '',
+            'photo_path' => $photoPath,
             'is_internal' => $request->user()->hasAnyRole(['solicitante', 'admin_departamento']) ? false : ($validated['is_internal'] ?? false),
         ]);
 
