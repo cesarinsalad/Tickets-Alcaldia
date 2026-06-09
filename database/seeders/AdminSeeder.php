@@ -21,6 +21,7 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Super',
                 'last_name' => 'Administrador',
+                'position' => 'Administrador del Sistema',
                 'phone_number' => '0295-0000000',
                 'department_id' => $department->id,
                 'password' => Hash::make('admin123'),

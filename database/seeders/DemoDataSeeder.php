@@ -98,6 +98,7 @@ class DemoDataSeeder extends Seeder
             $admin = User::create([
                 'name' => fake()->firstName(),
                 'last_name' => fake()->lastName(),
+                'position' => 'Coordinador General',
                 'email' => "admin." . Str::slug($dept->name) . '@alcaldia.gob.ve',
                 'phone_number' => fake()->phoneNumber(),
                 'department_id' => $dept->id,
@@ -114,6 +115,7 @@ class DemoDataSeeder extends Seeder
                     $tecnico = User::create([
                         'name' => fake()->firstName(),
                         'last_name' => fake()->lastName(),
+                        'position' => 'Técnico de Soporte',
                         'email' => 'tecnico' . ($i + 1) . '.informatica@alcaldia.gob.ve',
                         'phone_number' => fake()->phoneNumber(),
                         'department_id' => $dept->id,
@@ -129,6 +131,7 @@ class DemoDataSeeder extends Seeder
                     $solicitante = User::create([
                         'name' => fake()->firstName(),
                         'last_name' => fake()->lastName(),
+                        'position' => fake()->randomElement(['Secretaria', 'Asistente', 'Auxiliar', 'Oficial', 'Supervisor', 'Coordinador']),
                         'email' => 'solicitante' . ($i + 1) . '.' . Str::slug($dept->name) . '@alcaldia.gob.ve',
                         'phone_number' => fake()->phoneNumber(),
                         'department_id' => $dept->id,
@@ -146,6 +149,7 @@ class DemoDataSeeder extends Seeder
             $adminLibre = User::create([
                 'name' => fake()->firstName(),
                 'last_name' => fake()->lastName(),
+                'position' => 'Jefe de Área',
                 'email' => 'admin.disponible' . ($i + 1) . '@alcaldia.gob.ve',
                 'phone_number' => fake()->phoneNumber(),
                 'department_id' => null,

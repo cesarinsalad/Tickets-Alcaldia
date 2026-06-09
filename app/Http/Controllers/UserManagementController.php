@@ -128,6 +128,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'position' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'department_id' => ['required', 'exists:departments,id'],
@@ -150,6 +151,7 @@ class UserManagementController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'],
+            'position' => $validated['position'] ?? null,
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'] ?? null,
             'department_id' => $validated['department_id'],
@@ -185,6 +187,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'position' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'department_id' => ['required', 'exists:departments,id'],
@@ -209,6 +212,7 @@ class UserManagementController extends Controller
         $user->update([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'],
+            'position' => $validated['position'] ?? null,
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'] ?? null,
             'department_id' => $validated['department_id'],
