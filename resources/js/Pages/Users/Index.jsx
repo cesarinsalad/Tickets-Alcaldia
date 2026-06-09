@@ -110,19 +110,23 @@ export default function Index({ users, departments, roles, filters }) {
                         </div>
                     ) : (
                         <div className="divide-y divide-gris-borde">
-                            <div className="hidden sm:grid sm:grid-cols-6 gap-4 p-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            <div className="hidden sm:grid sm:grid-cols-7 gap-4 p-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 <div className="col-span-2">Usuario</div>
+                                <div>Cargo</div>
                                 <div>Rol</div>
                                 <div>Departamento</div>
                                 <div>Estado</div>
                                 <div>Acciones</div>
                             </div>
                             {users.data.map(user => (
-                                <div key={user.id} className="grid grid-cols-1 sm:grid-cols-6 gap-2 sm:gap-4 p-4 items-center hover:bg-gris-fondo">
+                                <div key={user.id} className="grid grid-cols-1 sm:grid-cols-7 gap-2 sm:gap-4 p-4 items-center hover:bg-gris-fondo">
                                     <div className="col-span-2">
                                         <p className="text-sm font-medium text-gray-900">{user.full_name ?? user.name}</p>
                                         <p className="text-xs text-gray-500">{user.email}</p>
                                         {user.phone_number && <p className="text-xs text-gray-400">{user.phone_number}</p>}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                        {user.position || '—'}
                                     </div>
                                     <div>
                                         {user.roles?.map(role => (

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Ticket } from 'lucide-react';
+import { Plus, Search, Ticket, FileText } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -25,6 +25,7 @@ const statusLabels = {
 };
 
 const priorityColors = {
+    sin_definir: 'gray',
     baja: 'secondary',
     media: 'orange',
     alta: 'danger',
@@ -32,6 +33,7 @@ const priorityColors = {
 };
 
 const priorityLabels = {
+    sin_definir: 'Sin definir',
     baja: 'Baja',
     media: 'Media',
     alta: 'Alta',
@@ -40,6 +42,12 @@ const priorityLabels = {
 
 export default function Index({ tickets, filters, categories, departments, users }) {
     const [search, setSearch] = useState(filters.search || '');
+
+    function activeFilters() {
+        const clean = {};
+        Object.entries({ ...filters, search }).forEach(([k, v]) => { if (v) clean[k] = v; });
+        return clean;
+    }
 
     function applyFilters(overrides = {}) {
         const params = { ...filters, ...overrides };
@@ -53,17 +61,31 @@ export default function Index({ tickets, filters, categories, departments, users
         applyFilters({ search });
     }
 
+    function reportUrl() {
+        const clean = activeFilters();
+        delete clean.per_page;
+        return route('tickets.report.index', clean);
+    }
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-900">Tickets</h2>
-                    <Link href={route('tickets.create')}>
-                        <Button size="sm">
-                            <Plus className="h-4 w-4" />
-                            Nuevo Ticket
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <a href={reportUrl()} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="sm">
+                                <FileText className="h-4 w-4" />
+                                Generar Reporte
+                            </Button>
+                        </a>
+                        <a href={route('tickets.create')}>
+                            <Button size="sm">
+                                <Plus className="h-4 w-4" />
+                                Nuevo Ticket
+                            </Button>
+                        </a>
+                    </div>
                 </div>
             }
         >
@@ -99,6 +121,7 @@ export default function Index({ tickets, filters, categories, departments, users
                             onChange={e => applyFilters({ priority: e.target.value })}
                         >
                             <option value="">Todas las prioridades</option>
+                            <option value="sin_definir">Sin definir</option>
                             <option value="baja">Baja</option>
                             <option value="media">Media</option>
                             <option value="alta">Alta</option>
@@ -134,7 +157,7 @@ export default function Index({ tickets, filters, categories, departments, users
                     </form>
                 </div>
 
-                <div className="rounded-lg border border-gris-borde bg-white">
+                <div className="rounded-lg border border-gris-borde bg-white overflow-x-auto">
                     {tickets.data.length === 0 ? (
                         <div className="p-12 text-center text-gray-500">
                             <Ticket className="mx-auto h-10 w-10 text-gray-300 mb-3" />
@@ -142,41 +165,50 @@ export default function Index({ tickets, filters, categories, departments, users
                             <p className="text-sm mt-1">Crea un nuevo ticket o ajusta los filtros de búsqueda.</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gris-borde">
-                            {tickets.data.map(ticket => (
-                                <Link
-                                    key={ticket.id}
-                                    href={route('tickets.show', ticket.id)}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-gris-fondo transition-colors gap-2"
-                                >
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-xs font-mono text-gray-500">{ticket.code}</span>
-                                            {ticket.category && (
-                                                <span className="text-xs text-gray-400">{ticket.category.name}</span>
-                                            )}
-                                            <Badge variant={statusColors[ticket.status] || 'default'}>
-                                                {statusLabels[ticket.status] || ticket.status}
-                                            </Badge>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <th className="px-4 py-3 font-medium">Código</th>
+                                    <th className="px-4 py-3 font-medium">Título</th>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Solicitante</th>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Categoría</th>
+                                    <th className="px-4 py-3 font-medium">Prioridad</th>
+                                    <th className="px-4 py-3 font-medium">Estado</th>
+                                    <th className="px-4 py-3 font-medium hidden lg:table-cell">Asignado</th>
+                                    <th className="px-4 py-3 font-medium hidden lg:table-cell">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {tickets.data.map(ticket => (
+                                    <tr
+                                        key={ticket.id}
+                                        onClick={() => router.visit(route('tickets.show', ticket.id))}
+                                        className="hover:bg-gris-fondo transition-colors cursor-pointer"
+                                    >
+                                        <td className="px-4 py-3 font-mono text-xs text-azul-institucional">{ticket.code}</td>
+                                        <td className="px-4 py-3 text-gray-900 max-w-[180px] truncate">{ticket.title}</td>
+                                        <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{ticket.creator?.full_name ?? ticket.creator?.name}</td>
+                                        <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{ticket.category?.name || '—'}</td>
+                                        <td className="px-4 py-3">
                                             <Badge variant={priorityColors[ticket.priority] || 'default'}>
                                                 {priorityLabels[ticket.priority] || ticket.priority}
                                             </Badge>
-                                        </div>
-                                        <p className="mt-1 text-sm font-medium text-gray-900 truncate">{ticket.title}</p>
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                                            <span>{ticket.creator?.full_name ?? ticket.creator?.name}</span>
-                                            {ticket.department && <span>{ticket.department.name}</span>}
-                                            <span>{new Date(ticket.entry_date).toLocaleDateString('es-VE')}</span>
-                                        </div>
-                                    </div>
-                                    {ticket.assigned && (
-                                        <span className="text-xs text-gray-500">
-                                            Asignado a: {ticket.assigned.full_name ?? ticket.assigned.name}
-                                        </span>
-                                    )}
-                                </Link>
-                            ))}
-                        </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant={statusColors[ticket.status] || 'default'}>
+                                                {statusLabels[ticket.status] || ticket.status}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-600 text-xs hidden lg:table-cell">
+                                            {(ticket.assigned?.full_name ?? ticket.assigned?.name) || 'Sin asignar'}
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500 text-xs hidden lg:table-cell">
+                                            {new Date(ticket.entry_date).toLocaleDateString('es-VE')}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
                 </div>
 
