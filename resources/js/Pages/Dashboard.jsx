@@ -94,7 +94,7 @@ function SuperAdminDashboard({ kpis, extra }) {
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Mayor Demanda</h3>
                     {extra.top_departments.length > 0 ? (
-                        <SimpleBarChart data={extra.top_departments} />
+                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id }))} />
                     ) : (
                         <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
                     )}

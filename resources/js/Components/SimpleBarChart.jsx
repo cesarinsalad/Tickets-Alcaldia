@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function SimpleBarChart({ data }) {
+export default function SimpleBarChart({ data, onBarClick }) {
     return (
         <ResponsiveContainer width="100%" height={260}>
             <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -20,7 +20,7 @@ export default function SimpleBarChart({ data }) {
                     cursor={{ fill: '#f1f5f9' }}
                     contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}
                 />
-                <Bar dataKey="count" fill="#1E3A5F" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#1E3A5F" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(data) => onBarClick?.(data)} />
             </BarChart>
         </ResponsiveContainer>
     );

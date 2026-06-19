@@ -93,7 +93,7 @@ export default function Index({ tickets, filters, categories, departments, users
 
             <div className="space-y-4">
                 <div className="rounded-lg border border-gris-borde bg-white p-4">
-                    <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
+                    <form onSubmit={handleSearch} className="space-y-3">
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                             <Input
@@ -103,57 +103,69 @@ export default function Index({ tickets, filters, categories, departments, users
                                 onChange={e => setSearch(e.target.value)}
                             />
                         </div>
-                        <Select
-                            className="w-full sm:w-40"
-                            value={filters.status || ''}
-                            onChange={e => applyFilters({ status: e.target.value })}
-                        >
-                            <option value="">Todos los estados</option>
-                            <option value="abierto">Abierto</option>
-                            <option value="en_proceso">En Proceso</option>
-                            <option value="pendiente_informacion">Pendiente de Info</option>
-                            <option value="resuelto">Resuelto</option>
-                            <option value="cerrado">Cerrado</option>
-                        </Select>
-                        <Select
-                            className="w-full sm:w-40"
-                            value={filters.priority || ''}
-                            onChange={e => applyFilters({ priority: e.target.value })}
-                        >
-                            <option value="">Todas las prioridades</option>
-                            <option value="sin_definir">Sin definir</option>
-                            <option value="baja">Baja</option>
-                            <option value="media">Media</option>
-                            <option value="alta">Alta</option>
-                            <option value="critica">Crítica</option>
-                        </Select>
-                        <Select
-                            className="w-full sm:w-40"
-                            value={filters.category || ''}
-                            onChange={e => applyFilters({ category: e.target.value })}
-                        >
-                            <option value="">Todas las categorías</option>
-                            {categories.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </Select>
-                        <Input
-                            type="date"
-                            className="w-full sm:w-36"
-                            value={filters.date_from || ''}
-                            onChange={e => applyFilters({ date_from: e.target.value })}
-                        />
-                        <Input
-                            type="date"
-                            className="w-full sm:w-36"
-                            value={filters.date_to || ''}
-                            onChange={e => applyFilters({ date_to: e.target.value })}
-                        />
-                        {filters.status || filters.priority || filters.category || filters.search || filters.date_from || filters.date_to ? (
-                            <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('tickets.index'))}>
-                                Limpiar filtros
-                            </Button>
-                        ) : null}
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <Select
+                                className="flex-1 min-w-[120px]"
+                                value={filters.status || ''}
+                                onChange={e => applyFilters({ status: e.target.value })}
+                            >
+                                <option value="">Todos los estados</option>
+                                <option value="abierto">Abierto</option>
+                                <option value="en_proceso">En Proceso</option>
+                                <option value="pendiente_informacion">Pendiente de Info</option>
+                                <option value="resuelto">Resuelto</option>
+                                <option value="cerrado">Cerrado</option>
+                            </Select>
+                            <Select
+                                className="flex-1 min-w-[120px]"
+                                value={filters.priority || ''}
+                                onChange={e => applyFilters({ priority: e.target.value })}
+                            >
+                                <option value="">Todas las prioridades</option>
+                                <option value="sin_definir">Sin definir</option>
+                                <option value="baja">Baja</option>
+                                <option value="media">Media</option>
+                                <option value="alta">Alta</option>
+                                <option value="critica">Crítica</option>
+                            </Select>
+                            <Select
+                                className="flex-1 min-w-[140px]"
+                                value={filters.category || ''}
+                                onChange={e => applyFilters({ category: e.target.value })}
+                            >
+                                <option value="">Todas las categorías</option>
+                                {categories.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </Select>
+                            <Select
+                                className="flex-1 min-w-[140px]"
+                                value={filters.department || ''}
+                                onChange={e => applyFilters({ department: e.target.value })}
+                            >
+                                <option value="">Todos los departamentos</option>
+                                {departments.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </Select>
+                            <Input
+                                type="date"
+                                className="w-[140px]"
+                                value={filters.date_from || ''}
+                                onChange={e => applyFilters({ date_from: e.target.value })}
+                            />
+                            <Input
+                                type="date"
+                                className="w-[140px]"
+                                value={filters.date_to || ''}
+                                onChange={e => applyFilters({ date_to: e.target.value })}
+                            />
+                            {filters.status || filters.priority || filters.category || filters.department || filters.search || filters.date_from || filters.date_to ? (
+                                <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('tickets.index'))}>
+                                    Limpiar filtros
+                                </Button>
+                            ) : null}
+                        </div>
                     </form>
                 </div>
 
