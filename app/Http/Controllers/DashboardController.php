@@ -289,14 +289,16 @@ class DashboardController extends Controller
                 ->whereNull('users.deleted_at')
                 ->whereNull('departments.deleted_at')
                 ->whereIn('tickets.status', array_map(fn($s) => $s->value, $activeStatuses))
+                ->whereBetween('tickets.entry_date', [$dateFrom, $dateTo])
                 ->groupBy('departments.id', 'departments.name')
                 ->orderByDesc('count')
                 ->take(5)
                 ->get();
 
             $categoryDistribution = Category::select('id', 'name')
-                ->withCount(['tickets' => function ($q) {
-                    $q->whereNull('tickets.deleted_at');
+                ->withCount(['tickets' => function ($q) use ($dateFrom, $dateTo) {
+                    $q->whereNull('tickets.deleted_at')
+                      ->whereBetween('entry_date', [$dateFrom, $dateTo]);
                 }])
                 ->orderByDesc('tickets_count')
                 ->get()

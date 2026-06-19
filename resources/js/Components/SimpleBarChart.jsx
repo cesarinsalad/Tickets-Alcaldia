@@ -19,6 +19,7 @@ export default function SimpleBarChart({ data, onBarClick }) {
                 <Tooltip
                     cursor={{ fill: '#f1f5f9' }}
                     contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}
+                    formatter={(value) => [`${value} tickets`, 'Cantidad']}
                 />
                 <Bar dataKey="count" fill="#1E3A5F" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(data) => onBarClick?.(data)} />
             </BarChart>
