@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#1E3A5F', '#2B4E78', '#3B6396', '#4F7BB8', '#6795D4', '#4A6741', '#5C7A52', '#6E8F63', '#84A578', '#9BBF8E'];
 
-export default function SimpleDonutChart({ data }) {
+export default function SimpleDonutChart({ data, onPieClick }) {
     const total = data.reduce((sum, d) => sum + d.count, 0);
 
     return (
@@ -18,6 +18,8 @@ export default function SimpleDonutChart({ data }) {
                         innerRadius={55}
                         outerRadius={90}
                         paddingAngle={2}
+                        cursor="pointer"
+                        onClick={(entry) => onPieClick?.(entry)}
                     >
                         {data.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -31,7 +33,7 @@ export default function SimpleDonutChart({ data }) {
             </ResponsiveContainer>
             <div className="flex-1 space-y-1.5 text-sm">
                 {data.map((d, i) => (
-                    <div key={d.name} className="flex items-center gap-2">
+                    <div key={d.name} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => onPieClick?.(d)}>
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                         <span className="text-gray-600 truncate flex-1">{d.name}</span>
                         <span className="font-medium text-gray-900">{d.count}</span>

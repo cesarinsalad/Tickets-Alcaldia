@@ -302,7 +302,7 @@ class DashboardController extends Controller
                 ->get()
                 ->filter(fn($c) => $c->tickets_count > 0)
                 ->values()
-                ->map(fn($c) => ['name' => $c->name, 'count' => $c->tickets_count]);
+                ->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'count' => $c->tickets_count]);
 
             $criticalSort = $request->input('critical_sort', 'entry_date');
             $criticalDir = $request->input('critical_dir', 'desc');

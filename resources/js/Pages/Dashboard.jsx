@@ -102,7 +102,7 @@ function SuperAdminDashboard({ kpis, extra }) {
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
                     {extra.category_distribution.length > 0 ? (
-                        <SimpleDonutChart data={extra.category_distribution} />
+                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id }))} />
                     ) : (
                         <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
                     )}
