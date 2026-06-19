@@ -82,10 +82,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-14 items-center justify-between">
                         <div className="flex items-center">
-                            <Link href={route('dashboard')} className="text-lg font-bold tracking-tight">
-                                Sistema de Tickets
-                            </Link>
-                            <div className="hidden md:ml-8 md:flex md:space-x-1">
+                            <div className="hidden md:flex md:space-x-1">
                                 {navItems.map(item => {
                                     const Icon = item.icon;
                                     return (
