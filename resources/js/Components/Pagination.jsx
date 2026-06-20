@@ -25,20 +25,25 @@ export default function Pagination({ links, perPage, total, onPerPageChange }) {
 
     return (
         <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Mostrar</span>
-                <select
-                    value={String(perPage || '10')}
-                    onChange={e => onPerPageChange(e.target.value)}
-                    className="w-20 rounded-md border border-gris-borde bg-white px-2 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-azul-institucional"
-                >
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                <span>por página — {total} resultados</span>
-            </div>
+            {onPerPageChange && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span>Mostrar</span>
+                    <select
+                        value={String(perPage || '10')}
+                        onChange={e => onPerPageChange(e.target.value)}
+                        className="w-20 rounded-md border border-gris-borde bg-white px-2 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-azul-institucional"
+                    >
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span>por página — {total} resultados</span>
+                </div>
+            )}
+            {!onPerPageChange && total > 0 && (
+                <div className="text-sm text-gray-600">{total} resultados</div>
+            )}
             {links && links.length > 3 && (
                 <div className="flex items-center gap-1">
                     {(() => {

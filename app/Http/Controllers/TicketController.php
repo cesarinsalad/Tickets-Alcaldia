@@ -87,7 +87,7 @@ class TicketController extends Controller
                 ->orderBy('assigned_id');
         }
 
-        if ($request->input('sla') === 'missed' && $request->input('status') === 'resuelto') {
+        if ($request->input('sla') === 'missed' && str_contains($request->input('status', ''), 'resuelto')) {
             $query->whereNotNull('sla_resolution_deadline')
                 ->whereColumn('exit_date', '>', 'sla_resolution_deadline');
         }

@@ -211,7 +211,7 @@ export default function Index({ tickets, filters, categories, departments, users
                             <span>Mostrando tickets <strong>abiertos y en proceso</strong> en el periodo seleccionado.</span>
                         </div>
                     )}
-                    {filters.status === 'resuelto' && filters.date_from && !filters.sla && (
+                    {(filters.status === 'resuelto' || filters.status === 'resuelto,cerrado') && filters.date_from && !filters.sla && (
                         <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-2.5 mt-3 text-sm text-green-800">
                             <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
                             <span>Mostrando tickets <strong>resueltos y cerrados</strong> en el período seleccionado.</span>
@@ -236,7 +236,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <SortHeader col="category" className="hidden md:table-cell">Categoría</SortHeader>
                                     <SortHeader col="priority">Prioridad</SortHeader>
                                     <SortHeader col="status">Estado</SortHeader>
-                                    <SortHeader col="response" className="hidden md:table-cell">Resolución</SortHeader>
+                                    <SortHeader col="response" className="hidden md:table-cell">Respuesta</SortHeader>
                                     <SortHeader col="assigned" className="hidden lg:table-cell">Asignado</SortHeader>
                                     <SortHeader col="entry_date" className="hidden lg:table-cell">Fecha</SortHeader>
                                 </tr>
