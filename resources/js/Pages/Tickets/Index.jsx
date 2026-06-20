@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Ticket, FileText } from 'lucide-react';
+import { Plus, Search, Ticket, FileText, AlertOctagon, AlertTriangle, CheckCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -59,6 +59,25 @@ export default function Index({ tickets, filters, categories, departments, users
     function handleSearch(e) {
         e.preventDefault();
         applyFilters({ search });
+    }
+
+    function handleSort(col) {
+        const newDir = filters.sort === col && filters.dir === 'asc' ? 'desc' : 'asc';
+        applyFilters({ sort: col, dir: newDir });
+    }
+
+    function SortIcon({ col }) {
+        if (filters.sort !== col) return null;
+        return filters.dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
+    }
+
+    function SortHeader({ col, children, className = '' }) {
+        return (
+            <th className={`px-4 py-3 font-medium cursor-pointer select-none hover:text-gray-700 ${className}`} onClick={() => handleSort(col)}>
+                {children}
+                <SortIcon col={col} />
+            </th>
+        );
     }
 
     function reportUrl() {
@@ -160,13 +179,43 @@ export default function Index({ tickets, filters, categories, departments, users
                                 value={filters.date_to || ''}
                                 onChange={e => applyFilters({ date_to: e.target.value })}
                             />
-                            {filters.status || filters.priority || filters.category || filters.department || filters.search || filters.date_from || filters.date_to ? (
+                            {filters.overdue || filters.sla || filters.status || filters.priority || filters.category || filters.department || filters.search || filters.date_from || filters.date_to ? (
                                 <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('tickets.index'))}>
                                     Limpiar filtros
                                 </Button>
                             ) : null}
                         </div>
                     </form>
+                    {filters.overdue && (
+                        <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 mt-3 text-sm text-red-800">
+                            <AlertOctagon className="h-4 w-4 text-red-600 shrink-0" />
+                            <span>Mostrando <strong>tickets vencidos</strong> — Tiempo establecido de resolución superado. Ordenados por técnico asignado.</span>
+                        </div>
+                    )}
+                    {filters.sla === 'missed' && (
+                        <div className="flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-4 py-2.5 mt-3 text-sm text-orange-800">
+                            <AlertTriangle className="h-4 w-4 text-orange-600 shrink-0" />
+                            <span>Mostrando tickets que <strong>NO cumplieron SLA</strong> — resueltos después de su plazo.</span>
+                        </div>
+                    )}
+                    {filters.priority === 'critica' && (
+                        <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 mt-3 text-sm text-red-800">
+                            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                            <span>Mostrando tickets con prioridad <strong>crítica</strong>.</span>
+                        </div>
+                    )}
+                    {filters.status === 'abierto,en_proceso' && (
+                        <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2.5 mt-3 text-sm text-blue-800">
+                            <Ticket className="h-4 w-4 text-blue-600 shrink-0" />
+                            <span>Mostrando tickets <strong>activos</strong> (abiertos y en proceso).</span>
+                        </div>
+                    )}
+                    {filters.status === 'resuelto' && !filters.sla && (
+                        <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-2.5 mt-3 text-sm text-green-800">
+                            <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+                            <span>Mostrando tickets <strong>resueltos</strong>.</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="rounded-lg border border-gris-borde bg-white overflow-x-auto">
@@ -180,14 +229,14 @@ export default function Index({ tickets, filters, categories, departments, users
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <th className="px-4 py-3 font-medium">Código</th>
-                                    <th className="px-4 py-3 font-medium">Título</th>
+                                    <SortHeader col="code">Código</SortHeader>
+                                    <SortHeader col="title">Título</SortHeader>
                                     <th className="px-4 py-3 font-medium hidden md:table-cell">Solicitante</th>
-                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Categoría</th>
-                                    <th className="px-4 py-3 font-medium">Prioridad</th>
-                                    <th className="px-4 py-3 font-medium">Estado</th>
-                                    <th className="px-4 py-3 font-medium hidden lg:table-cell">Asignado</th>
-                                    <th className="px-4 py-3 font-medium hidden lg:table-cell">Fecha</th>
+                                    <SortHeader col="category" className="hidden md:table-cell">Categoría</SortHeader>
+                                    <SortHeader col="priority">Prioridad</SortHeader>
+                                    <SortHeader col="status">Estado</SortHeader>
+                                    <SortHeader col="assigned" className="hidden lg:table-cell">Asignado</SortHeader>
+                                    <SortHeader col="entry_date" className="hidden lg:table-cell">Fecha</SortHeader>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">

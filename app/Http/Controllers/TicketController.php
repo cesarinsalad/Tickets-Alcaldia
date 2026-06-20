@@ -38,7 +38,8 @@ class TicketController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $statuses = explode(',', $request->input('status'));
+            $query->whereIn('status', $statuses);
         }
 
         if ($request->filled('priority')) {
@@ -59,12 +60,30 @@ class TicketController extends Controller
             $query->where('assigned_id', $request->input('assigned'));
         }
 
+        if ($request->filled('overdue')) {
+            $query->whereIn('status', [
+                TicketStatus::Abierto->value,
+                TicketStatus::EnProceso->value,
+                TicketStatus::PendienteInformacion->value,
+            ])
+                ->whereNotNull('sla_resolution_deadline')
+                ->where('sla_resolution_deadline', '<', now())
+                ->orderBy('assigned_id');
+        }
+
+        if ($request->input('sla') === 'missed' && $request->input('status') === 'resuelto') {
+            $query->whereNotNull('sla_resolution_deadline')
+                ->whereColumn('exit_date', '>', 'sla_resolution_deadline');
+        }
+
+        $dateField = $request->input('status') === 'resuelto' ? 'exit_date' : 'entry_date';
+
         if ($request->filled('date_from')) {
-            $query->whereDate('entry_date', '>=', $request->input('date_from'));
+            $query->whereDate($dateField, '>=', $request->input('date_from'));
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('entry_date', '<=', $request->input('date_to'));
+            $query->whereDate($dateField, '<=', $request->input('date_to'));
         }
 
         $perPage = (int) $request->input('per_page', 10);
@@ -72,7 +91,37 @@ class TicketController extends Controller
             $perPage = 10;
         }
 
-        $tickets = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+        $sortMap = [
+            'code' => 'code',
+            'title' => 'title',
+            'status' => 'status',
+            'priority' => 'priority',
+            'entry_date' => 'entry_date',
+            'created_at' => 'created_at',
+        ];
+
+        $sort = $request->input('sort', '');
+        $dir = $request->input('dir', '');
+
+        if ($sort && in_array($dir, ['asc', 'desc'])) {
+            if ($sort === 'category') {
+                $query->leftJoin('categories', 'tickets.category_id', '=', 'categories.id')
+                    ->reorder('categories.name', $dir)
+                    ->select('tickets.*');
+            } elseif ($sort === 'assigned') {
+                $query->leftJoin('users as assigned_users', 'tickets.assigned_id', '=', 'assigned_users.id')
+                    ->reorder('assigned_users.name', $dir)
+                    ->select('tickets.*');
+            } elseif (isset($sortMap[$sort])) {
+                $query->reorder($sortMap[$sort], $dir);
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $tickets = $query->paginate($perPage)->withQueryString();
 
         $categories = Category::all();
         $departments = Department::all();
@@ -84,7 +133,7 @@ class TicketController extends Controller
             'departments' => $departments,
             'users' => $users,
             'filters' => $request->only([
-                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to', 'per_page',
+                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to', 'per_page', 'overdue', 'sla', 'sort', 'dir',
             ]),
             'statuses' => collect(TicketStatus::cases())->map(fn ($s) => [
                 'value' => $s->value,

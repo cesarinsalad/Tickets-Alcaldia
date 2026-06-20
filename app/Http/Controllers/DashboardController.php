@@ -270,14 +270,12 @@ class DashboardController extends Controller
 
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
-            $resolvedThisMonth = Ticket::where('status', TicketStatus::Resuelto)
-                ->whereMonth('exit_date', now()->month)
-                ->whereYear('exit_date', now()->year)
+            $resolvedInPeriod = Ticket::where('status', TicketStatus::Resuelto)
+                ->whereBetween('exit_date', [$dateFrom, $dateTo])
                 ->count();
 
             $withinSla = Ticket::where('status', TicketStatus::Resuelto)
-                ->whereMonth('exit_date', now()->month)
-                ->whereYear('exit_date', now()->year)
+                ->whereBetween('exit_date', [$dateFrom, $dateTo])
                 ->whereColumn('exit_date', '<=', 'sla_resolution_deadline')
                 ->count();
 
@@ -308,7 +306,7 @@ class DashboardController extends Controller
 
             $criticalSort = $request->input('critical_sort', 'entry_date');
             $criticalDir = $request->input('critical_dir', 'desc');
-            $allowedSorts = ['code', 'title', 'priority', 'status', 'entry_date', 'sla_resolution_deadline', 'assigned'];
+            $allowedSorts = ['code', 'title', 'priority', 'status', 'entry_date', 'sla_resolution_deadline', 'assigned', 'department'];
 
             if (! in_array($criticalSort, $allowedSorts)) {
                 $criticalSort = 'entry_date';
@@ -340,7 +338,14 @@ class DashboardController extends Controller
                         ->orderBy('assigned_users.name', $criticalDir)
                         ->select('tickets.*');
                 }, function ($q) use ($criticalSortMap, $criticalSort, $criticalDir) {
-                    $q->orderBy($criticalSortMap[$criticalSort], $criticalDir);
+                    if ($criticalSort === 'department') {
+                        $q->leftJoin('users as creator_users', 'tickets.creator_id', '=', 'creator_users.id')
+                            ->leftJoin('departments', 'creator_users.department_id', '=', 'departments.id')
+                            ->orderBy('departments.name', $criticalDir)
+                            ->select('tickets.*');
+                    } else {
+                        $q->orderBy($criticalSortMap[$criticalSort] ?? 'entry_date', $criticalDir);
+                    }
                 })
                 ->paginate(10, ['*'], 'critical_page')
                 ->withQueryString();
@@ -369,10 +374,15 @@ class DashboardController extends Controller
 
             $extra = [
                 'is_superadmin' => true,
-                'active_tickets' => (clone $ticketQuery)->whereIn('status', $activeStatuses)->count(),
-                'resolved_this_month' => $resolvedThisMonth,
-                'sla_pct' => $resolvedThisMonth > 0 ? round(($withinSla / $resolvedThisMonth) * 100) : null,
-                'active_technicians' => User::role('tecnico')->where('is_active', true)->count(),
+                'active_tickets' => (clone $ticketQuery)->whereIn('status', [TicketStatus::Abierto, TicketStatus::EnProceso])->count(),
+                'resolved_this_month' => $resolvedInPeriod,
+                'sla_pct' => $resolvedInPeriod > 0 ? round(($withinSla / $resolvedInPeriod) * 100) : null,
+                'technicians_overdue' => (clone $ticketQuery)
+                    ->whereIn('status', array_map(fn($s) => $s->value, $activeStatuses))
+                    ->whereNotNull('sla_resolution_deadline')
+                    ->where('sla_resolution_deadline', '<', now())
+                    ->distinct('assigned_id')
+                    ->count('assigned_id'),
                 'top_departments' => $topDepartments,
                 'category_distribution' => $categoryDistribution,
                 'critical_expired' => $criticalExpired,
