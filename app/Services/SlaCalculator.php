@@ -78,6 +78,10 @@ class SlaCalculator
             return false;
         }
 
+        if (in_array($ticket->status->value, ['resuelto', 'cerrado'])) {
+            return false;
+        }
+
         return now() > $deadline;
     }
 

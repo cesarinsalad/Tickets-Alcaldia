@@ -387,12 +387,12 @@ class DashboardController extends Controller
                         ->where('is_active', true)
                         ->withCount(['assignedTickets as active_count' => fn($q) => $q->whereIn('status', $activeStatuses)])
                         ->withCount(['assignedTickets as resolved_on_time' => fn($q) => $q
-                            ->where('status', TicketStatus::Resuelto->value)
+                            ->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
                             ->whereBetween('exit_date', [$dateFrom, $dateTo])
                             ->whereColumn('exit_date', '<=', 'sla_resolution_deadline')
                         ])
                         ->withCount(['assignedTickets as resolved_overdue' => fn($q) => $q
-                            ->where('status', TicketStatus::Resuelto->value)
+                            ->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
                             ->whereBetween('exit_date', [$dateFrom, $dateTo])
                             ->whereNotNull('sla_resolution_deadline')
                             ->whereColumn('exit_date', '>', 'sla_resolution_deadline')

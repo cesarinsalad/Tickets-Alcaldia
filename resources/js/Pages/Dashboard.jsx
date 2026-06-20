@@ -130,10 +130,10 @@ function SuperAdminDashboard({ kpis, extra }) {
                             <thead>
                                 <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
                                     <th className="px-4 py-3 font-medium">Técnico</th>
-                                    <th className="px-4 py-3 font-medium text-center">Tickets Asignados</th>
-                                    <th className="px-4 py-3 font-medium">Desglose de Tickets Asignados</th>
-                                    <th className="px-4 py-3 font-medium text-center">Tickets Resueltos ({extra.date_from} - {extra.date_to})</th>
-                                    <th className="px-4 py-3 font-medium">Acción</th>
+                                    <th className="px-4 py-3 font-medium text-center">Tickets Activos</th>
+                                    <th className="px-4 py-3 font-medium">Desglose de Tickets Activos</th>
+                                    <th className="px-4 py-3 font-medium text-center">Tickets Cerrados ({extra.date_from} - {extra.date_to})</th>
+                                    <th className="px-4 py-3 font-medium">Ver Tickets</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
@@ -183,9 +183,17 @@ function SuperAdminDashboard({ kpis, extra }) {
                                                     variant="outline"
                                                     size="sm"
                                                     className="text-[11px] px-2 py-0.5 h-auto"
+                                                    onClick={() => router.visit(route('tickets.index', { assigned: t.id, status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to }))}
+                                                >
+                                                    Cerrados
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-[11px] px-2 py-0.5 h-auto"
                                                     onClick={() => router.visit(route('tickets.index', { assigned: t.id }))}
                                                 >
-                                                    Ver todos
+                                                    Todos
                                                 </Button>
                                             </div>
                                         </td>
@@ -206,7 +214,7 @@ function SuperAdminDashboard({ kpis, extra }) {
                             <AlertOctagon className="h-4 w-4 text-red-600" />
                             <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Críticos / Vencidos</h3>
                         </div>
-                        <Link href={route('tickets.index', { priority: 'critica', date_from: extra.date_from, date_to: extra.date_to })}>
+                        <Link href={route('tickets.index', { critical_overdue: 1, date_from: extra.date_from, date_to: extra.date_to })}>
                             <Button variant="ghost" size="sm" className="text-red-700 hover:text-red-900 hover:bg-red-100">
                                 Ver todos
                                 <ArrowRight className="h-3.5 w-3.5 ml-1" />

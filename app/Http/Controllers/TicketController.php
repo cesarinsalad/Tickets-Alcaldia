@@ -71,12 +71,30 @@ class TicketController extends Controller
                 ->orderBy('assigned_id');
         }
 
+        if ($request->filled('critical_overdue')) {
+            $query->whereIn('status', [
+                TicketStatus::Abierto->value,
+                TicketStatus::EnProceso->value,
+                TicketStatus::PendienteInformacion->value,
+            ])
+                ->where(function ($q) {
+                    $q->where('priority', TicketPriority::Critica->value)
+                      ->orWhere(function ($q2) {
+                          $q2->whereNotNull('sla_resolution_deadline')
+                             ->where('sla_resolution_deadline', '<', now());
+                      });
+                })
+                ->orderBy('assigned_id');
+        }
+
         if ($request->input('sla') === 'missed' && $request->input('status') === 'resuelto') {
             $query->whereNotNull('sla_resolution_deadline')
                 ->whereColumn('exit_date', '>', 'sla_resolution_deadline');
         }
 
-        $dateField = $request->input('status') === 'resuelto' ? 'exit_date' : 'entry_date';
+        $statusValue = $request->input('status', '');
+        $dateField = $statusValue && (str_contains($statusValue, 'resuelto') || str_contains($statusValue, 'cerrado'))
+            ? 'exit_date' : 'entry_date';
 
         if ($request->filled('date_from')) {
             $query->whereDate($dateField, '>=', $request->input('date_from'));
@@ -98,6 +116,7 @@ class TicketController extends Controller
             'priority' => 'priority',
             'entry_date' => 'entry_date',
             'created_at' => 'created_at',
+            'response' => 'sla_response_deadline',
         ];
 
         $sort = $request->input('sort', '');
@@ -133,7 +152,7 @@ class TicketController extends Controller
             'departments' => $departments,
             'users' => $users,
             'filters' => $request->only([
-                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to', 'per_page', 'overdue', 'sla', 'sort', 'dir',
+                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to', 'per_page', 'overdue', 'critical_overdue', 'sla', 'sort', 'dir',
             ]),
             'statuses' => collect(TicketStatus::cases())->map(fn ($s) => [
                 'value' => $s->value,

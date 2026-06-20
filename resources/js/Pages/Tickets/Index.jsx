@@ -180,7 +180,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                 value={filters.date_to || ''}
                                 onChange={e => applyFilters({ date_to: e.target.value })}
                             />
-                            {filters.overdue || filters.sla || filters.status || filters.priority || filters.category || filters.department || filters.search || filters.date_from || filters.date_to ? (
+                            {filters.overdue || filters.critical_overdue || filters.sla || filters.status || filters.priority || filters.category || filters.department || filters.search || filters.date_from || filters.date_to ? (
                                 <Button type="button" variant="ghost" size="sm" onClick={() => router.get(route('tickets.index'))}>
                                     Limpiar filtros
                                 </Button>
@@ -236,7 +236,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <SortHeader col="category" className="hidden md:table-cell">Categoría</SortHeader>
                                     <SortHeader col="priority">Prioridad</SortHeader>
                                     <SortHeader col="status">Estado</SortHeader>
-                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Respuesta</th>
+                                    <SortHeader col="response" className="hidden md:table-cell">Resolución</SortHeader>
                                     <SortHeader col="assigned" className="hidden lg:table-cell">Asignado</SortHeader>
                                     <SortHeader col="entry_date" className="hidden lg:table-cell">Fecha</SortHeader>
                                 </tr>
@@ -253,17 +253,33 @@ export default function Index({ tickets, filters, categories, departments, users
                                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{ticket.creator?.full_name ?? ticket.creator?.name}</td>
                                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{ticket.category?.name || '—'}</td>
                                         <td className="px-4 py-3">
-                                            <Badge variant={priorityColors[ticket.priority] || 'default'}>
+                                            <Badge variant={priorityColors[ticket.priority] || 'default'} className="text-[12px] px-1.5 leading-tight">
                                                 {priorityLabels[ticket.priority] || ticket.priority}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge variant={statusColors[ticket.status] || 'default'}>
+                                            <Badge variant={statusColors[ticket.status] || 'default'} className="text-[12px] px-1.5 leading-tight">
                                                 {statusLabels[ticket.status] || ticket.status}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3 hidden md:table-cell">
-                                            <RelativeTime deadline={ticket.sla_response_deadline} compact />
+                                            {ticket.status === 'resuelto' || ticket.status === 'cerrado' ? (
+                                                ticket.sla_resolution_deadline ? (
+                                                    new Date(ticket.exit_date) <= new Date(ticket.sla_resolution_deadline) ? (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-green-700 font-medium">
+                                                            <CheckCircle className="h-3 w-3" /> A tiempo
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium">
+                                                            <AlertTriangle className="h-3 w-3" /> Tardío
+                                                        </span>
+                                                    )
+                                                ) : (
+                                                    <span className="text-gray-400">—</span>
+                                                )
+                                            ) : (
+                                                <span className="text-xs"><RelativeTime deadline={ticket.sla_resolution_deadline} compact /></span>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-gray-600 text-xs hidden lg:table-cell">
                                             {(ticket.assigned?.full_name ?? ticket.assigned?.name) || 'Sin asignar'}

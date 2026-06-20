@@ -302,19 +302,61 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                 Tiempos de atención
                             </h3>
                             <div className="space-y-4 text-sm">
-                                <div>
-                                    <RelativeTime
-                                        deadline={sla.response_deadline}
-                                        entryDate={ticket.entry_date}
-                                        label="Responder antes de:"
-                                    />
+                                <div className="mb-3">
+                                    {ticket.status === 'resuelto' || ticket.status === 'cerrado' ? (
+                                        <div className="flex items-start gap-3">
+                                            <label className="text-sm text-gray-400 shrink-0">Responder antes de:</label>
+                                            {sla.response_deadline && ticket.exit_date ? (
+                                                new Date(ticket.exit_date) <= new Date(sla.response_deadline) ? (
+                                                    <span className="inline-flex items-center gap-1 text-sm text-green-700 font-medium">
+                                                        <CheckCircle className="h-3.5 w-3.5" /> A tiempo
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 text-sm text-amber-600 font-medium">
+                                                        <AlertTriangle className="h-3.5 w-3.5" /> Tardío
+                                                    </span>
+                                                )
+                                            ) : (
+                                                <span className="text-sm text-gray-400">—</span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-sm text-gray-400 shrink-0">Responder antes de:</span>
+                                            <RelativeTime
+                                                deadline={sla.response_deadline}
+                                                entryDate={ticket.entry_date}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
-                                    <RelativeTime
-                                        deadline={sla.resolution_deadline}
-                                        entryDate={ticket.entry_date}
-                                        label="Resolución esperada:"
-                                    />
+                                    {ticket.status === 'resuelto' || ticket.status === 'cerrado' ? (
+                                        <div className="flex items-start gap-3">
+                                            <label className="text-sm text-gray-400 shrink-0">Resolución esperada:</label>
+                                            {sla.resolution_deadline && ticket.exit_date ? (
+                                                new Date(ticket.exit_date) <= new Date(sla.resolution_deadline) ? (
+                                                    <span className="inline-flex items-center gap-1 text-sm text-green-700 font-medium">
+                                                        <CheckCircle className="h-3.5 w-3.5" /> A tiempo
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 text-sm text-amber-600 font-medium">
+                                                        <AlertTriangle className="h-3.5 w-3.5" /> Tardío
+                                                    </span>
+                                                )
+                                            ) : (
+                                                <span className="text-sm text-gray-400">—</span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-sm text-gray-400 shrink-0">Resolución esperada:</span>
+                                            <RelativeTime
+                                                deadline={sla.resolution_deadline}
+                                                entryDate={ticket.entry_date}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Tiempo máximo asignado</span>
