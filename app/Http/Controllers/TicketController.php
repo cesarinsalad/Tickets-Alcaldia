@@ -135,6 +135,10 @@ class TicketController extends Controller
                 $query->leftJoin('users as assigned_users', 'tickets.assigned_id', '=', 'assigned_users.id')
                     ->reorder('assigned_users.name', $dir)
                     ->select('tickets.*');
+            } elseif ($sort === 'creator') {
+                $query->leftJoin('users as creator_users', 'tickets.creator_id', '=', 'creator_users.id')
+                    ->reorder('creator_users.name', $dir)
+                    ->select('tickets.*');
             } elseif (isset($sortMap[$sort])) {
                 $query->reorder($sortMap[$sort], $dir);
             } else {

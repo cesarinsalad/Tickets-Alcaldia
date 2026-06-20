@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight } from 'lucide-react';
+import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -737,10 +737,11 @@ function TecnicoDashboard({ extra }) {
 function AdminDeptDashboard({ extra }) {
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard icon={Ticket} label="Tickets del Equipo" value={extra.total_department_tickets} color="blue" subtitle={`Tickets creados en el período ${extra.date_from} - ${extra.date_to}`} href={route('tickets.index', { date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={CheckCircle} label="Tickets Resueltos" value={extra.resolved_in_period} color="green" subtitle={`Resueltos en el período ${extra.date_from} - ${extra.date_to}`} href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={Circle} label="Tickets Activos" value={extra.dept_active_tickets.total} color="yellow" subtitle="Todos los tickets sin resolver" href={route('tickets.index', { status: 'abierto,en_proceso,pendiente_informacion' })} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                <KpiCard icon={Ticket} label="Tickets del Equipo" value={extra.total_department_tickets} color="blue" subtitle={`Creados en el período ${extra.date_from} - ${extra.date_to}`} href={route('tickets.index', { date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={CheckCircle} label="Tickets Resueltos" value={extra.resolved_in_period} color="green" subtitle={`En el período ${extra.date_from} - ${extra.date_to}`} href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={Circle} label="Tickets Activos" value={extra.dept_active_tickets.total} color="orange" subtitle="Todos los tickets sin resolver" href={route('tickets.index', { status: 'abierto,en_proceso,pendiente_informacion' })} />
+                <KpiCard icon={Users} label="Empleados con Tickets Activos" value={extra.employees_with_active} color="blue" subtitle="Número de empleados con tickets sin resolver" href={route('tickets.index', { sort: 'creator', dir: 'asc', status: 'abierto,en_proceso,pendiente_informacion' })} />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">

@@ -212,6 +212,12 @@ class DashboardController extends Controller
                     ->whereBetween('exit_date', [$dateFrom, $dateTo])
                     ->count(),
                 'dept_active_tickets' => $activeList,
+                'employees_with_active' => User::where('department_id', $user->department_id)
+                    ->where('is_active', true)
+                    ->whereHas('createdTickets', fn($q) => $q
+                        ->whereIn('status', [TicketStatus::Abierto->value, TicketStatus::EnProceso->value, TicketStatus::PendienteInformacion->value])
+                    )
+                    ->count(),
                 'top_employees' => $topEmployees,
             ];
         } elseif ($user->hasRole('admin_tickets')) {

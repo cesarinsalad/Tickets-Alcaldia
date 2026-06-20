@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { Plus, Search, Ticket, FileText, AlertOctagon, AlertTriangle, CheckCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
@@ -43,6 +43,8 @@ const priorityLabels = {
 
 export default function Index({ tickets, filters, categories, departments, users }) {
     const [search, setSearch] = useState(filters.search || '');
+    const { auth } = usePage().props;
+    const canFilterAll = auth.user?.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name));
 
     function activeFilters() {
         const clean = {};
@@ -148,6 +150,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                 <option value="alta">Alta</option>
                                 <option value="critica">Crítica</option>
                             </Select>
+                            {canFilterAll && (
                             <Select
                                 className="flex-1 min-w-[140px]"
                                 value={filters.category || ''}
@@ -158,6 +161,8 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}
                             </Select>
+                            )}
+                            {canFilterAll && (
                             <Select
                                 className="flex-1 min-w-[140px]"
                                 value={filters.department || ''}
@@ -168,6 +173,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
                             </Select>
+                            )}
                             <Input
                                 type="date"
                                 className="w-[140px]"
@@ -226,7 +232,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                 <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
                                     <SortHeader col="code">Código</SortHeader>
                                     <SortHeader col="title">Título</SortHeader>
-                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Solicitante</th>
+                                    <SortHeader col="creator" className="hidden md:table-cell">Solicitante</SortHeader>
                                     <SortHeader col="category" className="hidden md:table-cell">Categoría</SortHeader>
                                     <SortHeader col="priority">Prioridad</SortHeader>
                                     <SortHeader col="status">Estado</SortHeader>
