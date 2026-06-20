@@ -310,7 +310,7 @@ function AdminTicketsDashboard({ extra }) {
                                         <td className="px-5 py-3">
                                             <Link href={route('tickets.show', t.id)}>
                                                 <Button variant="outline" size="sm">
-                                                    Asignar / Evaluar
+                                                    Asignar
                                                 </Button>
                                             </Link>
                                         </td>
