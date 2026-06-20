@@ -236,7 +236,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <SortHeader col="category" className="hidden md:table-cell">Categoría</SortHeader>
                                     <SortHeader col="priority">Prioridad</SortHeader>
                                     <SortHeader col="status">Estado</SortHeader>
-                                    <SortHeader col="response" className="hidden md:table-cell">Respuesta</SortHeader>
+                                    <SortHeader col="response" className="hidden md:table-cell">Resolución</SortHeader>
                                     <SortHeader col="assigned" className="hidden lg:table-cell">Asignado</SortHeader>
                                     <SortHeader col="entry_date" className="hidden lg:table-cell">Fecha</SortHeader>
                                 </tr>

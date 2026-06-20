@@ -103,24 +103,63 @@ function SuperAdminDashboard({ kpis, extra }) {
                 <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
-                    {extra.top_departments.length > 0 ? (
-                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
+            {crit.data?.length > 0 && (
+                <div className="rounded-lg border border-red-200 bg-white">
+                    <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-red-100 bg-red-50/50">
+                        <div className="flex items-center gap-2">
+                            <AlertOctagon className="h-4 w-4 text-red-600" />
+                            <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Vencidos</h3>
+                        </div>
+                        <Link href={route('tickets.index', { critical_overdue: 1 })}>
+                            <Button variant="ghost" size="sm" className="text-red-700 hover:text-red-900 hover:bg-red-100">
+                                Ver todos
+                                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                            </Button>
+                        </Link>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <SortHeader col="code">Código</SortHeader>
+                                    <SortHeader col="title">Título</SortHeader>
+                                    <SortHeader col="priority">Prioridad</SortHeader>
+                                    <SortHeader col="status">Estado</SortHeader>
+                                    <SortHeader col="department">Departamento</SortHeader>
+                                    <SortHeader col="assigned">Asignado</SortHeader>
+                                    <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {crit.data.map(t => (
+                                    <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-red-50/30 transition-colors cursor-pointer">
+                                        <td className="px-5 py-3">
+                                            <span className="font-mono text-azul-institucional">{t.code}</span>
+                                        </td>
+                                        <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
+                                        <td className="px-5 py-3">
+                                            <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
+                                        </td>
+                                        <td className="px-5 py-3 text-gray-600">{statusLabels[t.status] || t.status}</td>
+                                        <td className="px-5 py-3 text-gray-600">{t.department || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-600">{t.assigned || '—'}</td>
+                                        <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {crit.links && crit.links.length > 3 && (
+                        <div className="px-5 py-3 border-t border-gris-borde">
+                            <Pagination
+                                links={crit.links}
+                                total={crit.total}
+                                perPage={crit.per_page || 10}
+                            />
+                        </div>
                     )}
                 </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
-                    {extra.category_distribution.length > 0 ? (
-                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
-            </div>
+            )}
 
             <div className="rounded-lg border border-gris-borde bg-white">
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
@@ -261,14 +300,76 @@ function SuperAdminDashboard({ kpis, extra }) {
                 )}
             </div>
 
-            {crit.data?.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
+                    {extra.top_departments.length > 0 ? (
+                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
+                    )}
+                </div>
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
+                    {extra.category_distribution.length > 0 ? (
+                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
+                    )}
+                </div>
+            </div>
+
+        </div>
+    );
+}
+
+function AdminTicketsDashboard({ extra }) {
+    const crit = extra.critical_expired;
+    const sort = extra.critical_sort || 'entry_date';
+    const dir = extra.critical_dir || 'desc';
+
+    function handleSort(col) {
+        const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
+        router.get(route('dashboard'), {
+            date_from: extra.date_from,
+            date_to: extra.date_to,
+            critical_sort: col,
+            critical_dir: newDir,
+            critical_page: 1,
+        }, { preserveState: true, replace: true });
+    }
+
+    function SortIcon({ col }) {
+        if (sort !== col) return null;
+        return dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
+    }
+
+    function SortHeader({ col, children, className = '' }) {
+        return (
+            <th className={`px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700 ${className}`} onClick={() => handleSort(col)}>
+                {children}
+                <SortIcon col={col} />
+            </th>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard icon={Ticket} label="Activos" value={extra.active_tickets} color="blue" subtitle="Tickets sin resolver en el período elegido" href={route('tickets.index', { status: 'abierto,en_proceso', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={CheckCircle} label="Tickets Resueltos y Cerrados" value={extra.resolved_this_month} color="green" subtitle="Tickets resueltos en el período elegido" href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro del plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
+            </div>
+
+            {crit?.data?.length > 0 && (
                 <div className="rounded-lg border border-red-200 bg-white">
                     <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-red-100 bg-red-50/50">
                         <div className="flex items-center gap-2">
                             <AlertOctagon className="h-4 w-4 text-red-600" />
-                            <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Críticos / Vencidos</h3>
+                            <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Vencidos</h3>
                         </div>
-                        <Link href={route('tickets.index', { critical_overdue: 1, date_from: extra.date_from, date_to: extra.date_to })}>
+                        <Link href={route('tickets.index', { critical_overdue: 1 })}>
                             <Button variant="ghost" size="sm" className="text-red-700 hover:text-red-900 hover:bg-red-100">
                                 Ver todos
                                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
@@ -318,68 +419,6 @@ function SuperAdminDashboard({ kpis, extra }) {
                     )}
                 </div>
             )}
-
-        </div>
-    );
-}
-
-function AdminTicketsDashboard({ extra }) {
-    const crit = extra.critical_expired;
-    const sort = extra.critical_sort || 'entry_date';
-    const dir = extra.critical_dir || 'desc';
-
-    function handleSort(col) {
-        const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
-        router.get(route('dashboard'), {
-            date_from: extra.date_from,
-            date_to: extra.date_to,
-            critical_sort: col,
-            critical_dir: newDir,
-            critical_page: 1,
-        }, { preserveState: true, replace: true });
-    }
-
-    function SortIcon({ col }) {
-        if (sort !== col) return null;
-        return dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
-    }
-
-    function SortHeader({ col, children, className = '' }) {
-        return (
-            <th className={`px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700 ${className}`} onClick={() => handleSort(col)}>
-                {children}
-                <SortIcon col={col} />
-            </th>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard icon={Ticket} label="Activos" value={extra.active_tickets} color="blue" subtitle="Tickets sin resolver en el período elegido" href={route('tickets.index', { status: 'abierto,en_proceso', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={CheckCircle} label="Tickets Resueltos y Cerrados" value={extra.resolved_this_month} color="green" subtitle="Tickets resueltos en el período elegido" href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro del plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
-                    {extra.top_departments?.length > 0 ? (
-                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
-                    {extra.category_distribution?.length > 0 ? (
-                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
-            </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
@@ -435,148 +474,109 @@ function AdminTicketsDashboard({ extra }) {
                 )}
             </div>
 
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Carga de Trabajo del Equipo</h3>
-                    {extra.technician_workload?.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                        <th className="px-4 py-3 font-medium">Técnico</th>
-                                        <th className="px-4 py-3 font-medium text-center">Tickets Asignados</th>
-                                        <th className="px-4 py-3 font-medium">Desglose de Tickets Asignados</th>
-                                        <th className="px-4 py-3 font-medium text-center">Tickets Resueltos ({extra.date_from} - {extra.date_to})</th>
-                                        <th className="px-4 py-3 font-medium">Acción</th>
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Carga de Trabajo del Equipo</h3>
+                {extra.technician_workload?.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <th className="px-4 py-3 font-medium">Técnico</th>
+                                    <th className="px-4 py-3 font-medium text-center">Tickets Asignados</th>
+                                    <th className="px-4 py-3 font-medium">Desglose de Tickets Asignados</th>
+                                    <th className="px-4 py-3 font-medium text-center">Tickets Resueltos ({extra.date_from} - {extra.date_to})</th>
+                                    <th className="px-4 py-3 font-medium">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {extra.technician_workload.map(t => (
+                                    <tr key={t.id} className="hover:bg-gris-fondo transition-colors">
+                                        <td className="px-4 py-3">
+                                            <p className="text-sm font-medium text-gray-900">{t.name}</p>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <span className="font-bold text-gray-900">{t.active_count}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="grid grid-cols-4 gap-1">
+                                                {['critica', 'alta', 'media', 'baja'].map(priority => {
+                                                    const count = t.priority_breakdown?.[priority] ?? 0;
+                                                    const variant = priorityBadgeMap[priority] || 'default';
+                                                    return (
+                                                        <Badge key={priority} variant={count > 0 ? variant : 'secondary'} className={`text-[10px] px-1 py-0 leading-tight justify-center ${count === 0 ? 'opacity-30' : ''}`}>
+                                                            {priorityLabels[priority]} {count}
+                                                        </Badge>
+                                                    );
+                                                })}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="inline-flex items-center justify-center gap-2 text-xs">
+                                                <span className={`font-medium inline-flex items-center gap-0.5 ${t.resolved_on_time > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+                                                    <CheckCircle className="h-3 w-3" /> {t.resolved_on_time} a tiempo
+                                                </span>
+                                                <span className="text-gray-300">|</span>
+                                                <span className={`font-medium inline-flex items-center gap-0.5 ${t.resolved_overdue > 0 ? 'text-red-700' : 'text-gray-400'}`}>
+                                                    <AlertTriangle className="h-3 w-3" /> {t.resolved_overdue} vencidos
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-[11px] px-2 py-0.5 h-auto"
+                                                    onClick={() => router.visit(route('tickets.index', { assigned: t.id, status: 'abierto,en_proceso,pendiente_informacion' }))}
+                                                >
+                                                    Activos
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-[11px] px-2 py-0.5 h-auto"
+                                                    onClick={() => router.visit(route('tickets.index', { assigned: t.id, status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to }))}
+                                                >
+                                                    Cerrados
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-[11px] px-2 py-0.5 h-auto"
+                                                    onClick={() => router.visit(route('tickets.index', { assigned: t.id }))}
+                                                >
+                                                    Todos
+                                                </Button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gris-borde">
-                                    {extra.technician_workload.map(t => (
-                                        <tr key={t.id} className="hover:bg-gris-fondo transition-colors">
-                                            <td className="px-4 py-3">
-                                                <p className="text-sm font-medium text-gray-900">{t.name}</p>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <span className="font-bold text-gray-900">{t.active_count}</span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="grid grid-cols-4 gap-1">
-                                                    {['critica', 'alta', 'media', 'baja'].map(priority => {
-                                                        const count = t.priority_breakdown?.[priority] ?? 0;
-                                                        const variant = priorityBadgeMap[priority] || 'default';
-                                                        return (
-                                                            <Badge key={priority} variant={count > 0 ? variant : 'secondary'} className={`text-[10px] px-1 py-0 leading-tight justify-center ${count === 0 ? 'opacity-30' : ''}`}>
-                                                                {priorityLabels[priority]} {count}
-                                                            </Badge>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <div className="inline-flex items-center justify-center gap-2 text-xs">
-                                                    <span className={`font-medium inline-flex items-center gap-0.5 ${t.resolved_on_time > 0 ? 'text-green-700' : 'text-gray-400'}`}>
-                                                        <CheckCircle className="h-3 w-3" /> {t.resolved_on_time} a tiempo
-                                                    </span>
-                                                    <span className="text-gray-300">|</span>
-                                                    <span className={`font-medium inline-flex items-center gap-0.5 ${t.resolved_overdue > 0 ? 'text-red-700' : 'text-gray-400'}`}>
-                                                        <AlertTriangle className="h-3 w-3" /> {t.resolved_overdue} vencidos
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-[11px] px-2 py-0.5 h-auto"
-                                                        onClick={() => router.visit(route('tickets.index', { assigned: t.id, status: 'abierto,en_proceso,pendiente_informacion' }))}
-                                                    >
-                                                        Activos
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-[11px] px-2 py-0.5 h-auto"
-                                                        onClick={() => router.visit(route('tickets.index', { assigned: t.id, status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to }))}
-                                                    >
-                                                        Cerrados
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="text-[11px] px-2 py-0.5 h-auto"
-                                                        onClick={() => router.visit(route('tickets.index', { assigned: t.id }))}
-                                                    >
-                                                        Todos
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-sm text-gray-500 text-center py-6">No hay técnicos registrados.</p>
+                )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
+                    {extra.top_departments?.length > 0 ? (
+                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
                     ) : (
-                        <p className="text-sm text-gray-500 text-center py-6">No hay técnicos registrados.</p>
+                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
                     )}
                 </div>
-
-                {crit?.data?.length > 0 && (
-                    <div className="rounded-lg border border-red-200 bg-white">
-                        <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-red-100 bg-red-50/50">
-                            <div className="flex items-center gap-2">
-                                <AlertOctagon className="h-4 w-4 text-red-600" />
-                                <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Críticos / Vencidos</h3>
-                            </div>
-                            <Link href={route('tickets.index', { critical_overdue: 1, date_from: extra.date_from, date_to: extra.date_to })}>
-                                <Button variant="ghost" size="sm" className="text-red-700 hover:text-red-900 hover:bg-red-100">
-                                    Ver todos
-                                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                                </Button>
-                            </Link>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                        <SortHeader col="code">Código</SortHeader>
-                                        <SortHeader col="title">Título</SortHeader>
-                                        <SortHeader col="priority">Prioridad</SortHeader>
-                                        <SortHeader col="status">Estado</SortHeader>
-                                        <SortHeader col="department">Departamento</SortHeader>
-                                        <SortHeader col="assigned">Asignado</SortHeader>
-                                        <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gris-borde">
-                                    {crit.data.map(t => (
-                                        <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-red-50/30 transition-colors cursor-pointer">
-                                            <td className="px-5 py-3">
-                                                <span className="font-mono text-azul-institucional">{t.code}</span>
-                                            </td>
-                                            <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
-                                            <td className="px-5 py-3">
-                                                <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
-                                            </td>
-                                            <td className="px-5 py-3 text-gray-600">{statusLabels[t.status] || t.status}</td>
-                                            <td className="px-5 py-3 text-gray-600">{t.department || '—'}</td>
-                                            <td className="px-5 py-3 text-gray-600">{t.assigned || '—'}</td>
-                                            <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        {crit.links && crit.links.length > 3 && (
-                            <div className="px-5 py-3 border-t border-gris-borde">
-                                <Pagination
-                                    links={crit.links}
-                                    total={crit.total}
-                                    perPage={crit.per_page || 10}
-                                />
-                            </div>
-                        )}
-                    </div>
-                )}
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
+                    {extra.category_distribution?.length > 0 ? (
+                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
+                    )}
+                </div>
+            </div>
 
         </div>
     );
