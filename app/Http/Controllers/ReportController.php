@@ -49,6 +49,10 @@ class ReportController extends Controller
             $query->where('assigned_id', $request->input('assigned'));
         }
 
+        if ($request->filled('creator')) {
+            $query->where('creator_id', $request->input('creator'));
+        }
+
         if ($request->filled('overdue')) {
             $query->whereIn('status', ['abierto', 'en_proceso', 'pendiente_informacion'])
                 ->whereNotNull('sla_resolution_deadline')

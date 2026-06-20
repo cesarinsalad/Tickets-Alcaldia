@@ -162,22 +162,16 @@ class DashboardController extends Controller
                 'cerrados' => (clone $baseQuery)->where('status', TicketStatus::Cerrado)->count(),
             ];
 
-            $totalResolved = (clone $baseQuery)->where('status', TicketStatus::Resuelto)
-                ->whereNotNull('exit_date')
-                ->whereNotNull('entry_date');
-
-            $avgWait = (clone $totalResolved)
-                ->selectRaw('AVG(EXTRACT(EPOCH FROM (exit_date - entry_date)) / 3600) as avg_hours')
-                ->first()
-                ->avg_hours;
-
-            $activeList = (clone $baseQuery)
+            $activePaginator = Ticket::query()
+                ->visibleTo($user)
                 ->whereIn('status', $activeStatuses)
                 ->with(['category', 'creator'])
                 ->latest()
-                ->take(20)
-                ->get()
-                ->map(fn($t) => [
+                ->paginate(5, ['*'], 'dept_active_page')
+                ->withQueryString();
+
+            $activeList = [
+                'data' => $activePaginator->getCollection()->map(fn($t) => [
                     'id' => $t->id,
                     'code' => $t->code,
                     'title' => $t->title,
@@ -188,15 +182,37 @@ class DashboardController extends Controller
                     'creator_name' => $t->creator->full_name,
                     'category' => $t->category?->name,
                     'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
-                ]);
+                ])->values()->toArray(),
+                'links' => $activePaginator->toArray()['links'] ?? [],
+                'total' => $activePaginator->total(),
+                'per_page' => $activePaginator->perPage(),
+            ];
 
             $totalDepartment = (clone $baseQuery)->count();
+
+            $topEmployees = User::where('department_id', $user->department_id)
+                ->where('is_active', true)
+                ->withCount(['createdTickets' => fn($q) => $q
+                    ->whereBetween('entry_date', [$dateFrom, $dateTo])
+                    ->whereNull('deleted_at')
+                ])
+                ->orderByDesc('created_tickets_count')
+                ->take(5)
+                ->get()
+                ->filter(fn($u) => $u->created_tickets_count > 0)
+                ->values()
+                ->map(fn($u) => ['id' => $u->id, 'name' => $u->full_name, 'count' => $u->created_tickets_count]);
 
             $extra = [
                 'is_admin_dept' => true,
                 'total_department_tickets' => $totalDepartment,
-                'avg_wait_hours' => $avgWait ? round((float) $avgWait, 1) : null,
+                'resolved_in_period' => Ticket::query()
+                    ->visibleTo($user)
+                    ->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
+                    ->whereBetween('exit_date', [$dateFrom, $dateTo])
+                    ->count(),
                 'dept_active_tickets' => $activeList,
+                'top_employees' => $topEmployees,
             ];
         } elseif ($user->hasRole('admin_tickets')) {
             $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);

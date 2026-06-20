@@ -24,7 +24,7 @@ export default function Pagination({ links, perPage, total, onPerPageChange }) {
     }
 
     return (
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between">
             {onPerPageChange && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                     <span>Mostrar</span>

@@ -738,52 +738,64 @@ function AdminDeptDashboard({ extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard icon={Ticket} label="Total Tickets del Equipo" value={extra.total_department_tickets} color="blue" subtitle="Creados por tu departamento" href={route('tickets.index')} />
-                <KpiCard icon={Clock} label="Tiempo Promedio de Espera" value={extra.avg_wait_hours ? `${extra.avg_wait_hours}h` : '—'} color="orange" subtitle="Horas entre creación y cierre" />
-                <KpiCard icon={CheckCircle} label="Tickets Activos" value={extra.dept_active_tickets.length} color="yellow" subtitle="Aún sin resolver en tu departamento" href={route('tickets.index')} />
+                <KpiCard icon={Ticket} label="Tickets del Equipo" value={extra.total_department_tickets} color="blue" subtitle={`Tickets creados en el período ${extra.date_from} - ${extra.date_to}`} href={route('tickets.index', { date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={CheckCircle} label="Tickets Resueltos" value={extra.resolved_in_period} color="green" subtitle={`Resueltos en el período ${extra.date_from} - ${extra.date_to}`} href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={Circle} label="Tickets Activos" value={extra.dept_active_tickets.total} color="yellow" subtitle="Todos los tickets sin resolver" href={route('tickets.index', { status: 'abierto,en_proceso,pendiente_informacion' })} />
             </div>
 
-            <div className="rounded-lg border border-gris-borde bg-white">
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
-                    <Ticket className="h-4 w-4 text-azul-institucional" />
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Tickets Activos del Departamento</h3>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
+                <div className="rounded-lg border border-gris-borde bg-white p-5 min-w-0 max-w-md">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Empleados con Mayor Demanda de Soporte</h3>
+                    {extra.top_employees?.length > 0 ? (
+                        <SimpleDonutChart data={extra.top_employees} onPieClick={(entry) => router.visit(route('tickets.index', { creator: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
+                    )}
                 </div>
-                {extra.dept_active_tickets.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <th className="px-5 py-3 font-medium">Código</th>
-                                    <th className="px-5 py-3 font-medium">Título</th>
-                                    <th className="px-5 py-3 font-medium">Solicitante</th>
-                                    <th className="px-5 py-3 font-medium">Estado</th>
-                                    <th className="px-5 py-3 font-medium">Categoría</th>
-                                    <th className="px-5 py-3 font-medium">Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gris-borde">
-                                {extra.dept_active_tickets.map(t => (
-                                    <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-5 py-3">
-                                            <Link href={route('tickets.show', t.id)} className="font-mono text-xs text-azul-institucional hover:underline">
-                                                {t.code}
-                                            </Link>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
-                                        <td className="px-5 py-3 text-gray-600">{t.creator_name}</td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-600">{t.category || '—'}</td>
-                                        <td className="px-5 py-3 text-gray-500 text-xs">{t.entry_date}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+
+                <div className="rounded-lg border border-gris-borde bg-white min-w-0">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
+                        <Ticket className="h-4 w-4 text-azul-institucional" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Tickets Activos del Departamento</h3>
                     </div>
-                ) : (
-                    <p className="text-sm text-gray-500 text-center py-10">No hay tickets activos en tu departamento.</p>
-                )}
+                    {extra.dept_active_tickets.data?.length > 0 ? (
+                        <div className="grid grid-rows-[1fr_auto] h-[340px]">
+                        <div className="overflow-y-auto">
+                            <table className="w-full text-sm">
+                                <thead className="sticky top-0 bg-white">
+                                    <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                        <th className="px-4 py-3 font-medium">Título</th>
+                                        <th className="px-4 py-3 font-medium">Solicitante</th>
+                                        <th className="px-4 py-3 font-medium">Estado</th>
+                                        <th className="px-4 py-3 font-medium">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gris-borde">
+                                    {extra.dept_active_tickets.data.map(t => (
+                                        <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-gray-50/50 transition-colors cursor-pointer">
+                                            <td className="px-4 py-3 text-gray-900 max-w-[180px] truncate">{t.title}</td>
+                                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{t.creator_name}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{t.entry_date}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                            <div className="px-4 py-3 border-t border-gris-borde">
+                                <Pagination
+                                    links={extra.dept_active_tickets.links}
+                                    total={extra.dept_active_tickets.total}
+                                    perPage={extra.dept_active_tickets.per_page || 5}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-10">No hay tickets activos en tu departamento.</p>
+                    )}
+                </div>
             </div>
 
         </div>

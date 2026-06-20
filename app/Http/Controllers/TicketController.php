@@ -60,6 +60,10 @@ class TicketController extends Controller
             $query->where('assigned_id', $request->input('assigned'));
         }
 
+        if ($request->filled('creator')) {
+            $query->where('creator_id', $request->input('creator'));
+        }
+
         if ($request->filled('overdue')) {
             $query->whereIn('status', [
                 TicketStatus::Abierto->value,
@@ -152,7 +156,7 @@ class TicketController extends Controller
             'departments' => $departments,
             'users' => $users,
             'filters' => $request->only([
-                'search', 'status', 'priority', 'category', 'department', 'assigned', 'date_from', 'date_to', 'per_page', 'overdue', 'critical_overdue', 'sla', 'sort', 'dir',
+                'search', 'status', 'priority', 'category', 'department', 'assigned', 'creator', 'date_from', 'date_to', 'per_page', 'overdue', 'critical_overdue', 'sla', 'sort', 'dir',
             ]),
             'statuses' => collect(TicketStatus::cases())->map(fn ($s) => [
                 'value' => $s->value,
