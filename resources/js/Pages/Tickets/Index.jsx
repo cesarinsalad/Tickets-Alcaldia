@@ -199,12 +199,6 @@ export default function Index({ tickets, filters, categories, departments, users
                             <span>Mostrando tickets que <strong>NO cumplieron SLA</strong> — resueltos después de su plazo.</span>
                         </div>
                     )}
-                    {filters.priority === 'critica' && (
-                        <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 mt-3 text-sm text-red-800">
-                            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
-                            <span>Mostrando tickets con prioridad <strong>crítica</strong>.</span>
-                        </div>
-                    )}
                     {filters.status === 'abierto,en_proceso' && (
                         <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2.5 mt-3 text-sm text-blue-800">
                             <Ticket className="h-4 w-4 text-blue-600 shrink-0" />
