@@ -286,7 +286,6 @@ class DashboardController extends Controller
                 ->whereNull('tickets.deleted_at')
                 ->whereNull('users.deleted_at')
                 ->whereNull('departments.deleted_at')
-                ->whereIn('tickets.status', array_map(fn($s) => $s->value, $activeStatuses))
                 ->whereBetween('tickets.entry_date', [$dateFrom, $dateTo])
                 ->groupBy('departments.id', 'departments.name')
                 ->orderByDesc('count')
@@ -383,6 +382,44 @@ class DashboardController extends Controller
                     ->where('sla_resolution_deadline', '<', now())
                     ->distinct('assigned_id')
                     ->count('assigned_id'),
+                'technician_workload' => (function () use ($activeStatuses, $dateFrom, $dateTo) {
+                    $technicians = User::role('tecnico')
+                        ->where('is_active', true)
+                        ->withCount(['assignedTickets as active_count' => fn($q) => $q->whereIn('status', $activeStatuses)])
+                        ->withCount(['assignedTickets as resolved_on_time' => fn($q) => $q
+                            ->where('status', TicketStatus::Resuelto->value)
+                            ->whereBetween('exit_date', [$dateFrom, $dateTo])
+                            ->whereColumn('exit_date', '<=', 'sla_resolution_deadline')
+                        ])
+                        ->withCount(['assignedTickets as resolved_overdue' => fn($q) => $q
+                            ->where('status', TicketStatus::Resuelto->value)
+                            ->whereBetween('exit_date', [$dateFrom, $dateTo])
+                            ->whereNotNull('sla_resolution_deadline')
+                            ->whereColumn('exit_date', '>', 'sla_resolution_deadline')
+                        ])
+                        ->orderByDesc('active_count')
+                        ->get();
+
+                    $technicianIds = $technicians->pluck('id');
+
+                    $priorityBreakdowns = DB::table('tickets')
+                        ->whereIn('assigned_id', $technicianIds)
+                        ->whereIn('status', $activeStatuses)
+                        ->selectRaw('assigned_id, priority, count(*) as count')
+                        ->groupBy('assigned_id', 'priority')
+                        ->get()
+                        ->groupBy('assigned_id');
+
+                    return $technicians->map(fn($u) => [
+                        'id' => $u->id,
+                        'name' => $u->full_name,
+                        'department' => $u->department?->name,
+                        'active_count' => (int) $u->active_count,
+                        'priority_breakdown' => $priorityBreakdowns->get($u->id, collect())->pluck('count', 'priority')->toArray(),
+                        'resolved_on_time' => (int) $u->resolved_on_time,
+                        'resolved_overdue' => (int) $u->resolved_overdue,
+                    ]);
+                })(),
                 'top_departments' => $topDepartments,
                 'category_distribution' => $categoryDistribution,
                 'critical_expired' => $criticalExpired,

@@ -19,6 +19,14 @@ const priorityBadgeMap = {
     sin_definir: 'gray',
 };
 
+const priorityLabels = {
+    sin_definir: 'Sin definir',
+    baja: 'Baja',
+    media: 'Media',
+    alta: 'Alta',
+    critica: 'Crítica',
+};
+
 const statusLabels = {
     abierto: 'Abierto',
     en_proceso: 'En Proceso',
@@ -97,9 +105,9 @@ function SuperAdminDashboard({ kpis, extra }) {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Mayor Demanda</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
                     {extra.top_departments.length > 0 ? (
-                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id }))} />
+                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
                     ) : (
                         <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
                     )}
@@ -107,11 +115,88 @@ function SuperAdminDashboard({ kpis, extra }) {
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
                     {extra.category_distribution.length > 0 ? (
-                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id }))} />
+                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
                     ) : (
                         <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
                     )}
                 </div>
+            </div>
+
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Carga de Trabajo del Equipo</h3>
+                {extra.technician_workload?.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <th className="px-4 py-3 font-medium">Técnico</th>
+                                    <th className="px-4 py-3 font-medium text-center">Tickets Asignados</th>
+                                    <th className="px-4 py-3 font-medium">Desglose de Tickets Asignados</th>
+                                    <th className="px-4 py-3 font-medium text-center">Tickets Resueltos ({extra.date_from} - {extra.date_to})</th>
+                                    <th className="px-4 py-3 font-medium">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {extra.technician_workload.map(t => (
+                                    <tr key={t.id} className="hover:bg-gris-fondo transition-colors">
+                                        <td className="px-4 py-3">
+                                            <p className="text-sm font-medium text-gray-900">{t.name}</p>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <span className="font-bold text-gray-900">{t.active_count}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="grid grid-cols-4 gap-1">
+                                                {['critica', 'alta', 'media', 'baja'].map(priority => {
+                                                    const count = t.priority_breakdown?.[priority] ?? 0;
+                                                    const variant = priorityBadgeMap[priority] || 'default';
+                                                    return (
+                                                        <Badge key={priority} variant={count > 0 ? variant : 'secondary'} className={`text-[10px] px-1 py-0 leading-tight justify-center ${count === 0 ? 'opacity-30' : ''}`}>
+                                                            {priorityLabels[priority]} {count}
+                                                        </Badge>
+                                                    );
+                                                })}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="inline-flex items-center justify-center gap-2 text-xs">
+                                                <span className={`font-medium inline-flex items-center gap-0.5 ${t.resolved_on_time > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+                                                    <CheckCircle className="h-3 w-3" /> {t.resolved_on_time} a tiempo
+                                                </span>
+                                                <span className="text-gray-300">|</span>
+                                                <span className={`font-medium inline-flex items-center gap-0.5 ${t.resolved_overdue > 0 ? 'text-red-700' : 'text-gray-400'}`}>
+                                                    <AlertTriangle className="h-3 w-3" /> {t.resolved_overdue} vencidos
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-[11px] px-2 py-0.5 h-auto"
+                                                    onClick={() => router.visit(route('tickets.index', { assigned: t.id, status: 'abierto,en_proceso,pendiente_informacion' }))}
+                                                >
+                                                    Activos
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-[11px] px-2 py-0.5 h-auto"
+                                                    onClick={() => router.visit(route('tickets.index', { assigned: t.id }))}
+                                                >
+                                                    Ver todos
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-sm text-gray-500 text-center py-6">No hay técnicos registrados.</p>
+                )}
             </div>
 
             {crit.data?.length > 0 && (
@@ -173,23 +258,6 @@ function SuperAdminDashboard({ kpis, extra }) {
                 </div>
             )}
 
-            <div className="rounded-lg border border-gris-borde bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                    {extra.user_department && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                        </p>
-                    )}
-                    {extra.unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {extra.unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
@@ -248,7 +316,6 @@ function AdminTicketsDashboard({ extra }) {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Carga de Trabajo del Equipo</h3>
                     {extra.technician_workload.length > 0 ? (
@@ -271,39 +338,6 @@ function AdminTicketsDashboard({ extra }) {
                     )}
                 </div>
 
-            <div className="rounded-lg border border-gris-borde bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                    {extra.user_department && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                        </p>
-                    )}
-                    {extra.unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {extra.unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                    {extra.user_department && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                        </p>
-                    )}
-                    {extra.unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {extra.unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
@@ -335,23 +369,6 @@ function RoleDashboard({ kpis, role, unreadNotifications, userDepartment }) {
                 )}
             </div>
 
-            <div className="rounded-lg border border-gris-borde bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{role}</Badge></p>
-                    {userDepartment && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{userDepartment}</span>
-                        </p>
-                    )}
-                    {unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
@@ -473,23 +490,6 @@ function TecnicoDashboard({ extra }) {
                 )}
             </div>
 
-            <div className="rounded-lg border border-gris-borde bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                    {extra.user_department && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                        </p>
-                    )}
-                    {extra.unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {extra.unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
@@ -546,23 +546,6 @@ function AdminDeptDashboard({ extra }) {
                 )}
             </div>
 
-            <div className="rounded-lg border border-gris-borde bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                    {extra.user_department && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                        </p>
-                    )}
-                    {extra.unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {extra.unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
@@ -686,23 +669,6 @@ function SolicitanteDashboard({ extra }) {
                 </div>
             )}
 
-            <div className="rounded-lg border border-gris-borde bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                <div className="space-y-3 text-sm text-gray-600">
-                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                    {extra.user_department && (
-                        <p className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-gray-400" />
-                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                        </p>
-                    )}
-                    {extra.unreadNotifications > 0 && (
-                        <p className="text-amarillo-advertencia">
-                            Tienes {extra.unreadNotifications} notificaciones sin leer.
-                        </p>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }

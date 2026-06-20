@@ -21,8 +21,17 @@ class HandleInertiaRequests extends Middleware
         $auth = ['user' => null, 'unread_notifications' => 0];
 
         if ($user) {
-            $user->load('roles');
+            $user->load(['roles', 'department']);
             $user->append('full_name');
+
+            $roleName = $user->roles->first()?->name;
+            $roleLabels = [
+                'solicitante' => 'Solicitante',
+                'tecnico' => 'Técnico',
+                'admin_departamento' => 'Administrador de Departamento',
+                'admin_tickets' => 'Administrador de Tickets',
+                'super_admin' => 'Super Administrador',
+            ];
 
             $auth = [
                 'user' => $user,
@@ -32,6 +41,8 @@ class HandleInertiaRequests extends Middleware
                     ->latest()
                     ->take(3)
                     ->get(),
+                'role_label' => $roleLabels[$roleName] ?? $roleName,
+                'department_name' => $user->department?->name,
             ];
         }
 

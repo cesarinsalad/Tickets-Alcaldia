@@ -171,6 +171,28 @@ export default function AuthenticatedLayout({ header, children }) {
                                             <p className="text-sm font-medium text-gray-900">{user.full_name ?? user.name}</p>
                                             <p className="text-xs text-gray-500">{user.email}</p>
                                         </div>
+                                        <div className="px-3 py-2 border-b border-gris-borde text-xs space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-gray-600">
+                                                <Shield className="h-3 w-3 text-gray-400" />
+                                                <span>{auth.role_label}</span>
+                                            </div>
+                                            {auth.department_name && (
+                                                <div className="flex items-center gap-1.5 text-gray-600">
+                                                    <Building2 className="h-3 w-3 text-gray-400" />
+                                                    <span className="truncate">{auth.department_name}</span>
+                                                </div>
+                                            )}
+                                            {unreadCount > 0 && (
+                                                <Link
+                                                    href={route('notifications.index')}
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex items-center gap-1.5 text-amarillo-advertencia hover:underline"
+                                                >
+                                                    <Bell className="h-3 w-3" />
+                                                    {unreadCount} sin leer
+                                                </Link>
+                                            )}
+                                        </div>
                                         <div className="p-1">
                                             <Link
                                                 href={route('profile.edit')}
