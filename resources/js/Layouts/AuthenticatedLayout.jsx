@@ -166,10 +166,10 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <ChevronDown className="h-4 w-4" />
                                 </button>
                                 {userMenuOpen && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 rounded-md border border-gris-borde bg-white shadow-lg z-50">
+                                    <div className="absolute right-0 top-full mt-1 w-56 rounded-md border border-gris-borde bg-white shadow-lg z-50">
                                         <div className="px-3 py-2 border-b border-gris-borde">
-                                            <p className="text-sm font-medium text-gray-900">{user.full_name ?? user.name}</p>
-                                            <p className="text-xs text-gray-500">{user.email}</p>
+                                            <p className="text-sm font-medium text-gray-900 truncate">{user.full_name ?? user.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                         </div>
                                         <div className="px-3 py-2 border-b border-gris-borde text-xs space-y-1.5">
                                             <div className="flex items-center gap-1.5 text-gray-600">
@@ -181,16 +181,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     <Building2 className="h-3 w-3 text-gray-400" />
                                                     <span className="truncate">{auth.department_name}</span>
                                                 </div>
-                                            )}
-                                            {unreadCount > 0 && (
-                                                <Link
-                                                    href={route('notifications.index')}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex items-center gap-1.5 text-amarillo-advertencia hover:underline"
-                                                >
-                                                    <Bell className="h-3 w-3" />
-                                                    {unreadCount} sin leer
-                                                </Link>
                                             )}
                                         </div>
                                         <div className="p-1">
