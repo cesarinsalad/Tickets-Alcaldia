@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users } from 'lucide-react';
+import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users, Layers } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -659,34 +659,79 @@ function TecnicoDashboard({ extra }) {
     return (
         <div className="space-y-6">
 
-            <div className="rounded-lg border border-gris-borde bg-white p-6">
-                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Tickets Resueltos</h3>
-                <div className="flex items-center gap-4">
-                    <div className="relative w-20 h-20">
-                        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 72 72">
-                            <circle cx="36" cy="36" r="30" fill="none" stroke="#e5e7eb" strokeWidth="6" />
-                            <circle cx="36" cy="36" r="30" fill="none"
-                                stroke={extra.progress_pct >= 100 ? '#22c55e' : extra.progress_pct >= 50 ? '#eab308' : '#ef4444'}
-                                strokeWidth="6"
-                                strokeDasharray={2 * Math.PI * 30}
-                                strokeDashoffset={2 * Math.PI * 30 * (1 - extra.progress_pct / 100)}
-                                strokeLinecap="round"
-                            />
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-gray-900">{extra.progress_pct}%</span>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+                <div className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
+                        <TrendingUp className="h-4 w-4 text-azul-institucional" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Progreso Actual</h3>
                     </div>
-                    <div className="flex-1">
-                        <p className="text-sm text-gray-700">
+                    <div className="flex flex-col items-center p-5">
+                        <div className="relative w-24 h-24 mb-2">
+                            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 72 72">
+                                <circle cx="36" cy="36" r="30" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                                <circle cx="36" cy="36" r="30" fill="none"
+                                    stroke={extra.progress_pct >= 100 ? '#34d399' : extra.progress_pct >= 50 ? '#facc15' : '#f87171'}
+                                    strokeWidth="6"
+                                    strokeDasharray={2 * Math.PI * 30}
+                                    strokeDashoffset={2 * Math.PI * 30 * (1 - extra.progress_pct / 100)}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-800">{extra.progress_pct}%</span>
+                        </div>
+                        <p className="text-sm text-slate-400 text-center mt-4 italic">
                             {extra.progress_pct >= 100 ? (
-                                <span className="text-green-600 font-medium">¡Todos tus tickets han sido resueltos!</span>
+                                <span>¡Todos tus tickets han sido resueltos!</span>
                             ) : extra.progress_pct >= 50 ? (
-                                <span className="text-yellow-600 font-medium">Más de la mitad de tus tickets han sido resueltos. ¡Buen progreso!</span>
+                                <span>Más de la mitad de tus tickets han sido resueltos. ¡Buen progreso!</span>
                             ) : (
-                                <span className="text-red-600 font-medium">Menos de la mitad de tus tickets han sido resueltos.</span>
+                                <span>Menos de la mitad de tus tickets han sido resueltos.</span>
                             )}
                         </p>
                     </div>
                 </div>
+
+                <div className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden flex flex-col">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
+                        <AlertTriangle className="h-4 w-4 text-azul-institucional" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Urgencias</h3>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center px-5 pb-5">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-red-100 rounded-xl p-4">
+                                <p className="text-4xl font-black text-center" style={{ color: '#c10005' }}>{extra.sla_expired}</p>
+                                <p className="text-sm font-medium text-red-600 text-center mt-1">Vencidos</p>
+                            </div>
+                            <div className="bg-yellow-100 rounded-xl p-4">
+                                <p className="text-4xl font-black text-center" style={{ color: '#f0b100' }}>{extra.sla_at_risk}</p>
+                                <p className="text-sm font-medium text-yellow-600 text-center mt-1">En Riesgo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
+                        <Layers className="h-4 w-4 text-azul-institucional" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Carga de Trabajo</h3>
+                    </div>
+                    <div className="p-5">
+                        {extra.queue_status_breakdown?.map((item, idx) => {
+                            const dotColor = item.name === 'Abiertos' ? '#2a4d76' : item.name === 'En Proceso' ? '#4a6741' : '#f0b100';
+                            return (
+                                <div key={item.name} className={`flex items-center justify-between py-3 ${idx < extra.queue_status_breakdown.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+                                        <span className="text-sm font-medium text-slate-500">{item.name}</span>
+                                    </div>
+                                    <span className="text-xl font-bold text-slate-700">{item.count}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">

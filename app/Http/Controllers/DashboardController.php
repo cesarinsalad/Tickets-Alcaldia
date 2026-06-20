@@ -179,6 +179,14 @@ class DashboardController extends Controller
                 'recently_closed' => $recentlyClosed,
                 'queue_sort' => $queueSort,
                 'queue_dir' => $queueDir,
+                'pending_info_count' => (clone $assignedQuery)
+                    ->where('status', TicketStatus::PendienteInformacion->value)
+                    ->count(),
+                'queue_status_breakdown' => [
+                    ['name' => 'Abiertos', 'count' => (clone $assignedQuery)->where('status', TicketStatus::Abierto->value)->count()],
+                    ['name' => 'En Proceso', 'count' => (clone $assignedQuery)->where('status', TicketStatus::EnProceso->value)->count()],
+                    ['name' => 'Pendiente Info', 'count' => (clone $assignedQuery)->where('status', TicketStatus::PendienteInformacion->value)->count()],
+                ],
                 'progress_pct' => (function () use ($assignedQuery) {
                     $total = (clone $assignedQuery)->count();
                     $resolved = (clone $assignedQuery)->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])->count();
