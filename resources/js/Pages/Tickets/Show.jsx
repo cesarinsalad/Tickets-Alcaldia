@@ -141,41 +141,46 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                         </div>
                     )}
 
-                    {canChangePriority && (
-                        <div className="rounded-lg border border-gris-borde bg-white p-6">
-                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                <AlertTriangle className="h-4 w-4" />
-                                Cambiar Prioridad
-                            </h3>
-                            <Select value={newPriority} onChange={e => setNewPriority(e.target.value)}>
-                                <option value="">Seleccionar prioridad</option>
-                                {Object.entries(priorityLabels).map(([val, desc]) => (
-                                    <option key={val} value={val}>
-                                        {val.charAt(0).toUpperCase() + val.slice(1)} — {desc}
-                                    </option>
-                                ))}
-                            </Select>
-                            <Button size="sm" className="mt-2 w-full" onClick={handleChangePriority} disabled={!newPriority}>
-                                Cambiar Prioridad
-                            </Button>
-                        </div>
-                    )}
-
-                    {canChangeCategory && (
-                        <div className="rounded-lg border border-gris-borde bg-white p-6">
-                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                <FolderTree className="h-4 w-4" />
-                                Cambiar Categoría
-                            </h3>
-                            <Select value={newCategory} onChange={e => setNewCategory(e.target.value)}>
-                                <option value="">Seleccionar categoría</option>
-                                {categories?.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </Select>
-                            <Button size="sm" className="mt-2 w-full" onClick={handleChangeCategory} disabled={!newCategory}>
-                                Cambiar Categoría
-                            </Button>
+                    {(canChangePriority || canChangeCategory) && (
+                        <div className="rounded-lg border border-gris-borde bg-white p-6 mb-6">
+                            <div className={`grid ${canChangePriority && canChangeCategory ? 'grid-cols-1 sm:grid-cols-2 gap-4' : 'grid-cols-1'}`}>
+                                {canChangePriority && (
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                            <AlertTriangle className="h-4 w-4" />
+                                            Cambiar Prioridad
+                                        </h3>
+                                        <Select value={newPriority} onChange={e => setNewPriority(e.target.value)}>
+                                            <option value="">Seleccionar prioridad</option>
+                                            {Object.entries(priorityLabels).map(([val, desc]) => (
+                                                <option key={val} value={val}>
+                                                    {val.charAt(0).toUpperCase() + val.slice(1)} — {desc}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                        <Button size="sm" className="mt-2 w-full" onClick={handleChangePriority} disabled={!newPriority}>
+                                            Cambiar Prioridad
+                                        </Button>
+                                    </div>
+                                )}
+                                {canChangeCategory && (
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                            <FolderTree className="h-4 w-4" />
+                                            Cambiar Categoría
+                                        </h3>
+                                        <Select value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+                                            <option value="">Seleccionar categoría</option>
+                                            {categories?.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
+                                        </Select>
+                                        <Button size="sm" className="mt-2 w-full" onClick={handleChangeCategory} disabled={!newCategory}>
+                                            Cambiar Categoría
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
