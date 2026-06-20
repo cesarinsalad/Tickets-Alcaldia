@@ -674,7 +674,7 @@ function TecnicoDashboard({ extra }) {
                                         <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
                                         <td className="px-5 py-3">
                                             <Link href={route('tickets.show', t.id)}>
-                                                <Button variant="outline" size="sm">Transicionar</Button>
+                                                <Button variant="outline" size="sm">Atender</Button>
                                             </Link>
                                         </td>
                                     </tr>
