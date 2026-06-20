@@ -7,6 +7,7 @@ import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import { Badge } from '@/Components/ui/badge';
 import Pagination from '@/Components/Pagination';
+import RelativeTime from '@/Components/RelativeTime';
 
 const statusColors = {
     abierto: 'default',
@@ -207,13 +208,13 @@ export default function Index({ tickets, filters, categories, departments, users
                     {filters.status === 'abierto,en_proceso' && (
                         <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2.5 mt-3 text-sm text-blue-800">
                             <Ticket className="h-4 w-4 text-blue-600 shrink-0" />
-                            <span>Mostrando tickets <strong>activos</strong> (abiertos y en proceso).</span>
+                            <span>Mostrando tickets <strong>abiertos y en proceso</strong> en el periodo seleccionado.</span>
                         </div>
                     )}
-                    {filters.status === 'resuelto' && !filters.sla && (
+                    {filters.status === 'resuelto' && filters.date_from && !filters.sla && (
                         <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-2.5 mt-3 text-sm text-green-800">
                             <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
-                            <span>Mostrando tickets <strong>resueltos</strong>.</span>
+                            <span>Mostrando tickets <strong>resueltos y cerrados</strong> en el período seleccionado.</span>
                         </div>
                     )}
                 </div>
@@ -235,6 +236,7 @@ export default function Index({ tickets, filters, categories, departments, users
                                     <SortHeader col="category" className="hidden md:table-cell">Categoría</SortHeader>
                                     <SortHeader col="priority">Prioridad</SortHeader>
                                     <SortHeader col="status">Estado</SortHeader>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Respuesta</th>
                                     <SortHeader col="assigned" className="hidden lg:table-cell">Asignado</SortHeader>
                                     <SortHeader col="entry_date" className="hidden lg:table-cell">Fecha</SortHeader>
                                 </tr>
@@ -259,6 +261,9 @@ export default function Index({ tickets, filters, categories, departments, users
                                             <Badge variant={statusColors[ticket.status] || 'default'}>
                                                 {statusLabels[ticket.status] || ticket.status}
                                             </Badge>
+                                        </td>
+                                        <td className="px-4 py-3 hidden md:table-cell">
+                                            <RelativeTime deadline={ticket.sla_response_deadline} compact />
                                         </td>
                                         <td className="px-4 py-3 text-gray-600 text-xs hidden lg:table-cell">
                                             {(ticket.assigned?.full_name ?? ticket.assigned?.name) || 'Sin asignar'}
