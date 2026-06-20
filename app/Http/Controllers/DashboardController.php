@@ -82,23 +82,18 @@ class DashboardController extends Controller
                 'is_solicitante' => true,
                 'my_active_tickets' => $myActiveTickets,
                 'my_history_tickets' => $myHistory,
+                'progress_pct' => (function () use ($baseQuery) {
+                    $total = (clone $baseQuery)->count();
+                    $resolved = (clone $baseQuery)->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])->count();
+                    return $total > 0 ? round(($resolved / $total) * 100) : 0;
+                })(),
             ];
         } elseif ($user->hasRole('tecnico')) {
-            $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);
+            $baseQuery = Ticket::query()->visibleTo($user);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
             $activeStatusValues = array_map(fn($s) => $s->value, $activeStatuses);
 
-            $kpis = [
-                'abiertos_asignados' => (clone $baseQuery)->where('status', TicketStatus::Abierto)->count(),
-                'en_proceso' => (clone $baseQuery)->where('status', TicketStatus::EnProceso)->count(),
-                'pendiente_informacion' => (clone $baseQuery)->where('status', TicketStatus::PendienteInformacion)->count(),
-                'resueltos_hoy' => (clone $baseQuery)
-                    ->where('status', TicketStatus::Resuelto)
-                    ->whereDate('exit_date', today())
-                    ->count(),
-            ];
-
-            $assignedQuery = Ticket::where('assigned_id', $user->id)->whereBetween('entry_date', [$dateFrom, $dateTo]);
+            $assignedQuery = Ticket::where('assigned_id', $user->id);
 
             $slaAtRisk = (clone $assignedQuery)
                 ->whereIn('status', $activeStatuses)
@@ -113,12 +108,27 @@ class DashboardController extends Controller
                 ->where('sla_resolution_deadline', '<', now())
                 ->count();
 
-            $myQueue = (clone $assignedQuery)
+            $queueSort = $request->input('queue_sort', 'sla_resolution_deadline');
+            $queueDir = $request->input('queue_dir', 'asc');
+            $queueAllowedSorts = ['code', 'title', 'creator_name', 'priority', 'status', 'sla_resolution_deadline', 'entry_date'];
+            if (!in_array($queueSort, $queueAllowedSorts)) $queueSort = 'sla_resolution_deadline';
+            if (!in_array($queueDir, ['asc', 'desc'])) $queueDir = 'asc';
+
+            $queuePaginator = (clone $assignedQuery)
                 ->whereIn('status', $activeStatuses)
-                ->with(['category', 'creator.department'])
-                ->orderBy('sla_resolution_deadline')
-                ->get()
-                ->map(fn($t) => [
+                ->with(['creator.department'])
+                ->when($queueSort === 'creator_name', function ($q) use ($queueDir) {
+                    $q->leftJoin('users as queue_creator_users', 'tickets.creator_id', '=', 'queue_creator_users.id')
+                        ->reorder('queue_creator_users.name', $queueDir)
+                        ->select('tickets.*');
+                }, function ($q) use ($queueSort, $queueDir) {
+                    $q->reorder($queueSort, $queueDir);
+                })
+                ->paginate(5, ['*'], 'queue_page')
+                ->withQueryString();
+
+            $myQueue = [
+                'data' => $queuePaginator->getCollection()->map(fn($t) => [
                     'id' => $t->id,
                     'code' => $t->code,
                     'title' => $t->title,
@@ -133,14 +143,20 @@ class DashboardController extends Controller
                     'sla_deadline_raw' => $t->sla_resolution_deadline?->toIso8601String(),
                     'entry_date_raw' => $t->entry_date?->toIso8601String(),
                     'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
-                ]);
+                ])->values()->toArray(),
+                'links' => $queuePaginator->toArray()['links'] ?? [],
+                'total' => $queuePaginator->total(),
+                'per_page' => $queuePaginator->perPage(),
+            ];
 
-            $recentlyClosed = (clone $assignedQuery)
+            $closedPaginator = (clone $assignedQuery)
                 ->whereIn('status', [TicketStatus::Resuelto, TicketStatus::Cerrado])
                 ->latest('exit_date')
-                ->take(10)
-                ->get()
-                ->map(fn($t) => [
+                ->paginate(5, ['*'], 'closed_page')
+                ->withQueryString();
+
+            $recentlyClosed = [
+                'data' => $closedPaginator->getCollection()->map(fn($t) => [
                     'id' => $t->id,
                     'code' => $t->code,
                     'title' => $t->title,
@@ -149,7 +165,11 @@ class DashboardController extends Controller
                     'exit_date' => $t->exit_date?->format('d/m/Y H:i'),
                     'priority' => $t->priority->value,
                     'priority_label' => $t->priority->label(),
-                ]);
+                ])->values()->toArray(),
+                'links' => $closedPaginator->toArray()['links'] ?? [],
+                'total' => $closedPaginator->total(),
+                'per_page' => $closedPaginator->perPage(),
+            ];
 
             $extra = [
                 'is_tecnico' => true,
@@ -157,6 +177,13 @@ class DashboardController extends Controller
                 'sla_expired' => $slaExpired,
                 'my_queue' => $myQueue,
                 'recently_closed' => $recentlyClosed,
+                'queue_sort' => $queueSort,
+                'queue_dir' => $queueDir,
+                'progress_pct' => (function () use ($assignedQuery) {
+                    $total = (clone $assignedQuery)->count();
+                    $resolved = (clone $assignedQuery)->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])->count();
+                    return $total > 0 ? round(($resolved / $total) * 100) : 0;
+                })(),
             ];
         } elseif ($user->hasRole('admin_departamento')) {
             $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);

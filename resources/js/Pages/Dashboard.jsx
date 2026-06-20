@@ -630,11 +630,63 @@ const statusLabelMap = {
 };
 
 function TecnicoDashboard({ extra }) {
+    const queueSort = extra.queue_sort || 'sla_resolution_deadline';
+    const queueDir = extra.queue_dir || 'asc';
+
+    function handleQueueSort(col) {
+        const newDir = queueSort === col && queueDir === 'asc' ? 'desc' : 'asc';
+        router.get(route('dashboard'), {
+            queue_sort: col,
+            queue_dir: newDir,
+            queue_page: 1,
+        }, { preserveState: true, replace: true });
+    }
+
+    function SortIcon({ col }) {
+        if (queueSort !== col) return null;
+        return queueDir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
+    }
+
+    function SortHeader({ col, children }) {
+        return (
+            <th className="px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700" onClick={() => handleQueueSort(col)}>
+                {children}
+                <SortIcon col={col} />
+            </th>
+        );
+    }
+
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <KpiCard icon={Clock} label="Tiempo ajustado" value={extra.sla_at_risk} color="yellow" subtitle="Tus tickets con menos del 30% restante" />
-                <KpiCard icon={AlertTriangle} label="Vencidos" value={extra.sla_expired} color="red" subtitle="Tus tickets que superaron el plazo" href={route('tickets.index')} />
+
+            <div className="rounded-lg border border-gris-borde bg-white p-6">
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">Tickets Resueltos</h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative w-20 h-20">
+                        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 72 72">
+                            <circle cx="36" cy="36" r="30" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                            <circle cx="36" cy="36" r="30" fill="none"
+                                stroke={extra.progress_pct >= 100 ? '#22c55e' : extra.progress_pct >= 50 ? '#eab308' : '#ef4444'}
+                                strokeWidth="6"
+                                strokeDasharray={2 * Math.PI * 30}
+                                strokeDashoffset={2 * Math.PI * 30 * (1 - extra.progress_pct / 100)}
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-gray-900">{extra.progress_pct}%</span>
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-sm text-gray-700">
+                            {extra.progress_pct >= 100 ? (
+                                <span className="text-green-600 font-medium">¡Todos tus tickets han sido resueltos!</span>
+                            ) : extra.progress_pct >= 50 ? (
+                                <span className="text-yellow-600 font-medium">Más de la mitad de tus tickets han sido resueltos. ¡Buen progreso!</span>
+                            ) : (
+                                <span className="text-red-600 font-medium">Menos de la mitad de tus tickets han sido resueltos.</span>
+                            )}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
@@ -642,28 +694,27 @@ function TecnicoDashboard({ extra }) {
                     <Ticket className="h-4 w-4 text-azul-institucional" />
                     <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Mi Cola de Trabajo</h3>
                 </div>
-                {extra.my_queue.length > 0 ? (
+                {extra.my_queue.data?.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <th className="px-5 py-3 font-medium">Código</th>
-                                    <th className="px-5 py-3 font-medium">Título</th>
-                                    <th className="px-5 py-3 font-medium">Solicitante</th>
-                                    <th className="px-5 py-3 font-medium">Prioridad</th>
-                                    <th className="px-5 py-3 font-medium">Estado</th>
-                                    <th className="px-5 py-3 font-medium">Vencimiento</th>
+                                    <SortHeader col="code">Código</SortHeader>
+                                    <SortHeader col="title">Título</SortHeader>
+                                    <SortHeader col="creator_name">Solicitante</SortHeader>
+                                    <SortHeader col="priority">Prioridad</SortHeader>
+                                    <SortHeader col="status">Estado</SortHeader>
+                                    <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
                                     <th className="px-5 py-3 font-medium">Acción</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
-                                {extra.my_queue.map(t => (
+                                {extra.my_queue.data.map(t => (
                                     <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="px-5 py-3 font-mono text-xs text-gray-500">{t.code}</td>
                                         <td className="px-5 py-3 max-w-[180px]">
-                                                <span className="text-gray-900 text-sm truncate block">{t.title}</span>
-                                                <TimeProgressBar deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} />
-                                            </td>
+                                            <span className="text-gray-900 text-sm truncate block">{t.title}</span>
+                                        </td>
                                         <td className="px-5 py-3 text-gray-600">{t.creator_name}</td>
                                         <td className="px-5 py-3">
                                             <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
@@ -685,6 +736,15 @@ function TecnicoDashboard({ extra }) {
                 ) : (
                     <p className="text-sm text-gray-500 text-center py-10">No tienes tickets asignados.</p>
                 )}
+                {extra.my_queue.links && extra.my_queue.links.length > 3 && (
+                    <div className="px-5 py-3 border-t border-gris-borde">
+                        <Pagination
+                            links={extra.my_queue.links}
+                            total={extra.my_queue.total}
+                            perPage={extra.my_queue.per_page || 5}
+                        />
+                    </div>
+                )}
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
@@ -692,7 +752,7 @@ function TecnicoDashboard({ extra }) {
                     <CheckCircle className="h-4 w-4 text-verde-exito" />
                     <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Cerrados Recientemente</h3>
                 </div>
-                {extra.recently_closed.length > 0 ? (
+                {extra.recently_closed.data?.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
@@ -705,7 +765,7 @@ function TecnicoDashboard({ extra }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
-                                {extra.recently_closed.map(t => (
+                                {extra.recently_closed.data.map(t => (
                                     <tr key={t.id} className="hover:bg-green-50/30 transition-colors">
                                         <td className="px-5 py-3">
                                             <Link href={route('tickets.show', t.id)} className="font-mono text-xs text-azul-institucional hover:underline">
@@ -727,6 +787,15 @@ function TecnicoDashboard({ extra }) {
                     </div>
                 ) : (
                     <p className="text-sm text-gray-500 text-center py-10">No hay tickets cerrados recientemente.</p>
+                )}
+                {extra.recently_closed.links && extra.recently_closed.links.length > 3 && (
+                    <div className="px-5 py-3 border-t border-gris-borde">
+                        <Pagination
+                            links={extra.recently_closed.links}
+                            total={extra.recently_closed.total}
+                            perPage={extra.recently_closed.per_page || 5}
+                        />
+                    </div>
                 )}
             </div>
 
@@ -981,7 +1050,7 @@ export default function Dashboard({ stats, unreadNotifications }) {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
                     <div className="flex items-center gap-2">
-                        {!stats.is_solicitante && (
+                        {!stats.is_solicitante && !stats.is_tecnico && (
                             <>
                             <Input
                                 type="date"
