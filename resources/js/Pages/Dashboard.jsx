@@ -173,40 +173,21 @@ function SuperAdminDashboard({ kpis, extra }) {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Acceso rápido</h3>
-                    <div className="space-y-2">
-                        <Link href={route('tickets.create')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Plus className="h-4 w-4 text-azul-institucional" />
-                            Crear nuevo ticket
-                        </Link>
-                        <Link href={route('tickets.index')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Ticket className="h-4 w-4 text-azul-institucional" />
-                            Ver todos los tickets
-                        </Link>
-                        <Link href={route('tickets.index', { priority: 'critica' })} className="flex items-center gap-2 rounded-md border border-red-200 p-3 text-sm text-gray-700 hover:bg-red-50 transition-colors">
-                            <AlertOctagon className="h-4 w-4 text-red-600" />
-                            Tickets críticos
-                        </Link>
-                    </div>
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                    <div className="space-y-3 text-sm text-gray-600">
-                        <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                        {extra.user_department && (
-                            <p className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-gray-400" />
-                                Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                            </p>
-                        )}
-                        {extra.unreadNotifications > 0 && (
-                            <p className="text-amarillo-advertencia">
-                                Tienes {extra.unreadNotifications} notificaciones sin leer.
-                            </p>
-                        )}
-                    </div>
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
+                    {extra.user_department && (
+                        <p className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
+                        </p>
+                    )}
+                    {extra.unreadNotifications > 0 && (
+                        <p className="text-amarillo-advertencia">
+                            Tienes {extra.unreadNotifications} notificaciones sin leer.
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
@@ -289,26 +270,24 @@ function AdminTicketsDashboard({ extra }) {
                         <p className="text-sm text-gray-500 text-center py-6">No hay técnicos registrados.</p>
                     )}
                 </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Acceso rápido</h3>
-                    <div className="space-y-2">
-                        <Link href={route('tickets.create')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Plus className="h-4 w-4 text-azul-institucional" />
-                            Crear nuevo ticket
-                        </Link>
-                        <Link href={route('tickets.index')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Ticket className="h-4 w-4 text-azul-institucional" />
-                            Ver todos los tickets
-                        </Link>
-                        <Link href={route('tickets.index', { status: 'abierto', assigned: 'none' })} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Circle className="h-4 w-4 text-azul-institucional" />
-                            Tickets sin asignar
-                        </Link>
-                    </div>
-                </div>
-            </div>
 
             <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
+                    {extra.user_department && (
+                        <p className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
+                        </p>
+                    )}
+                    {extra.unreadNotifications > 0 && (
+                        <p className="text-amarillo-advertencia">
+                            Tienes {extra.unreadNotifications} notificaciones sin leer.
+                        </p>
+                    )}
+                </div>
+            </div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
                 <div className="space-y-3 text-sm text-gray-600">
                     <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
@@ -356,36 +335,21 @@ function RoleDashboard({ kpis, role, unreadNotifications, userDepartment }) {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Acceso rápido</h3>
-                    <div className="space-y-2">
-                        <Link href={route('tickets.create')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Plus className="h-4 w-4 text-azul-institucional" />
-                            Crear nuevo ticket
-                        </Link>
-                        <Link href={route('tickets.index')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Ticket className="h-4 w-4 text-azul-institucional" />
-                            Ver todos los tickets
-                        </Link>
-                    </div>
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                    <div className="space-y-3 text-sm text-gray-600">
-                        <p>Rol actual: <Badge variant="secondary">{role}</Badge></p>
-                        {userDepartment && (
-                            <p className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-gray-400" />
-                                Departamento: <span className="font-medium text-gray-900">{userDepartment}</span>
-                            </p>
-                        )}
-                        {unreadNotifications > 0 && (
-                            <p className="text-amarillo-advertencia">
-                                Tienes {unreadNotifications} notificaciones sin leer.
-                            </p>
-                        )}
-                    </div>
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                    <p>Rol actual: <Badge variant="secondary">{role}</Badge></p>
+                    {userDepartment && (
+                        <p className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Departamento: <span className="font-medium text-gray-900">{userDepartment}</span>
+                        </p>
+                    )}
+                    {unreadNotifications > 0 && (
+                        <p className="text-amarillo-advertencia">
+                            Tienes {unreadNotifications} notificaciones sin leer.
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
@@ -509,36 +473,21 @@ function TecnicoDashboard({ extra }) {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Acceso rápido</h3>
-                    <div className="space-y-2">
-                        <Link href={route('tickets.create')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Plus className="h-4 w-4 text-azul-institucional" />
-                            Crear nuevo ticket
-                        </Link>
-                        <Link href={route('tickets.index')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Ticket className="h-4 w-4 text-azul-institucional" />
-                            Ver mis tickets
-                        </Link>
-                    </div>
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                    <div className="space-y-3 text-sm text-gray-600">
-                        <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                        {extra.user_department && (
-                            <p className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-gray-400" />
-                                Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                            </p>
-                        )}
-                        {extra.unreadNotifications > 0 && (
-                            <p className="text-amarillo-advertencia">
-                                Tienes {extra.unreadNotifications} notificaciones sin leer.
-                            </p>
-                        )}
-                    </div>
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
+                    {extra.user_department && (
+                        <p className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
+                        </p>
+                    )}
+                    {extra.unreadNotifications > 0 && (
+                        <p className="text-amarillo-advertencia">
+                            Tienes {extra.unreadNotifications} notificaciones sin leer.
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
@@ -597,36 +546,21 @@ function AdminDeptDashboard({ extra }) {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Acceso rápido</h3>
-                    <div className="space-y-2">
-                        <Link href={route('tickets.create')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Plus className="h-4 w-4 text-azul-institucional" />
-                            Crear nuevo ticket
-                        </Link>
-                        <Link href={route('tickets.index')} className="flex items-center gap-2 rounded-md border border-gris-borde p-3 text-sm text-gray-700 hover:bg-gris-fondo transition-colors">
-                            <Ticket className="h-4 w-4 text-azul-institucional" />
-                            Ver todos los tickets
-                        </Link>
-                    </div>
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
-                    <div className="space-y-3 text-sm text-gray-600">
-                        <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
-                        {extra.user_department && (
-                            <p className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-gray-400" />
-                                Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
-                            </p>
-                        )}
-                        {extra.unreadNotifications > 0 && (
-                            <p className="text-amarillo-advertencia">
-                                Tienes {extra.unreadNotifications} notificaciones sin leer.
-                            </p>
-                        )}
-                    </div>
+            <div className="rounded-lg border border-gris-borde bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Información</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                    <p>Rol actual: <Badge variant="secondary">{extra.role}</Badge></p>
+                    {extra.user_department && (
+                        <p className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            Departamento: <span className="font-medium text-gray-900">{extra.user_department}</span>
+                        </p>
+                    )}
+                    {extra.unreadNotifications > 0 && (
+                        <p className="text-amarillo-advertencia">
+                            Tienes {extra.unreadNotifications} notificaciones sin leer.
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
