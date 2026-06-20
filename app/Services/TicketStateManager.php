@@ -38,6 +38,14 @@ class TicketStateManager
             throw new \InvalidArgumentException('El ticket debe estar asignado a un técnico antes de ponerlo En Proceso.');
         }
 
+        if ($newStatus === TicketStatus::EnProceso) {
+            $ticket->in_progress_at = $now;
+        }
+
+        if ($newStatus === TicketStatus::Resuelto) {
+            $ticket->resolved_at = $now;
+        }
+
         if (in_array($newStatus, [TicketStatus::Resuelto, TicketStatus::Cerrado])) {
             $ticket->exit_date = $now;
         } elseif ($newStatus === TicketStatus::Abierto && $ticket->status === TicketStatus::Cerrado) {

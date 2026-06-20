@@ -1,13 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle } from 'lucide-react';
 import RelativeTime from '@/Components/RelativeTime';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Textarea } from '@/Components/ui/textarea';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import InputError from '@/Components/InputError';
 
 const statusColors = {
@@ -290,13 +291,73 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                 <dd className="text-gray-900">{(ticket.assigned?.full_name ?? ticket.assigned?.name) || 'Sin asignar'}</dd>
                             </div>
                             <div>
-                                <dt className="text-gray-500">Fecha de ingreso</dt>
+                                <dt className="text-gray-500 inline-flex items-center gap-1">
+                                    Fecha de creación
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <HelpCircle className="h-3.5 w-3.5 text-gray-400 cursor-help" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                Momento en que el solicitante registró el ticket en el sistema.
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </dt>
                                 <dd className="text-gray-900">{new Date(ticket.entry_date).toLocaleString('es-VE')}</dd>
                             </div>
-                            {ticket.exit_date && (
+                            {ticket.responded_at && (
                                 <div>
-                                    <dt className="text-gray-500">Fecha de egreso</dt>
-                                    <dd className="text-gray-900">{new Date(ticket.exit_date).toLocaleString('es-VE')}</dd>
+                                    <dt className="text-gray-500 inline-flex items-center gap-1">
+                                        Fecha de respuesta
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <HelpCircle className="h-3.5 w-3.5 text-gray-400 cursor-help" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    Momento en que un administrador asignó el ticket a un técnico.
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </dt>
+                                    <dd className="text-gray-900">{new Date(ticket.responded_at).toLocaleString('es-VE')}</dd>
+                                </div>
+                            )}
+                            {ticket.in_progress_at && (
+                                <div>
+                                    <dt className="text-gray-500 inline-flex items-center gap-1">
+                                        Inicio de atención
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <HelpCircle className="h-3.5 w-3.5 text-gray-400 cursor-help" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    Momento en que el técnico comenzó a trabajar en la solución.
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </dt>
+                                    <dd className="text-gray-900">{new Date(ticket.in_progress_at).toLocaleString('es-VE')}</dd>
+                                </div>
+                            )}
+                            {ticket.resolved_at && (
+                                <div>
+                                    <dt className="text-gray-500 inline-flex items-center gap-1">
+                                        Fecha de resolución
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <HelpCircle className="h-3.5 w-3.5 text-gray-400 cursor-help" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    Momento en que el técnico marcó el ticket como resuelto.
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </dt>
+                                    <dd className="text-gray-900">{new Date(ticket.resolved_at).toLocaleString('es-VE')}</dd>
                                 </div>
                             )}
                         </dl>

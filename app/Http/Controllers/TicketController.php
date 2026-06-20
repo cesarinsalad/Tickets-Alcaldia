@@ -313,6 +313,9 @@ class TicketController extends Controller
                 ]),
                 'entry_date' => $ticket->entry_date,
                 'exit_date' => $ticket->exit_date,
+                'responded_at' => $ticket->responded_at,
+                'in_progress_at' => $ticket->in_progress_at,
+                'resolved_at' => $ticket->resolved_at,
                 'photo_url' => $ticket->photo_path ? Storage::url($ticket->photo_path) : null,
                 'assigned_id' => $ticket->assigned_id,
                 'sla_response_deadline' => $ticket->sla_response_deadline,
@@ -345,6 +348,7 @@ class TicketController extends Controller
             ->firstOrFail();
 
         $ticket->assigned_id = $tech->id;
+        $ticket->responded_at = now();
         $ticket->save();
 
         $tech->notifications()->create([

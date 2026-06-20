@@ -22,6 +22,9 @@ class TicketFactory extends Factory
             'creator_id' => User::factory(),
             'category_id' => Category::factory(),
             'entry_date' => now(),
+            'responded_at' => null,
+            'in_progress_at' => null,
+            'resolved_at' => null,
         ];
     }
 }

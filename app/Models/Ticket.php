@@ -19,6 +19,7 @@ class Ticket extends Model
         'code', 'title', 'description', 'priority', 'status',
         'creator_id', 'assigned_id', 'category_id', 'photo_path',
         'entry_date', 'exit_date',
+        'responded_at', 'in_progress_at', 'resolved_at',
         'sla_response_deadline', 'sla_resolution_deadline',
     ];
 
@@ -29,6 +30,9 @@ class Ticket extends Model
             'status' => TicketStatus::class,
             'entry_date' => 'datetime',
             'exit_date' => 'datetime',
+            'responded_at' => 'datetime',
+            'in_progress_at' => 'datetime',
+            'resolved_at' => 'datetime',
             'sla_response_deadline' => 'datetime',
             'sla_resolution_deadline' => 'datetime',
         ];

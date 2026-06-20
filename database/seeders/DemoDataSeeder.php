@@ -229,9 +229,14 @@ class DemoDataSeeder extends Seeder
                 if (in_array($statusValue, ['en_proceso', 'pendiente_informacion'])) {
                     $tecnico = $tecnicos->random();
                     $data['assigned_id'] = $tecnico->id;
+                    $data['responded_at'] = (clone $entryDate)->addMinutes(fake()->numberBetween(5, 120));
+                    $data['in_progress_at'] = (clone $data['responded_at'])->addMinutes(fake()->numberBetween(5, 60));
                 } elseif (in_array($statusValue, ['resuelto', 'cerrado'])) {
                     $tecnico = $tecnicos->random();
                     $data['assigned_id'] = $tecnico->id;
+                    $data['responded_at'] = (clone $entryDate)->addMinutes(fake()->numberBetween(5, 120));
+                    $data['in_progress_at'] = (clone $data['responded_at'])->addMinutes(fake()->numberBetween(5, 60));
+                    $data['resolved_at'] = (clone $data['in_progress_at'])->addHours(fake()->numberBetween(1, 24));
                     $exitHour = min($hour + fake()->numberBetween(1, 5), 14);
                     if ($exitHour >= 15) $exitHour = 14;
                     $exitDate = (clone $entryDate)->setTime($exitHour, fake()->numberBetween(0, 59), 0);
@@ -252,6 +257,15 @@ class DemoDataSeeder extends Seeder
                 $ticket->entry_date = $data['entry_date'];
                 if (isset($data['assigned_id'])) {
                     $ticket->assigned_id = $data['assigned_id'];
+                }
+                if (isset($data['responded_at'])) {
+                    $ticket->responded_at = $data['responded_at'];
+                }
+                if (isset($data['in_progress_at'])) {
+                    $ticket->in_progress_at = $data['in_progress_at'];
+                }
+                if (isset($data['resolved_at'])) {
+                    $ticket->resolved_at = $data['resolved_at'];
                 }
                 if (isset($data['exit_date'])) {
                     $ticket->exit_date = $data['exit_date'];
