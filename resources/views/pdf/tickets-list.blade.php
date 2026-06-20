@@ -6,11 +6,10 @@
     <style>
         @page { margin: 1.5cm 1.5cm 2.5cm; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 8pt; color: #1a1a1a; line-height: 1.4; }
-        .header { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #1e3a5f; padding-bottom: 12px; margin-bottom: 14px; }
-        .header-logo svg { width: 40px; height: 40px; }
-        .header-text .institution { font-size: 14pt; font-weight: bold; color: #1e3a5f; }
-        .header-text .subtitle { font-size: 7pt; color: #666; }
-        .header-text .report-type { font-size: 9pt; color: #1e3a5f; font-weight: bold; margin-top: 4px; }
+        .header-table { width: 100%; border-bottom: 3px solid #1e3a5f; margin-bottom: 14px; }
+        .header-table td { border: none; padding: 0 0 15px 0; vertical-align: middle; }
+        .header-logo { height: 95px; width: auto; }
+        .report-type { font-size: 14pt; color: #1e3a5f; font-weight: bold; text-transform: uppercase; }
         .filters-bar { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-size: 7.5pt; color: #555; }
         .filters-bar strong { color: #333; }
         table { width: 100%; border-collapse: collapse; }
@@ -28,27 +27,21 @@
         .badge-media { background: #fef9c3; color: #854d0e; }
         .badge-alta { background: #ffedd5; color: #9a3412; }
         .badge-critica { background: #fee2e2; color: #991b1b; }
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 1.8cm; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5cm; border-top: 1px solid #d0d5dd; font-size: 7pt; color: #999; }
+        .footer { position: fixed; bottom: -2.0cm; left: 0; right: 0; height: 1.2cm; border-top: 1px solid #d0d5dd; font-size: 7pt; color: #999; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-logo">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 5 L95 25 L95 55 C95 75 75 92 50 98 C25 92 5 75 5 55 L5 25 Z" fill="#1e3a5f"/>
-                <path d="M50 15 L85 30 L85 52 C85 68 70 82 50 87 C30 82 15 68 15 52 L15 30 Z" fill="#f8fafc"/>
-                <circle cx="50" cy="45" r="12" fill="#1e3a5f"/>
-                <circle cx="50" cy="45" r="8" fill="#f8fafc"/>
-                <path d="M40 50 L60 50 M50 40 L50 60" stroke="#1e3a5f" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M35 70 Q50 80 65 70" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <div class="header-text">
-            <div class="institution">Alcaldía Municipal</div>
-            <div class="subtitle">Isla de Margarita, Estado Nueva Esparta</div>
-            <div class="report-type">REPORTE DE TICKETS</div>
-        </div>
-    </div>
+    <table class="header-table" width="100%">
+        <tr>
+            <td width="25%" align="left" valign="middle">
+                <img src="{{ public_path('tickets-logo.png') }}" class="header-logo" alt="Logo">
+            </td>
+            <td width="50%" align="center" valign="middle">
+                <div class="report-type">Reporte de Tickets</div>
+            </td>
+            <td width="25%">&nbsp;</td>
+        </tr>
+    </table>
 
     <div class="filters-bar">
         <strong>Filtros aplicados:</strong>
@@ -67,27 +60,29 @@
     <table>
         <thead>
             <tr>
-                <th>Código</th>
-                <th>Título</th>
-                <th>Solicitante</th>
-                <th>Categoría</th>
-                <th>Prioridad</th>
-                <th>Estado</th>
-                <th>Asignado</th>
-                <th>Fecha</th>
+                <th style="width: 9%;">Código</th>
+                <th style="width: 20%;">Título</th>
+                <th style="width: 13%;">Solicitante</th>
+                <th style="width: 11%;">Categoría</th>
+                <th style="width: 11%;">Prioridad</th>
+                <th style="width: 11%;">Estado</th>
+                <th style="width: 10%;">Respuesta</th>
+                <th style="width: 11%;">Asignado</th>
+                <th style="width: 4%;">Fecha</th>
             </tr>
         </thead>
         <tbody>
             @foreach($tickets as $t)
             <tr>
                 <td style="font-family: monospace; font-size: 7pt;">{{ $t->code }}</td>
-                <td style="max-width: 150px; word-wrap: break-word;">{{ $t->title }}</td>
-                <td>{{ $t->creator->full_name }}</td>
-                <td>{{ $t->category->name ?? 'Sin categoría' }}</td>
-                <td><span class="badge badge-{{ $t->priority->value }}">{{ $t->priority->label() }}</span></td>
-                <td><span class="badge badge-{{ $t->status->value }}">{{ $t->status->label() }}</span></td>
-                <td>{{ $t->assigned->full_name ?? 'Sin asignar' }}</td>
-                <td style="white-space: nowrap;">{{ $t->entry_date?->format('d/m/Y H:i') ?? $t->created_at->format('d/m/Y H:i') }}</td>
+                <td style="word-wrap: break-word;">{{ $t->title }}</td>
+                <td style="font-size: 7.5pt;">{{ $t->creator->full_name }}</td>
+                <td style="font-size: 7.5pt;">{{ $t->category->name ?? '—' }}</td>
+                <td><span class="badge badge-{{ $t->priority->value }}" style="font-size: 6pt; padding: 1px 5px;">{{ $t->priority->label() }}</span></td>
+                <td><span class="badge badge-{{ $t->status->value }}" style="font-size: 6pt; padding: 1px 5px;">{{ $t->status->label() }}</span></td>
+                <td style="font-size: 7.5pt;">{{ $t->exit_date && $t->sla_resolution_deadline ? ($t->exit_date <= $t->sla_resolution_deadline ? 'A tiempo' : 'Tardío') : '—' }}</td>
+                <td style="font-size: 7.5pt;">{{ $t->assigned->full_name ?? '—' }}</td>
+                <td style="font-size: 7pt; white-space: nowrap;">{{ $t->entry_date?->format('d/m/Y') ?? $t->created_at->format('d/m/Y') }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -95,8 +90,25 @@
     @endif
 
     <div class="footer">
-        <span>Reporte generado el {{ now()->format('d/m/Y H:i') }}</span>
-        <span>Página {PAGE_NUM} de {PAGE_COUNT}</span>
     </div>
+
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->getFont("Helvetica", "normal");
+            $size = 7;
+            $color = array(0.6, 0.6, 0.6);
+            $y = $pdf->get_height() - 32;
+
+            // Left text (creation date)
+            $leftText = "Reporte generado el " . now()->format('d/m/Y H:i');
+            $pdf->page_text(42.5, $y, $leftText, $font, $size, $color);
+
+            // Right text (page numbers)
+            $rightText = "Página {PAGE_NUM} de {PAGE_COUNT}";
+            $width = $fontMetrics->getTextWidth($rightText, $font, $size);
+            $x = $pdf->get_width() - $width - 42.5;
+            $pdf->page_text($x, $y, $rightText, $font, $size, $color);
+        }
+    </script>
 </body>
 </html>

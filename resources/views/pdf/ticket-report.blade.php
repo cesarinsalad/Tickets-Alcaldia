@@ -15,45 +15,26 @@
             line-height: 1.5;
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .header-table {
+            width: 100%;
             border-bottom: 3px solid #1e3a5f;
-            padding-bottom: 14px;
             margin-bottom: 22px;
         }
 
+        .header-table td {
+            border: none;
+            padding: 0 0 15px 0;
+            vertical-align: middle;
+        }
+
         .header-logo {
-            flex-shrink: 0;
+            height: 100px;
+            width: auto;
         }
 
-        .header-logo svg {
-            width: 48px;
-            height: 48px;
-        }
-
-        .header-text {
-            flex: 1;
-        }
-
-        .header-text .institution {
-            font-size: 16pt;
-            font-weight: bold;
+        .report-type {
+            font-size: 14pt;
             color: #1e3a5f;
-            letter-spacing: 1.5px;
-        }
-
-        .header-text .subtitle {
-            font-size: 8pt;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .header-text .report-type {
-            font-size: 9pt;
-            color: #1e3a5f;
-            margin-top: 6px;
             font-weight: bold;
         }
 
@@ -198,21 +179,13 @@
 
         .footer {
             position: fixed;
-            bottom: 0;
+            bottom: -2.5cm;
             left: 0;
             right: 0;
-            height: 2cm;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2cm;
+            height: 1.2cm;
             border-top: 1px solid #d0d5dd;
             font-size: 7.5pt;
             color: #999;
-        }
-
-        .page-number {
-            text-align: right;
         }
 
         .continuation {
@@ -232,24 +205,17 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-logo">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 5 L95 25 L95 55 C95 75 75 92 50 98 C25 92 5 75 5 55 L5 25 Z" fill="#1e3a5f"/>
-                <path d="M50 15 L85 30 L85 52 C85 68 70 82 50 87 C30 82 15 68 15 52 L15 30 Z" fill="#f8fafc"/>
-                <circle cx="50" cy="45" r="12" fill="#1e3a5f"/>
-                <circle cx="50" cy="45" r="8" fill="#f8fafc"/>
-                <path d="M40 50 L60 50 M50 40 L50 60" stroke="#1e3a5f" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M35 70 Q50 80 65 70" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round"/>
-                <text x="50" y="93" text-anchor="middle" font-size="5" fill="#1e3a5f" font-weight="bold"></text>
-            </svg>
-        </div>
-        <div class="header-text">
-            <div class="institution">Alcaldía Municipal</div>
-            <div class="subtitle">Isla de Margarita, Estado Nueva Esparta</div>
-            <div class="report-type">REPORTE DETALLADO DE TICKET</div>
-        </div>
-    </div>
+    <table class="header-table" width="100%">
+        <tr>
+            <td width="25%" align="left" valign="middle">
+                <img src="{{ public_path('tickets-logo.png') }}" class="header-logo" alt="Logo">
+            </td>
+            <td width="50%" align="center" valign="middle">
+                <div class="report-type">Reporte Detallado de Ticket</div>
+            </td>
+            <td width="25%">&nbsp;</td>
+        </tr>
+    </table>
 
     <h2>Información del Ticket</h2>
 
@@ -401,8 +367,25 @@
     @endif
 
     <div class="footer">
-        <span>Reporte generado el {{ now()->format('d/m/Y H:i') }}</span>
-        <span class="page-number">Página {PAGE_NUM} de {PAGE_COUNT}</span>
     </div>
+
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->getFont("Helvetica", "normal");
+            $size = 7.5;
+            $color = array(0.6, 0.6, 0.6);
+            $y = $pdf->get_height() - 32;
+
+            // Left text (creation date)
+            $leftText = "Reporte generado el " . now()->format('d/m/Y H:i');
+            $pdf->page_text(56.7, $y, $leftText, $font, $size, $color);
+
+            // Right text (page numbers)
+            $rightText = "Página {PAGE_NUM} de {PAGE_COUNT}";
+            $width = $fontMetrics->getTextWidth($rightText, $font, $size);
+            $x = $pdf->get_width() - $width - 56.7;
+            $pdf->page_text($x, $y, $rightText, $font, $size, $color);
+        }
+    </script>
 </body>
 </html>

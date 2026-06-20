@@ -15,45 +15,26 @@
             line-height: 1.3;
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
+        .header-table {
+            width: 100%;
             border-bottom: 3px solid #1e3a5f;
-            padding-bottom: 12px;
             margin-bottom: 16px;
         }
 
+        .header-table td {
+            border: none;
+            padding: 0 0 15px 0;
+            vertical-align: middle;
+        }
+
         .header-logo {
-            flex-shrink: 0;
+            height: 95px;
+            width: auto;
         }
 
-        .header-logo svg {
-            width: 44px;
-            height: 44px;
-        }
-
-        .header-text {
-            flex: 1;
-        }
-
-        .header-text .institution {
-            font-size: 15pt;
-            font-weight: bold;
+        .doc-type {
+            font-size: 14pt;
             color: #1e3a5f;
-            letter-spacing: 1.5px;
-        }
-
-        .header-text .subtitle {
-            font-size: 7.5pt;
-            color: #666;
-            margin-top: 1px;
-        }
-
-        .header-text .doc-type {
-            font-size: 9pt;
-            color: #1e3a5f;
-            margin-top: 5px;
             font-weight: bold;
         }
 
@@ -95,42 +76,23 @@
             font-size: 10pt;
         }
 
-        .date-row {
-            text-align: right;
-            margin-bottom: 24px;
+
+
+        .signatures-table {
+            width: 100%;
+            margin-top: 80px;
         }
 
-        .date-row .date-label {
-            font-size: 8pt;
-            color: #888;
-        }
-
-        .date-row .date-value {
-            font-size: 10pt;
-            font-weight: 600;
-            color: #1a1a1a;
-            border-top: 1px solid #1a1a1a;
-            display: inline-block;
-            padding-top: 3px;
-            min-width: 180px;
-            text-align: center;
-        }
-
-        .signatures {
-            display: flex;
-            justify-content: space-between;
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .signature-box {
-            flex: 1;
+        .signature-cell {
             text-align: center;
         }
 
         .signature-line {
             border-top: 1px solid #1a1a1a;
             margin-bottom: 6px;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .signature-name {
@@ -147,7 +109,7 @@
 
         .footer {
             position: fixed;
-            bottom: 0;
+            bottom: -1.0cm;
             left: 0;
             right: 0;
             text-align: center;
@@ -159,23 +121,17 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-logo">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 5 L95 25 L95 55 C95 75 75 92 50 98 C25 92 5 75 5 55 L5 25 Z" fill="#1e3a5f"/>
-                <path d="M50 15 L85 30 L85 52 C85 68 70 82 50 87 C30 82 15 68 15 52 L15 30 Z" fill="#f8fafc"/>
-                <circle cx="50" cy="45" r="12" fill="#1e3a5f"/>
-                <circle cx="50" cy="45" r="8" fill="#f8fafc"/>
-                <path d="M40 50 L60 50 M50 40 L50 60" stroke="#1e3a5f" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M35 70 Q50 80 65 70" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <div class="header-text">
-            <div class="institution">Alcaldía Municipal</div>
-            <div class="subtitle">Isla de Margarita, Estado Nueva Esparta</div>
-            <div class="doc-type">CONSTANCIA DE SATISFACCIÓN</div>
-        </div>
-    </div>
+    <table class="header-table" width="100%">
+        <tr>
+            <td width="25%" align="left" valign="middle">
+                <img src="{{ public_path('tickets-logo.png') }}" class="header-logo" alt="Logo">
+            </td>
+            <td width="50%" align="center" valign="middle">
+                <div class="doc-type">Constancia de Satisfacción</div>
+            </td>
+            <td width="25%">&nbsp;</td>
+        </tr>
+    </table>
 
     <div class="content">
         <p>
@@ -236,23 +192,21 @@
         </p>
     </div>
 
-    <div class="date-row">
-        <div class="date-label">Fecha de emisión</div>
-        <div class="date-value">{{ now()->translatedFormat('d \d\e F \d\e Y') }}</div>
-    </div>
-
-    <div class="signatures">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-name">{{ $ticket->creator->full_name }}</div>
-            <div class="signature-role">Solicitante</div>
-        </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div class="signature-name">{{ $ticket->assigned?->full_name ?? '______________________________' }}</div>
-            <div class="signature-role">Técnico Responsable</div>
-        </div>
-    </div>
+    <table class="signatures-table">
+        <tr>
+            <td class="signature-cell" width="45%" valign="bottom">
+                <div class="signature-line"></div>
+                <div class="signature-name">{{ $ticket->creator->full_name }}</div>
+                <div class="signature-role">Solicitante</div>
+            </td>
+            <td width="10%">&nbsp;</td>
+            <td class="signature-cell" width="45%" valign="bottom">
+                <div class="signature-line"></div>
+                <div class="signature-name">{{ $ticket->assigned?->full_name ?? '______________________________' }}</div>
+                <div class="signature-role">Técnico Responsable</div>
+            </td>
+        </tr>
+    </table>
 
     <div class="footer">
         Documento generado el {{ now()->translatedFormat('d \d\e F \d\e Y \a \l\a\s H:i') }}

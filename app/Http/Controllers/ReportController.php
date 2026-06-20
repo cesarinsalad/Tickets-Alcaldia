@@ -27,7 +27,8 @@ class ReportController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $statuses = explode(',', $request->input('status'));
+            $query->whereIn('status', $statuses);
         }
 
         if ($request->filled('priority')) {
@@ -38,12 +39,50 @@ class ReportController extends Controller
             $query->where('category_id', $request->input('category'));
         }
 
+        if ($request->filled('department')) {
+            $query->whereHas('creator', function ($q) use ($request) {
+                $q->where('department_id', $request->input('department'));
+            });
+        }
+
+        if ($request->filled('assigned')) {
+            $query->where('assigned_id', $request->input('assigned'));
+        }
+
+        if ($request->filled('overdue')) {
+            $query->whereIn('status', ['abierto', 'en_proceso', 'pendiente_informacion'])
+                ->whereNotNull('sla_resolution_deadline')
+                ->where('sla_resolution_deadline', '<', now())
+                ->orderBy('assigned_id');
+        }
+
+        if ($request->filled('critical_overdue')) {
+            $query->whereIn('status', ['abierto', 'en_proceso', 'pendiente_informacion'])
+                ->where(function ($q) {
+                    $q->where('priority', 'critica')
+                      ->orWhere(function ($q2) {
+                          $q2->whereNotNull('sla_resolution_deadline')
+                             ->where('sla_resolution_deadline', '<', now());
+                      });
+                })
+                ->orderBy('assigned_id');
+        }
+
+        if ($request->input('sla') === 'missed' && str_contains($request->input('status', ''), 'resuelto')) {
+            $query->whereNotNull('sla_resolution_deadline')
+                ->whereColumn('exit_date', '>', 'sla_resolution_deadline');
+        }
+
+        $statusValue = $request->input('status', '');
+        $dateField = $statusValue && (str_contains($statusValue, 'resuelto') || str_contains($statusValue, 'cerrado'))
+            ? 'exit_date' : 'entry_date';
+
         if ($request->filled('date_from')) {
-            $query->whereDate('entry_date', '>=', $request->input('date_from'));
+            $query->whereDate($dateField, '>=', $request->input('date_from'));
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('entry_date', '<=', $request->input('date_to'));
+            $query->whereDate($dateField, '<=', $request->input('date_to'));
         }
 
         $tickets = $query->orderBy('created_at', 'desc')->get();

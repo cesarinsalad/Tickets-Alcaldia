@@ -99,7 +99,7 @@ function SuperAdminDashboard({ kpis, extra }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <KpiCard icon={Ticket} label="Tickets Activos y En Proceso" value={extra.active_tickets} color="blue" subtitle="Tickets sin resolver en el período elegido" href={route('tickets.index', { status: 'abierto,en_proceso', date_from: extra.date_from, date_to: extra.date_to })} />
                 <KpiCard icon={CheckCircle} label="Tickets Resueltos y Cerrados" value={extra.resolved_this_month} color="green" subtitle="Tickets resueltos en el período elegido" href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro del plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro de su plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
                 <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
             </div>
 
@@ -358,7 +358,7 @@ function AdminTicketsDashboard({ extra }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <KpiCard icon={Ticket} label="Activos" value={extra.active_tickets} color="blue" subtitle="Tickets sin resolver en el período elegido" href={route('tickets.index', { status: 'abierto,en_proceso', date_from: extra.date_from, date_to: extra.date_to })} />
                 <KpiCard icon={CheckCircle} label="Tickets Resueltos y Cerrados" value={extra.resolved_this_month} color="green" subtitle="Tickets resueltos en el período elegido" href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro del plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro de su plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
                 <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
             </div>
 
