@@ -856,68 +856,102 @@ function SolicitanteDashboard({ extra }) {
                 </Link>
             </div>
 
-            {extra.my_active_tickets.length > 0 && (
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Mis Tickets en Curso</h3>
-                    <div className="space-y-4">
-                        {extra.my_active_tickets.map(t => (
-                            <Link
-                                key={t.id}
-                                href={route('tickets.show', t.id)}
-                                className="block rounded-md border border-gris-borde p-4 hover:border-azul-institucional hover:shadow-sm transition-all"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-xs font-mono text-gray-400">{t.code}</span>
-                                            <span className="text-xs text-gray-400">{t.category}</span>
-                                        </div>
-                                        <p className="text-sm font-medium text-gray-900 mt-0.5">{t.title}</p>
-                                    </div>
-                                    <span className="text-xs text-gray-400 whitespace-nowrap">{t.entry_date}</span>
-                                </div>
-                                <ProgressBar currentStatus={t.status} />
-                            </Link>
-                        ))}
+            {extra.my_active_tickets.data?.length > 0 ? (
+                <div className="rounded-lg border border-gris-borde bg-white">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
+                        <Ticket className="h-4 w-4 text-azul-institucional" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Mis Tickets en Curso</h3>
                     </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <th className="px-4 py-3 font-medium">Código</th>
+                                    <th className="px-4 py-3 font-medium">Título</th>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Categoría</th>
+                                    <th className="px-4 py-3 font-medium">Prioridad</th>
+                                    <th className="px-4 py-3 font-medium">Estado</th>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {extra.my_active_tickets.data.map(t => (
+                                    <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-gris-fondo transition-colors cursor-pointer">
+                                        <td className="px-4 py-3 font-mono text-xs text-azul-institucional">{t.code}</td>
+                                        <td className="px-4 py-3 text-gray-900 max-w-[180px] truncate">{t.title}</td>
+                                        <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{t.category || '—'}</td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{priorityLabels[t.priority] || t.priority}</Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{t.entry_date}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {extra.my_active_tickets.links && extra.my_active_tickets.links.length > 3 && (
+                        <div className="px-4 py-3 border-t border-gris-borde">
+                            <Pagination
+                                links={extra.my_active_tickets.links}
+                                total={extra.my_active_tickets.total}
+                                perPage={extra.my_active_tickets.per_page || 5}
+                            />
+                        </div>
+                    )}
                 </div>
-            )}
+            ) : null}
 
-            {extra.pending_receipt.length > 0 && (
-                <div className="rounded-lg border border-verde-exito/30 bg-white">
-                    <div className="flex items-center gap-2 px-5 py-3 border-b border-verde-exito/20 bg-green-50/50">
+            {extra.my_history_tickets.data?.length > 0 ? (
+                <div className="rounded-lg border border-gris-borde bg-white">
+                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
                         <CheckCircle className="h-4 w-4 text-verde-exito" />
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Constancias Pendientes</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Historial de Tickets</h3>
                     </div>
-                    <div className="divide-y divide-gris-borde">
-                        {extra.pending_receipt.map(t => (
-                            <div key={t.id} className="flex items-center justify-between px-5 py-4">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-mono text-gray-400">{t.code}</span>
-                                        <span className="h-1.5 w-1.5 rounded-full bg-verde-exito" />
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-900 mt-0.5">{t.title}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">
-                                        Resuelto por: {t.assigned_name || '—'} &middot; {t.exit_date}
-                                    </p>
-                                </div>
-                                <a href={route('tickets.receipt', t.id)} target="_blank" rel="noopener noreferrer">
-                                    <Button variant="outline" size="sm" className="shrink-0">
-                                        <CheckCircle className="h-3.5 w-3.5" />
-                                        Generar Constancia
-                                    </Button>
-                                </a>
-                            </div>
-                        ))}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
+                                    <th className="px-4 py-3 font-medium">Código</th>
+                                    <th className="px-4 py-3 font-medium">Título</th>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Asignado</th>
+                                    <th className="px-4 py-3 font-medium">Estado</th>
+                                    <th className="px-4 py-3 font-medium hidden md:table-cell">Resolución</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gris-borde">
+                                {extra.my_history_tickets.data.map(t => (
+                                    <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-gray-50/50 transition-colors cursor-pointer">
+                                        <td className="px-4 py-3 font-mono text-xs text-azul-institucional">{t.code}</td>
+                                        <td className="px-4 py-3 text-gray-900 max-w-[180px] truncate">{t.title}</td>
+                                        <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{t.assigned_name || '—'}</td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{t.exit_date || '—'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
+                    {extra.my_history_tickets.links && extra.my_history_tickets.links.length > 3 && (
+                        <div className="px-4 py-3 border-t border-gris-borde">
+                            <Pagination
+                                links={extra.my_history_tickets.links}
+                                total={extra.my_history_tickets.total}
+                                perPage={extra.my_history_tickets.per_page || 5}
+                            />
+                        </div>
+                    )}
                 </div>
-            )}
+            ) : null}
 
-            {extra.my_active_tickets.length === 0 && extra.pending_receipt.length === 0 && (
+            {(!extra.my_active_tickets.data?.length && !extra.my_history_tickets.data?.length) && (
                 <div className="rounded-lg border border-gris-borde bg-white p-12 text-center text-gray-500">
                     <CheckCircle className="mx-auto h-10 w-10 text-gray-300 mb-3" />
-                    <p className="text-lg font-medium">No tienes tickets activos</p>
+                    <p className="text-lg font-medium">No tienes tickets</p>
                     <p className="text-sm mt-1">Si tienes un problema técnico, crea un nuevo reporte de incidencia.</p>
                 </div>
             )}
@@ -947,33 +981,39 @@ export default function Dashboard({ stats, unreadNotifications }) {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
                     <div className="flex items-center gap-2">
-                        <Input
-                            type="date"
-                            value={from}
-                            onChange={e => setFrom(e.target.value)}
-                            className="w-36 text-sm"
-                        />
-                        <span className="text-gray-400 text-sm">—</span>
-                        <Input
-                            type="date"
-                            value={to}
-                            onChange={e => setTo(e.target.value)}
-                            className="w-36 text-sm"
-                        />
-                        <Button size="sm" variant="outline" onClick={applyDates}>
-                            Aplicar
-                        </Button>
-                        {(from || to) && (
-                            <Button size="sm" variant="ghost" onClick={clearDates}>
-                                Limpiar
+                        {!stats.is_solicitante && (
+                            <>
+                            <Input
+                                type="date"
+                                value={from}
+                                onChange={e => setFrom(e.target.value)}
+                                className="w-36 text-sm"
+                            />
+                            <span className="text-gray-400 text-sm">—</span>
+                            <Input
+                                type="date"
+                                value={to}
+                                onChange={e => setTo(e.target.value)}
+                                className="w-36 text-sm"
+                            />
+                            <Button size="sm" variant="outline" onClick={applyDates}>
+                                Aplicar
                             </Button>
+                            {(from || to) && (
+                                <Button size="sm" variant="ghost" onClick={clearDates}>
+                                    Limpiar
+                                </Button>
+                            )}
+                            </>
                         )}
+                        {!stats.is_solicitante && (
                         <Link href={route('tickets.create')}>
                             <Button size="sm">
                                 <Plus className="h-4 w-4" />
                                 Nuevo Ticket
                             </Button>
                         </Link>
+                        )}
                     </div>
                 </div>
             }

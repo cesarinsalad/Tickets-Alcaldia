@@ -277,6 +277,7 @@ class TicketController extends Controller
         $canChangeCategory = $request->user()->hasAnyRole(['admin_tickets', 'super_admin']);
         $canSeeInternalComments = $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin']);
         $canUploadPhoto = ! $request->user()->hasRole('solicitante');
+        $canGenerateReport = $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin']);
 
         $technicians = User::role('tecnico')
             ->where('is_active', true)
@@ -323,6 +324,7 @@ class TicketController extends Controller
             'canChangePriority' => $canChangePriority,
             'canChangeCategory' => $canChangeCategory,
             'canUploadPhoto' => $canUploadPhoto,
+            'canGenerateReport' => $canGenerateReport,
             'canSeeInternalComments' => $canSeeInternalComments,
             'technicians' => $technicians,
             'categories' => Category::all(),

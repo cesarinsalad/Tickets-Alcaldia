@@ -34,7 +34,7 @@ const priorityLabels = {
     critica: 'Crítica',
 };
 
-export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canChangeCategory, canUploadPhoto, canSeeInternalComments, categories, priorityLabels }) {
+export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canChangeCategory, canUploadPhoto, canSeeInternalComments, canGenerateReport, categories, priorityLabels }) {
     const [comment, setComment] = useState('');
     const [commentPhoto, setCommentPhoto] = useState(null);
     const [commentPhotoPreview, setCommentPhotoPreview] = useState(null);
@@ -112,6 +112,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             {priorityLabels[ticket.priority] || ticket.priority}
                         </Badge>
                     </div>
+                    {canGenerateReport && (
                     <div className="flex items-center gap-2">
                         <a href={route('tickets.report', ticket.id)} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" size="sm">
@@ -128,6 +129,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             </a>
                         )}
                     </div>
+                    )}
                 </div>
             }
         >

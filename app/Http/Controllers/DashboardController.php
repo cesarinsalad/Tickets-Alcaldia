@@ -29,22 +29,18 @@ class DashboardController extends Controller
         $extra = [];
 
         if ($user->hasRole('solicitante')) {
-            $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);
+            $baseQuery = Ticket::query()->visibleTo($user);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
-            $kpis = [
-                'abiertos' => (clone $baseQuery)->where('status', TicketStatus::Abierto)->count(),
-                'en_proceso' => (clone $baseQuery)->where('status', TicketStatus::EnProceso)->count(),
-                'resueltos' => (clone $baseQuery)->where('status', TicketStatus::Resuelto)->count(),
-            ];
-
-            $myActiveTickets = (clone $baseQuery)
+            $activePaginator = (clone $baseQuery)
                 ->whereIn('status', $activeStatuses)
                 ->with(['category'])
                 ->latest()
-                ->take(15)
-                ->get()
-                ->map(fn($t) => [
+                ->paginate(5, ['*'], 'active_page')
+                ->withQueryString();
+
+            $myActiveTickets = [
+                'data' => $activePaginator->getCollection()->map(fn($t) => [
                     'id' => $t->id,
                     'code' => $t->code,
                     'title' => $t->title,
@@ -54,26 +50,38 @@ class DashboardController extends Controller
                     'priority_label' => $t->priority->label(),
                     'category' => $t->category?->name,
                     'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
-                ]);
+                ])->values()->toArray(),
+                'links' => $activePaginator->toArray()['links'] ?? [],
+                'total' => $activePaginator->total(),
+                'per_page' => $activePaginator->perPage(),
+            ];
 
-            $pendingReceipt = (clone $baseQuery)
-                ->where('status', TicketStatus::Resuelto)
-                ->with(['assigned', 'category'])
+            $historyPaginator = (clone $baseQuery)
+                ->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
+                ->with(['assigned'])
                 ->latest('exit_date')
-                ->take(10)
-                ->get()
-                ->map(fn($t) => [
+                ->paginate(5, ['*'], 'history_page')
+                ->withQueryString();
+
+            $myHistory = [
+                'data' => $historyPaginator->getCollection()->map(fn($t) => [
                     'id' => $t->id,
                     'code' => $t->code,
                     'title' => $t->title,
+                    'status' => $t->status->value,
+                    'status_label' => $t->status->label(),
                     'assigned_name' => $t->assigned?->full_name,
                     'exit_date' => $t->exit_date?->format('d/m/Y H:i'),
-                ]);
+                ])->values()->toArray(),
+                'links' => $historyPaginator->toArray()['links'] ?? [],
+                'total' => $historyPaginator->total(),
+                'per_page' => $historyPaginator->perPage(),
+            ];
 
             $extra = [
                 'is_solicitante' => true,
                 'my_active_tickets' => $myActiveTickets,
-                'pending_receipt' => $pendingReceipt,
+                'my_history_tickets' => $myHistory,
             ];
         } elseif ($user->hasRole('tecnico')) {
             $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);

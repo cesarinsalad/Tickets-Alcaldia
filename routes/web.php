@@ -28,17 +28,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/tickets/report', [ReportController::class, 'index'])->name('tickets.report.index');
-
     Route::resource('tickets', TicketController::class)->except(['edit', 'update']);
     Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
     Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
     Route::post('/tickets/{ticket}/transition', [TicketController::class, 'transition'])->name('tickets.transition');
     Route::post('/tickets/{ticket}/change-priority', [TicketController::class, 'changePriority'])->name('tickets.change-priority');
     Route::post('/tickets/{ticket}/change-category', [TicketController::class, 'changeCategory'])->name('tickets.change-category');
-
-    Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
-    Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
 
     Route::middleware(['role:admin_departamento|super_admin|admin_tickets'])->group(function () {
         Route::resource('users', UserManagementController::class)->except(['show']);
@@ -62,7 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware(['role:tecnico|admin_tickets|super_admin'])->group(function () {
+        Route::get('/tickets/report', [ReportController::class, 'index'])->name('tickets.report.index');
         Route::resource('knowledge', KnowledgeArticleController::class)->except(['show', 'create', 'edit']);
+        Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
+        Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
