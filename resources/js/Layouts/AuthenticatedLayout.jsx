@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, Menu, X, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, XCircle } from 'lucide-react';
+import { Bell, ChevronDown, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, XCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/Components/ui/dropdown';
 import { Badge } from '@/Components/ui/badge';
 
@@ -63,6 +63,7 @@ export default function AuthenticatedLayout({ header, children }) {
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });
     if (user.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name))) {
         navItems.push({ href: route('articles.index'), label: 'Base de Conocimiento', icon: BookOpen, active: route().current('articles.*') });
+        navItems.push({ href: route('equipments.index'), label: 'Equipos', icon: Monitor, active: route().current('equipments.*') });
     }
 
     if (user.roles?.some(r => ['super_admin', 'admin_departamento', 'admin_tickets'].includes(r.name))) {

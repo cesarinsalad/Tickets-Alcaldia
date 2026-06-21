@@ -7,6 +7,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\InterventionReportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SlaConfigurationController;
@@ -60,6 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/tickets/report', [ReportController::class, 'index'])->name('tickets.report.index');
         Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
         Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
+        Route::get('/equipments', [InterventionReportController::class, 'index'])->name('equipments.index');
+        Route::get('/equipments/{sku}', [InterventionReportController::class, 'lookup'])->name('equipments.lookup');
+        Route::post('/tickets/{ticket}/intervention-report', [InterventionReportController::class, 'generate'])->name('tickets.intervention-report.generate');
+        Route::get('/intervention-reports/{report}/pdf', [InterventionReportController::class, 'showPdf'])->name('intervention-reports.pdf');
 
         Route::get('/kb', [ArticleController::class, 'index'])->name('articles.index');
         Route::get('/kb/search', [ArticleController::class, 'search'])->name('articles.search');

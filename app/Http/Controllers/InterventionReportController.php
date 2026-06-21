@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Equipment;
+use App\Models\InterventionReport;
+use App\Models\Ticket;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+
+class InterventionReportController extends Controller
+{
+    public function index(Request $request)
+    {
+        if (! $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin'])) {
+            abort(403);
+        }
+
+        $query = Equipment::query()
+            ->withCount('interventionReports')
+            ->with(['interventionReports' => fn ($q) => $q->latest()->limit(1)->with('ticket')])
+            ->latest('updated_at');
+
+        if ($request->filled('search')) {
+            $term = $request->input('search');
+            $query->where(function ($q) use ($term) {
+                $q->where('sku', 'ilike', "%{$term}%")
+                  ->orWhere('brand', 'ilike', "%{$term}%")
+                  ->orWhere('model', 'ilike', "%{$term}%");
+            });
+        }
+
+        $equipment = $query->paginate(15)->withQueryString();
+
+        return Inertia::render('Equipments/Index', [
+            'equipment' => $equipment,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    public function lookup(Request $request)
+    {
+        if (! $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin'])) {
+            abort(403);
+        }
+
+        $equipment = Equipment::where('sku', $request->route('sku'))->first();
+
+        if (! $equipment) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json([
+            'sku' => $equipment->sku,
+            'brand' => $equipment->brand,
+            'model' => $equipment->model,
+            'processor' => $equipment->processor,
+            'ram_memory' => $equipment->ram_memory,
+            'storage_disk' => $equipment->storage_disk,
+        ]);
+    }
+
+    public function generate(Request $request, Ticket $ticket)
+    {
+        Gate::authorize('view', $ticket);
+
+        $validated = $request->validate([
+            'sku' => ['required', 'string', 'max:100'],
+            'brand' => ['nullable', 'string', 'max:100'],
+            'model' => ['nullable', 'string', 'max:100'],
+            'processor' => ['nullable', 'string', 'max:100'],
+            'ram_memory' => ['nullable', 'string', 'max:50'],
+            'storage_disk' => ['nullable', 'string', 'max:100'],
+            'diagnostic' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $equipment = Equipment::updateOrCreate(
+            ['sku' => $validated['sku']],
+            collect($validated)->only(['brand', 'model', 'processor', 'ram_memory', 'storage_disk'])->toArray()
+        );
+
+        $report = $ticket->interventionReports()->create([
+            'equipment_id' => $equipment->id,
+            'diagnostic' => $validated['diagnostic'],
+        ]);
+
+        $ticket->load(['creator.department', 'assigned', 'category']);
+
+        $pdf = Pdf::loadView('pdf.intervention-report', [
+            'ticket' => $ticket,
+            'equipment' => $equipment,
+            'report' => $report,
+        ]);
+
+        return $pdf->download("informe-retiro-{$ticket->code}.pdf");
+    }
+
+    public function showPdf(InterventionReport $report)
+    {
+        $report->load(['ticket.creator.department', 'ticket.assigned', 'ticket.category', 'equipment']);
+
+        $ticket = $report->ticket;
+
+        Gate::authorize('view', $ticket);
+
+        $pdf = Pdf::loadView('pdf.intervention-report', [
+            'ticket' => $ticket,
+            'equipment' => $report->equipment,
+            'report' => $report,
+        ]);
+
+        return $pdf->stream("informe-retiro-{$ticket->code}.pdf");
+    }
+}

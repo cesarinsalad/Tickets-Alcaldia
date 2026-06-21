@@ -63,6 +63,11 @@ class Ticket extends Model
         return $this->hasMany(Notification::class);
     }
 
+    public function interventionReports(): HasMany
+    {
+        return $this->hasMany(InterventionReport::class);
+    }
+
     public function getDepartmentAttribute()
     {
         return $this->creator?->department;

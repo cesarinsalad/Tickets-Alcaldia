@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle, Wrench } from 'lucide-react';
 import RelativeTime from '@/Components/RelativeTime';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -9,6 +9,7 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
+import GenerateReportModal from '@/Components/GenerateReportModal';
 import InputError from '@/Components/InputError';
 
 const statusColors = {
@@ -47,6 +48,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
     const [newPriority, setNewPriority] = useState('');
     const [newCategory, setNewCategory] = useState('');
     const [errors, setErrors] = useState({});
+    const [showInterventionModal, setShowInterventionModal] = useState(false);
 
     function submitComment(e) {
         e.preventDefault();
@@ -129,6 +131,10 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                                 </Button>
                             </a>
                         )}
+                        <Button variant="outline" size="sm" onClick={() => setShowInterventionModal(true)}>
+                            <Wrench className="h-4 w-4" />
+                            Retiro de Equipo
+                        </Button>
                     </div>
                     )}
                 </div>
@@ -531,6 +537,12 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                     )}
                 </div>
             </div>
+            {showInterventionModal && (
+                <GenerateReportModal
+                    ticket={ticket}
+                    onClose={() => setShowInterventionModal(false)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
