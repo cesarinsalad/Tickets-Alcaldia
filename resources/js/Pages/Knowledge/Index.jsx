@@ -1,175 +1,201 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, BookOpen, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, Plus, BookOpen, FileText, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
+import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
-import { Textarea } from '@/Components/ui/textarea';
-import InputError from '@/Components/InputError';
 
-function ArticleModal({ mode, article, onClose }) {
-    const isEdit = mode === 'edit';
-    const [form, setForm] = useState({
-        title: isEdit ? (article?.title || '') : '',
-        content: isEdit ? (article?.content || '') : '',
-    });
-    const [errors, setErrors] = useState({});
-    const [processing, setProcessing] = useState(false);
-
-    function handleSubmit(e) {
-        e.preventDefault();
-        setProcessing(true);
-
-        if (isEdit) {
-            router.put(route('knowledge.update', article.id), form, {
-                onError: (err) => { setErrors(err); setProcessing(false); },
-                onSuccess: () => { setProcessing(false); onClose(); },
-            });
-        } else {
-            router.post(route('knowledge.store'), form, {
-                onError: (err) => { setErrors(err); setProcessing(false); },
-                onSuccess: () => { setProcessing(false); onClose(); },
-            });
-        }
-    }
-
+function ArticleCard({ article, isDraftView }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                        {isEdit ? 'Editar Artículo' : 'Nuevo Artículo'}
-                    </h2>
-                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
+        <Link
+            href={route('articles.show', article.slug)}
+            className="block rounded-lg border border-gris-borde bg-white p-5 hover:shadow-md hover:border-azul-institucional/30 transition-all group"
+        >
+            <div className="flex items-start gap-3">
+                <div className="mt-1 p-2 rounded-md bg-azul-institucional/10 text-azul-institucional">
+                    <FileText className="h-5 w-5" />
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <Label htmlFor="kb_title">Título</Label>
-                        <Input id="kb_title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="mt-1" />
-                        <InputError message={errors.title} />
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-gray-900 group-hover:text-azul-institucional transition-colors line-clamp-2">
+                            {article.title}
+                        </h3>
+                        {isDraftView && (
+                            <Badge variant="warning" className="shrink-0 text-[10px]">Borrador</Badge>
+                        )}
                     </div>
-                    <div>
-                        <Label htmlFor="kb_content">Contenido</Label>
-                        <Textarea
-                            id="kb_content"
-                            value={form.content}
-                            onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                            rows={12}
-                            className="mt-1"
-                            placeholder="Describe el protocolo o procedimiento..."
-                        />
-                        <InputError message={errors.content} />
+                    <div className="flex flex-wrap items-center gap-1 mt-2">
+                        {article.categories?.map(c => (
+                            <Badge key={c.id} variant="secondary" className="text-[10px]">{c.name}</Badge>
+                        ))}
                     </div>
-                    <div className="flex items-center gap-3 pt-2">
-                        <Button type="submit" disabled={processing}>
-                            {processing ? (isEdit ? 'Guardando...' : 'Creando...') : (isEdit ? 'Guardar Cambios' : 'Crear Artículo')}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-                    </div>
-                </form>
+                    <p className="text-xs text-gray-400 mt-2">
+                        {article.author?.full_name ?? article.author?.name} &middot; Actualizado {new Date(article.updated_at).toLocaleDateString('es-VE')}
+                    </p>
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-gray-300 group-hover:text-azul-institucional transition-colors shrink-0" />
             </div>
-        </div>
+        </Link>
     );
 }
 
-export default function Index({ articles }) {
+export default function Index({ articles, categories, filters }) {
     const { auth } = usePage().props;
-    const user = auth?.user;
-    const canEdit = user?.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name));
-    const [modal, setModal] = useState(null);
-    const [expanded, setExpanded] = useState({});
+    const tab = filters?.status || 'published';
+    const [search, setSearch] = useState(filters?.search || '');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
-    function toggleExpand(id) {
-        setExpanded(e => ({ ...e, [id]: !e[id] }));
+    function navigate(params) {
+        router.get(route('articles.index'), { ...filters, ...params }, {
+            preserveState: true,
+            replace: true,
+        });
     }
 
-    function handleDelete(article) {
-        if (confirm('¿Eliminar este artículo?')) {
-            router.delete(route('knowledge.destroy', article.id));
+    const debouncedSearch = useCallback(() => {
+        if (search.length < 2) {
+            setSearchResults([]);
+            return;
         }
-    }
+        setIsSearching(true);
+        navigate({ search, category: filters?.category });
+    }, [search, filters?.category, filters?.status]);
 
-    function canManage(article) {
-        if (user?.roles?.some(r => ['super_admin', 'admin_tickets'].includes(r.name))) return true;
-        return article.user_id === user?.id;
-    }
+    useEffect(() => {
+        const timer = setTimeout(debouncedSearch, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const selectedCategory = filters?.category ? parseInt(filters.category) : null;
 
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Base de Conocimiento</h2>
-                    {canEdit && (
-                        <Button size="sm" onClick={() => setModal('create')}>
+                    <div className="flex items-center gap-3">
+                        <BookOpen className="h-6 w-6 text-azul-institucional" />
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900">Base de Conocimiento</h2>
+                            <p className="text-sm text-gray-500">Protocolos, procedimientos y guías de resolución</p>
+                        </div>
+                    </div>
+                    <Link href={route('articles.create')}>
+                        <Button size="sm">
                             <Plus className="h-4 w-4" />
                             Nuevo Artículo
                         </Button>
-                    )}
+                    </Link>
                 </div>
             }
         >
             <Head title="Base de Conocimiento" />
 
-            {modal && (
-                <ArticleModal
-                    mode={modal === 'create' ? 'create' : 'edit'}
-                    article={modal !== 'create' ? modal : null}
-                    onClose={() => setModal(null)}
-                />
+            <div className="mb-6">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                        type="search"
+                        placeholder="Buscar protocolos y procedimientos..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="pl-10 h-12 text-base"
+                    />
+                </div>
+            </div>
+
+            <div className="flex items-center gap-1 mb-4 border-b border-gris-borde">
+                <button
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        tab === 'published' ? 'border-azul-institucional text-azul-institucional' : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => navigate({ status: 'published', category: undefined })}
+                >
+                    Publicados
+                </button>
+                <button
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        tab === 'draft' ? 'border-azul-institucional text-azul-institucional' : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => navigate({ status: 'draft', category: undefined })}
+                >
+                    Borradores
+                </button>
+            </div>
+
+            {tab === 'published' && (
+                <div className="flex flex-wrap items-center gap-2 mb-6">
+                    <Button
+                        variant={!selectedCategory ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => navigate({ category: undefined })}
+                    >
+                        Todas
+                    </Button>
+                    {categories.map(c => (
+                        <Button
+                            key={c.id}
+                            variant={selectedCategory === c.id ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => navigate({ category: c.id })}
+                        >
+                            {c.name}
+                        </Button>
+                    ))}
+                </div>
             )}
 
-            <div className="">
-                <div className="rounded-lg border border-gris-borde bg-white">
-                    {articles.length === 0 ? (
-                        <div className="p-12 text-center text-gray-500">
-                            <BookOpen className="mx-auto h-10 w-10 text-gray-300 mb-3" />
-                            <p className="text-lg font-medium">No hay artículos</p>
-                            <p className="text-sm mt-1">Crea el primer protocolo o procedimiento.</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-gris-borde">
-                            {articles.map(article => (
-                                <div key={article.id} className="p-4 hover:bg-gris-fondo transition-colors">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div
-                                            className="flex-1 min-w-0 cursor-pointer"
-                                            onClick={() => toggleExpand(article.id)}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                {expanded[article.id] ? (
-                                                    <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
-                                                ) : (
-                                                    <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-                                                )}
-                                                <h3 className="text-sm font-medium text-gray-900">{article.title}</h3>
-                                            </div>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {article.author} &middot; {article.created_at}
-                                            </p>
-                                        </div>
-                                        {canManage(article) && (
-                                            <div className="flex items-center gap-1 shrink-0">
-                                                <Button variant="ghost" size="sm" onClick={() => setModal(article)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="sm" onClick={() => handleDelete(article)}>
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {expanded[article.id] && (
-                                        <div className="mt-3 pl-6 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                            {article.content}
-                                        </div>
-                                    )}
-                                </div>
+            {isSearching ? (
+                <div className="py-12 text-center text-gray-500">
+                    <Search className="mx-auto h-8 w-8 text-gray-300 animate-pulse mb-3" />
+                    <p className="text-sm">Buscando...</p>
+                </div>
+            ) : articles.data.length === 0 ? (
+                <div className="rounded-lg border border-gris-borde bg-white py-16 text-center">
+                    <BookOpen className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-lg font-medium text-gray-500">
+                        {search ? 'Sin resultados' : tab === 'draft' ? 'No hay borradores' : 'No hay artículos publicados'}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                        {search
+                            ? `No se encontraron artículos para "${search}".`
+                            : tab === 'draft'
+                                ? 'Los borradores que escribas aparecerán aquí.'
+                                : 'Crea el primer artículo de la base de conocimiento.'}
+                    </p>
+                    {!search && (
+                        <Link href={route('articles.create')} className="inline-block mt-4">
+                            <Button size="sm">
+                                <Plus className="h-4 w-4" />
+                                {tab === 'draft' ? 'Crear Borrador' : 'Crear Artículo'}
+                            </Button>
+                        </Link>
+                    )}
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        {articles.data.map(article => (
+                            <ArticleCard key={article.slug} article={article} isDraftView={tab === 'draft'} />
+                        ))}
+                    </div>
+                    {articles.last_page > 1 && (
+                        <div className="flex items-center justify-center gap-2">
+                            {articles.links?.map((link, i) => (
+                                <Button
+                                    key={i}
+                                    variant={link.active ? 'default' : 'outline'}
+                                    size="sm"
+                                    disabled={!link.url}
+                                    onClick={() => link.url && router.get(link.url, {}, { preserveState: true, replace: true })}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
+                </>
+            )}
         </AuthenticatedLayout>
     );
 }

@@ -4,7 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\KnowledgeArticleController;
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -58,9 +58,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['role:tecnico|admin_tickets|super_admin'])->group(function () {
         Route::get('/tickets/report', [ReportController::class, 'index'])->name('tickets.report.index');
-        Route::resource('knowledge', KnowledgeArticleController::class)->except(['show', 'create', 'edit']);
         Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
         Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
+
+        Route::get('/kb', [ArticleController::class, 'index'])->name('articles.index');
+        Route::get('/kb/search', [ArticleController::class, 'search'])->name('articles.search');
+        Route::get('/kb/create', [ArticleController::class, 'create'])->name('articles.create');
+        Route::post('/kb', [ArticleController::class, 'store'])->name('articles.store');
+        Route::get('/kb/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
+        Route::get('/kb/{article:slug}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
+        Route::put('/kb/{article:slug}', [ArticleController::class, 'update'])->name('articles.update');
+        Route::delete('/kb/{article:slug}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+        Route::put('/kb/{article:slug}/publish', [ArticleController::class, 'publish'])->name('articles.publish');
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

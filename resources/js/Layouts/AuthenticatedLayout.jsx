@@ -62,7 +62,7 @@ export default function AuthenticatedLayout({ header, children }) {
     navItems.push({ href: route('dashboard'), label: 'Dashboard', icon: LayoutDashboard, active: route().current('dashboard') });
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });
     if (user.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name))) {
-        navItems.push({ href: route('knowledge.index'), label: 'Base de Conocimiento', icon: BookOpen, active: route().current('knowledge.*') });
+        navItems.push({ href: route('articles.index'), label: 'Base de Conocimiento', icon: BookOpen, active: route().current('articles.*') });
     }
 
     if (user.roles?.some(r => ['super_admin', 'admin_departamento', 'admin_tickets'].includes(r.name))) {
