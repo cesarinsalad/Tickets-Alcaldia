@@ -14,7 +14,7 @@ class InterventionReportController extends Controller
 {
     public function index(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin'])) {
+        if (! $request->user()->hasPermissionTo('ver equipos')) {
             abort(403);
         }
 
@@ -42,7 +42,7 @@ class InterventionReportController extends Controller
 
     public function lookup(Request $request)
     {
-        if (! $request->user()->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin'])) {
+        if (! $request->user()->hasPermissionTo('gestionar equipos')) {
             abort(403);
         }
 
@@ -64,6 +64,10 @@ class InterventionReportController extends Controller
 
     public function generate(Request $request, Ticket $ticket)
     {
+        if (! $request->user()->hasPermissionTo('gestionar equipos')) {
+            abort(403);
+        }
+
         Gate::authorize('view', $ticket);
 
         $validated = $request->validate([
@@ -99,6 +103,10 @@ class InterventionReportController extends Controller
 
     public function showPdf(InterventionReport $report)
     {
+        if (! request()->user()->hasPermissionTo('ver equipos')) {
+            abort(403);
+        }
+
         $report->load(['ticket.creator.department', 'ticket.assigned', 'ticket.category', 'equipment']);
 
         $ticket = $report->ticket;

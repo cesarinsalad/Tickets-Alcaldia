@@ -60,4 +60,9 @@ class User extends Authenticatable
     {
         return trim($this->name . ' ' . $this->last_name);
     }
+
+    public function usesDashboard(string $template): bool
+    {
+        return $this->roles()->where('dashboard_template', $template)->exists();
+    }
 }

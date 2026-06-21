@@ -13,7 +13,7 @@ class RolePermissionController extends Controller
 
     public function index()
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -25,13 +25,20 @@ class RolePermissionController extends Controller
                 'is_base' => in_array($role->name, $this->baseRoles),
                 'permissions' => $role->permissions->pluck('name'),
                 'permissions_count' => $role->permissions->count(),
+                'dashboard_template' => $role->dashboard_template,
             ];
         });
 
-        $permissions = Permission::all()->map(fn ($p) => [
-            'id' => $p->id,
-            'name' => $p->name,
-        ])->values();
+        $permissions = Permission::select('id', 'name', 'module')
+            ->orderBy('module')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'module' => $p->module,
+            ])
+            ->values();
 
         return Inertia::render('Roles/Index', [
             'roles' => $roles,
@@ -41,7 +48,7 @@ class RolePermissionController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -49,17 +56,22 @@ class RolePermissionController extends Controller
             'name' => ['required', 'string', 'max:50', 'unique:roles,name'],
             'permissions' => ['array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
+            'dashboard_template' => ['nullable', 'string', 'exists:roles,dashboard_template'],
         ]);
 
-        $role = Role::create(['name' => $validated['name']]);
+        $role = Role::create([
+            'name' => $validated['name'],
+            'dashboard_template' => $request->input('dashboard_template'),
+        ]);
         $role->syncPermissions($validated['permissions'] ?? []);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return back()->with('success', 'Rol creado exitosamente.');
     }
 
     public function update(Request $request, Role $role)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -71,13 +83,14 @@ class RolePermissionController extends Controller
 
         $role->update(['name' => $validated['name']]);
         $role->syncPermissions($validated['permissions'] ?? []);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return back()->with('success', 'Rol actualizado exitosamente.');
     }
 
     public function destroy(Role $role)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -96,7 +109,7 @@ class RolePermissionController extends Controller
 
     public function storePermission(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -111,7 +124,7 @@ class RolePermissionController extends Controller
 
     public function destroyPermission(Permission $permission)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -122,7 +135,7 @@ class RolePermissionController extends Controller
 
     public function batchSync(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar roles')) {
             abort(403);
         }
 
@@ -138,6 +151,7 @@ class RolePermissionController extends Controller
                 $role->syncPermissions($permissions);
             }
         }
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         return back()->with('success', 'Permisos actualizados exitosamente.');
     }

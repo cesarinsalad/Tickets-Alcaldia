@@ -59,21 +59,31 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const navItems = [];
 
+    const can = (perm) => auth.all_permissions?.includes?.(perm);
+
     navItems.push({ href: route('dashboard'), label: 'Dashboard', icon: LayoutDashboard, active: route().current('dashboard') });
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });
-    if (user.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name))) {
+    if (can('ver articulos')) {
         navItems.push({ href: route('articles.index'), label: 'Base de Conocimiento', icon: BookOpen, active: route().current('articles.*') });
+    }
+    if (can('ver equipos')) {
         navItems.push({ href: route('equipments.index'), label: 'Equipos', icon: Monitor, active: route().current('equipments.*') });
     }
 
-    if (user.roles?.some(r => ['super_admin', 'admin_departamento', 'admin_tickets'].includes(r.name))) {
+    if (can('gestionar usuarios')) {
         navItems.push({ href: route('users.index'), label: 'Usuarios', icon: Users, active: route().current('users.*') });
     }
 
-    if (user.roles?.some(r => r.name === 'super_admin')) {
+    if (can('gestionar categorias')) {
         navItems.push({ href: route('categories.index'), label: 'Categorías', icon: FolderTree, active: route().current('categories.*') });
+    }
+    if (can('gestionar departamentos')) {
         navItems.push({ href: route('departments.index'), label: 'Departamentos', icon: Building2, active: route().current('departments.*') });
+    }
+    if (can('gestionar roles')) {
         navItems.push({ href: route('roles.index'), label: 'Roles y Permisos', icon: Shield, active: route().current('roles.*') });
+    }
+    if (can('gestionar sla')) {
         navItems.push({ href: route('sla.index'), label: 'Tiempos de Respuesta', icon: Clock, active: route().current('sla.*') });
     }
 

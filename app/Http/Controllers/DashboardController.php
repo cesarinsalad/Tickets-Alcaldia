@@ -28,7 +28,7 @@ class DashboardController extends Controller
         $kpis = [];
         $extra = [];
 
-        if ($user->hasRole('solicitante')) {
+        if ($user->usesDashboard('solicitante')) {
             $baseQuery = Ticket::query()->visibleTo($user);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
@@ -88,7 +88,7 @@ class DashboardController extends Controller
                     return $total > 0 ? round(($resolved / $total) * 100) : 0;
                 })(),
             ];
-        } elseif ($user->hasRole('tecnico')) {
+        } elseif ($user->usesDashboard('tecnico')) {
             $baseQuery = Ticket::query()->visibleTo($user);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
             $activeStatusValues = array_map(fn($s) => $s->value, $activeStatuses);
@@ -193,7 +193,7 @@ class DashboardController extends Controller
                     return $total > 0 ? round(($resolved / $total) * 100) : 0;
                 })(),
             ];
-        } elseif ($user->hasRole('admin_departamento')) {
+        } elseif ($user->usesDashboard('admin_departamento')) {
             $baseQuery = Ticket::query()->visibleTo($user)->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
 
@@ -263,7 +263,7 @@ class DashboardController extends Controller
                     ->count(),
                 'top_employees' => $topEmployees,
             ];
-        } elseif ($user->hasRole('admin_tickets')) {
+        } elseif ($user->usesDashboard('admin_tickets')) {
             $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $kpis = [
                 'abiertos' => (clone $ticketQuery)->where('status', TicketStatus::Abierto)->count(),
@@ -469,7 +469,7 @@ class DashboardController extends Controller
                 'top_departments' => $topDepartments,
                 'category_distribution' => $categoryDistribution,
             ];
-        } elseif ($user->hasRole('super_admin')) {
+        } elseif ($user->usesDashboard('super_admin')) {
             $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $kpis = [
                 'abiertos' => (clone $ticketQuery)->where('status', TicketStatus::Abierto)->count(),

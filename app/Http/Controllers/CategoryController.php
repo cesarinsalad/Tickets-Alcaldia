@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar categorias')) {
             abort(403, 'No autorizado.');
         }
 
@@ -37,7 +37,7 @@ class CategoryController extends Controller
 
     public function create()
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar categorias')) {
             abort(403, 'No autorizado.');
         }
 
@@ -46,7 +46,7 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar categorias')) {
             abort(403, 'No autorizado.');
         }
 
@@ -63,7 +63,7 @@ class CategoryController extends Controller
 
     public function edit(Category $category)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar categorias')) {
             abort(403, 'No autorizado.');
         }
 
@@ -74,7 +74,7 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar categorias')) {
             abort(403, 'No autorizado.');
         }
 
@@ -91,7 +91,7 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar categorias')) {
             abort(403, 'No autorizado.');
         }
 

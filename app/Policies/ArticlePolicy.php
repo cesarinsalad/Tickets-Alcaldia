@@ -7,32 +7,36 @@ use App\Models\User;
 
 class ArticlePolicy
 {
-    public function view(User $user): bool
+    public function view(User $user, ?Article $article = null): bool
     {
-        return $user->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin']);
+        return $user->hasPermissionTo('ver articulos');
     }
 
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['tecnico', 'admin_tickets', 'super_admin']);
+        return $user->hasPermissionTo('crear articulos');
     }
 
     public function update(User $user, Article $article): bool
     {
-        if ($user->hasAnyRole(['super_admin', 'admin_tickets'])) {
+        if ($user->hasPermissionTo('publicar articulos')) {
             return true;
         }
 
-        return $article->author_id === $user->id;
+        if ($user->hasPermissionTo('crear articulos') && $article->author_id === $user->id) {
+            return true;
+        }
+
+        return false;
     }
 
     public function delete(User $user, Article $article): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin_tickets']);
+        return $user->hasPermissionTo('publicar articulos');
     }
 
-    public function publish(User $user): bool
+    public function publish(User $user, ?Article $article = null): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin_tickets']);
+        return $user->hasPermissionTo('publicar articulos');
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
@@ -51,12 +52,9 @@ class UserManagementController extends Controller
         $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
         $departments = Department::all();
 
-        $roles = collect([
-            ['value' => 'solicitante', 'label' => 'Solicitante'],
-            ['value' => 'tecnico', 'label' => 'Técnico'],
-            ['value' => 'admin_departamento', 'label' => 'Administrador de Departamento'],
-            ['value' => 'admin_tickets', 'label' => 'Administrador de Tickets'],
-            ['value' => 'super_admin', 'label' => 'Super Administrador'],
+        $roles = Role::all()->map(fn ($r) => [
+            'value' => $r->name,
+            'label' => $this->roleLabel($r->name) ?? ucfirst($r->name),
         ]);
 
         return Inertia::render('Users/Index', [
@@ -69,18 +67,14 @@ class UserManagementController extends Controller
 
     public function create()
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
 
         $departments = Department::all();
-        $roles = [
-            'solicitante' => 'Solicitante',
-            'tecnico' => 'Técnico',
-            'admin_departamento' => 'Administrador de Departamento',
-            'admin_tickets' => 'Administrador de Tickets',
-            'super_admin' => 'Super Administrador',
-        ];
+        $roles = Role::all()->mapWithKeys(fn ($r) => [
+            $r->name => $this->roleLabel($r->name) ?? ucfirst($r->name),
+        ]);
 
         return Inertia::render('Users/Create', [
             'departments' => $departments,
@@ -90,18 +84,14 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
 
         $departments = Department::all();
-        $roles = [
-            'solicitante' => 'Solicitante',
-            'tecnico' => 'Técnico',
-            'admin_departamento' => 'Administrador de Departamento',
-            'admin_tickets' => 'Administrador de Tickets',
-            'super_admin' => 'Super Administrador',
-        ];
+        $roles = Role::all()->mapWithKeys(fn ($r) => [
+            $r->name => $this->roleLabel($r->name) ?? ucfirst($r->name),
+        ]);
 
         $user->load('roles');
         $user->append('full_name');
@@ -115,16 +105,11 @@ class UserManagementController extends Controller
 
     public function store(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
 
-        $allowedRoles = ['solicitante', 'tecnico', 'admin_departamento', 'admin_tickets'];
-
-        if ($request->user()->hasRole('super_admin')) {
-            $allowedRoles[] = 'super_admin';
-        }
-
+        $allowedRoles = Role::pluck('name')->toArray();
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -174,16 +159,11 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
 
-        $allowedRoles = ['solicitante', 'tecnico', 'admin_departamento', 'admin_tickets'];
-
-        if ($request->user()->hasRole('super_admin')) {
-            $allowedRoles[] = 'super_admin';
-        }
-
+        $allowedRoles = Role::pluck('name')->toArray();
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -274,7 +254,7 @@ class UserManagementController extends Controller
 
     public function resetPassword(User $user)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
 
@@ -291,7 +271,7 @@ class UserManagementController extends Controller
 
     public function toggle(User $user)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
         $user->update([
@@ -305,7 +285,7 @@ class UserManagementController extends Controller
 
     public function destroy(User $user)
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar usuarios')) {
             abort(403, 'No autorizado.');
         }
 
@@ -314,5 +294,17 @@ class UserManagementController extends Controller
         $user->delete();
 
         return back()->with('success', 'Usuario eliminado exitosamente.');
+    }
+
+    private function roleLabel(string $name): ?string
+    {
+        return match ($name) {
+            'super_admin' => 'Super Administrador',
+            'admin_tickets' => 'Administrador de Tickets',
+            'admin_departamento' => 'Administrador de Departamento',
+            'tecnico' => 'Técnico',
+            'solicitante' => 'Solicitante',
+            default => null,
+        };
     }
 }

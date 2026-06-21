@@ -21,7 +21,7 @@ class HandleInertiaRequests extends Middleware
         $auth = ['user' => null, 'unread_notifications' => 0];
 
         if ($user) {
-            $user->load(['roles', 'department']);
+            $user->load(['roles.permissions', 'department']);
             $user->append('full_name');
 
             $roleName = $user->roles->first()?->name;
@@ -43,6 +43,7 @@ class HandleInertiaRequests extends Middleware
                     ->get(),
                 'role_label' => $roleLabels[$roleName] ?? $roleName,
                 'department_name' => $user->department?->name,
+                'all_permissions' => $user->roles->flatMap(fn ($r) => $r->permissions->pluck('name'))->unique()->values(),
             ];
         }
 

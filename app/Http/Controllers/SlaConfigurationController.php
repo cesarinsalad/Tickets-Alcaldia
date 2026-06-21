@@ -18,7 +18,7 @@ class SlaConfigurationController extends Controller
 
     public function index()
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar sla')) {
             abort(403);
         }
 
@@ -56,7 +56,7 @@ class SlaConfigurationController extends Controller
 
     public function update(Request $request)
     {
-        if (! $request->user()->hasRole('super_admin')) {
+        if (! $request->user()->hasPermissionTo('gestionar sla')) {
             abort(403);
         }
 
@@ -90,7 +90,7 @@ class SlaConfigurationController extends Controller
 
     public function reset()
     {
-        if (! request()->user()->hasRole('super_admin')) {
+        if (! request()->user()->hasPermissionTo('gestionar sla')) {
             abort(403);
         }
 
