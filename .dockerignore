@@ -1,0 +1,27 @@
+# Docker build context exclusions
+.git
+.github
+node_modules
+vendor
+public/build
+public/storage
+storage/*.key
+storage/app/*_seeded.lock
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*.log
+.env
+.env.backup
+.env.production
+database/*.sqlite
+phpunit.xml
+docker-compose*
+Dockerfile
+.dockerignore
+.editorconfig
+.gitattributes
+.gitignore
+.npmrc
+jsconfig.json
+README.md

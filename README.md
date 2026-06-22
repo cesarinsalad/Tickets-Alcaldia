@@ -61,60 +61,76 @@ Abierto ──────────► En Proceso ────────►
 
 ## Instalación
 
-### Requisitos
+Puedes inicializar y ejecutar este proyecto de dos maneras: usando **Docker** (recomendado para un despliegue rápido y demo) o de forma **Manual**.
 
-- PHP 8.3+
-- Composer
-- Node.js 20+
-- PostgreSQL 16 (o SQLite para desarrollo local)
+### Opción 1: Con Docker (Recomendado)
 
-### Pasos
+Requiere tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/) (en Windows/Mac) o Docker Engine en Linux.
 
-```bash
-# 1. Clonar el repositorio
-git clone <repositorio> sistema-tickets
-cd Tickets-Alcaldia
+1. **Clonar el repositorio:**
+   ```bash
+   git clone <repositorio> sistema-tickets
+   cd sistema-tickets
+   ```
 
-# 2. Instalar dependencias PHP
-composer install
+2. **Levantar los contenedores:**
+   ```bash
+   docker compose up --build -d
+   ```
+   *Esto descargará las imágenes oficiales, instalará las dependencias (PHP y Node), compilará el frontend y levantará la base de datos PostgreSQL.*
 
-# 3. Instalar dependencias JavaScript
-npm install
+3. **¡Listo!**
+   - El sistema estará disponible en [http://localhost:8000](http://localhost:8000)
+   - La base de datos (PostgreSQL) está expuesta en el puerto `5433` de tu máquina (usuario: `sistema_tickets`, password: `sistema_tickets`).
 
-# 4. Copiar y configurar variables de entorno
-cp .env.example .env
-php artisan key:generate
-```
+> **Nota sobre los datos de demo:** Durante el primer inicio, el contenedor ejecutará automáticamente las migraciones y poblará la base de datos con información de prueba. Si en el futuro deseas limpiar la base de datos y volver a generar los datos desde cero, ejecuta:
+> `docker compose exec app php artisan migrate:fresh --seed`
 
-Editar `.env`:
+---
 
-```env
-APP_NAME="Sistema de Tickets"
-APP_LOCALE=es
-APP_TIMEZONE=America/Caracas
+### Opción 2: Instalación Manual
 
-DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=sistema_tickets
-DB_USERNAME=postgres
-DB_PASSWORD=tu_password
-```
-*Para desarrollo con SQLite, dejar `DB_CONNECTION=sqlite` y crear `database/database.sqlite`.*
+**Requisitos:** PHP 8.3+, Composer, Node.js 20+, PostgreSQL 16 (o SQLite para desarrollo local).
 
-```bash
-# 5. Ejecutar migraciones
-php artisan migrate
+1. **Clonar el repositorio:**
+   ```bash
+   git clone <repositorio> sistema-tickets
+   cd sistema-tickets
+   ```
 
-# 6. Poblar la base de datos con datos de demostración
-php artisan db:seed
+2. **Instalar dependencias:**
+   ```bash
+   composer install
+   npm install
+   ```
 
-# 7. Compilar assets frontend
-npm run build
+3. **Configurar variables de entorno:**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   Edita `.env` para configurar tu conexión a la base de datos:
+   ```env
+   DB_CONNECTION=pgsql
+   DB_HOST=127.0.0.1
+   DB_PORT=5432
+   DB_DATABASE=sistema_tickets
+   DB_USERNAME=postgres
+   DB_PASSWORD=tu_password
+   ```
+   *(Para usar SQLite, deja `DB_CONNECTION=sqlite` y crea el archivo `database/database.sqlite`).*
 
-# 8. Iniciar servidor de desarrollo
-php artisan serve
-```
+4. **Ejecutar migraciones y poblar base de datos:**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
+
+5. **Compilar assets e iniciar servidor:**
+   ```bash
+   npm run build
+   php artisan serve
+   ```
 
 ### Usuario administrador por defecto
 

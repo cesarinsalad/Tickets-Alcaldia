@@ -193,7 +193,9 @@ class DemoDataSeeder extends Seeder
 
             for ($i = 0; $i < $spec['count']; $i++) {
                 $solicitante = $solicitantes->random();
-                $daysAgo = fake()->numberBetween(0, 30);
+                $startDate = \Illuminate\Support\Carbon::create(2026, 6, 15);
+                $daysDifference = max(0, $startDate->diffInDays(now()));
+                $daysAgo = fake()->numberBetween(0, $daysDifference);
                 $hour = fake()->numberBetween(8, 14);
                 $minute = fake()->numberBetween(0, 59);
                 $entryDate = now()->subDays($daysAgo)->setTime($hour, $minute, 0);
