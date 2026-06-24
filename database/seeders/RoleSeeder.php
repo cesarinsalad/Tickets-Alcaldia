@@ -28,6 +28,7 @@ class RoleSeeder extends Seeder
             ['name' => 'ver articulos',             'module' => 'knowledge'],
             ['name' => 'crear articulos',           'module' => 'knowledge'],
             ['name' => 'publicar articulos',        'module' => 'knowledge'],
+            ['name' => 'eliminar articulos',        'module' => 'knowledge'],
             ['name' => 'gestionar roles',           'module' => 'roles'],
             ['name' => 'gestionar sla',             'module' => 'sla'],
         ];
@@ -93,6 +94,7 @@ class RoleSeeder extends Seeder
             'ver articulos',
             'crear articulos',
             'publicar articulos',
+            'eliminar articulos',
             'gestionar roles',
             'gestionar sla',
         ])->get());

@@ -126,6 +126,7 @@ class ArticleController extends Controller
 
         $canEdit = Gate::allows('update', $article);
         $canPublish = Gate::allows('publish', $article) && $article->status === ArticleStatus::Draft;
+        $canDelete = Gate::allows('delete', $article);
 
         return Inertia::render('Knowledge/Show', [
             'article' => [
@@ -151,6 +152,7 @@ class ArticleController extends Controller
             ],
             'canEdit' => $canEdit,
             'canPublish' => $canPublish,
+            'canDelete' => $canDelete,
         ]);
     }
 

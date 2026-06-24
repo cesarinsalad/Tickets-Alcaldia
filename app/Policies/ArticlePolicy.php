@@ -32,7 +32,7 @@ class ArticlePolicy
 
     public function delete(User $user, Article $article): bool
     {
-        return $user->hasPermissionTo('publicar articulos');
+        return $user->hasPermissionTo('eliminar articulos');
     }
 
     public function publish(User $user, ?Article $article = null): bool

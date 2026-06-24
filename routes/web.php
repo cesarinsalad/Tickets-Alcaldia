@@ -80,7 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/intervention-reports/{report}/pdf', [InterventionReportController::class, 'showPdf'])->name('intervention-reports.pdf');
     });
 
-    Route::middleware(['permission:ver articulos|crear articulos|publicar articulos'])->group(function () {
+    Route::middleware(['permission:ver articulos|crear articulos|publicar articulos|eliminar articulos'])->group(function () {
         Route::get('/kb', [ArticleController::class, 'index'])->name('articles.index');
         Route::get('/kb/search', [ArticleController::class, 'search'])->name('articles.search');
         Route::get('/kb/create', [ArticleController::class, 'create'])->name('articles.create');

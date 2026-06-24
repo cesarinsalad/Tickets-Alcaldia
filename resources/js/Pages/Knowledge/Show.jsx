@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Pencil, CheckCircle, FileText, Download, Paperclip } from 'lucide-react';
+import { ArrowLeft, Pencil, CheckCircle, FileText, Download, Paperclip, Trash2 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 
@@ -10,11 +10,17 @@ function formatFileSize(bytes) {
     return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-export default function Show({ article, canEdit, canPublish }) {
+export default function Show({ article, canEdit, canPublish, canDelete }) {
     function handlePublish() {
         router.put(route('articles.publish', article.slug), {}, {
-            onSuccess: () => {},
+            onSuccess: () => { },
         });
+    }
+
+    function handleDelete() {
+        if (confirm('¿Estás seguro de que deseas eliminar este artículo?')) {
+            router.delete(route('articles.destroy', article.slug));
+        }
     }
 
     return (
@@ -42,6 +48,12 @@ export default function Show({ article, canEdit, canPublish }) {
                                     Editar
                                 </Button>
                             </Link>
+                        )}
+                        {canDelete && (
+                            <Button variant="destructive" size="sm" onClick={handleDelete}>
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar
+                            </Button>
                         )}
                     </div>
                 </div>
