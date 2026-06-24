@@ -29,6 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::middleware(['permission:generar reportes'])->group(function () {
+        Route::get('/tickets/report', [ReportController::class, 'index'])->name('tickets.report.index');
+        Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
+        Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
+    });
+
     Route::resource('tickets', TicketController::class)->except(['edit', 'update']);
     Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
     Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
@@ -66,11 +72,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/roles/permissions', [RolePermissionController::class, 'batchSync'])->name('roles.permissions.sync');
     });
 
-    Route::middleware(['permission:generar reportes'])->group(function () {
-        Route::get('/tickets/report', [ReportController::class, 'index'])->name('tickets.report.index');
-        Route::get('/tickets/{ticket}/report', [ReportController::class, 'show'])->name('tickets.report');
-        Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
-    });
 
     Route::middleware(['permission:ver equipos|gestionar equipos'])->group(function () {
         Route::get('/equipments', [InterventionReportController::class, 'index'])->name('equipments.index');
