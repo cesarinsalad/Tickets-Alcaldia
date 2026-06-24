@@ -182,6 +182,15 @@ return [
         'photo' => 'foto',
         'current_password' => 'contraseña actual',
         'new_password' => 'nueva contraseña',
+        'sku' => 'código (SKU)',
+        'brand' => 'marca',
+        'model' => 'modelo',
+        'processor' => 'procesador',
+        'ram_memory' => 'memoria RAM',
+        'storage_disk' => 'disco de almacenamiento',
+        'diagnostic' => 'diagnóstico',
+        'assigned_id' => 'técnico asignado',
+        'status' => 'estado',
     ],
 
 ];
