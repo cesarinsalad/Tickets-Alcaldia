@@ -51,6 +51,7 @@ export default function Index({ articles, categories, filters }) {
         router.get(route('articles.index'), { ...filters, ...params }, {
             preserveState: true,
             replace: true,
+            onFinish: () => setIsSearching(false),
         });
     }
 
