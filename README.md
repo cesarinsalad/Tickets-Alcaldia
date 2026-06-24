@@ -73,18 +73,44 @@ Requiere tener instalado [Docker Desktop](https://www.docker.com/products/docker
    cd sistema-tickets
    ```
 
-2. **Levantar los contenedores:**
+2. **Configurar el entorno:**
+   ```bash
+   cp .env.example .env
+   # (Opcional) Abre .env y configura contraseñas más seguras
+   ```
+
+3. **Levantar los contenedores:**
    ```bash
    docker compose up --build -d
    ```
    *Esto descargará las imágenes oficiales, instalará las dependencias (PHP y Node), compilará el frontend y levantará la base de datos PostgreSQL.*
 
-3. **¡Listo!**
+4. **¡Listo!**
    - El sistema estará disponible en [http://localhost:8000](http://localhost:8000)
-   - La base de datos (PostgreSQL) está expuesta en el puerto `5433` de tu máquina (usuario: `sistema_tickets`, password: `sistema_tickets`).
+   - La base de datos (PostgreSQL) está expuesta en el puerto `5433` de tu máquina (usuario: el que definiste en `.env`, password: el que definiste en `.env`).
 
 > **Nota sobre los datos de demo:** Durante el primer inicio, el contenedor ejecutará automáticamente las migraciones y poblará la base de datos con información de prueba. Si en el futuro deseas limpiar la base de datos y volver a generar los datos desde cero, ejecuta:
 > `docker compose exec app php artisan migrate:fresh --seed`
+
+### Actualizar el código en Producción (Docker)
+
+Cuando se suban nuevas actualizaciones o correcciones de código al repositorio, los pasos para aplicar estos cambios en el servidor donde está desplegado el sistema son:
+
+1. **Descargar los últimos cambios:**
+   ```bash
+   git pull
+   ```
+
+2. **Reconstruir y actualizar el contenedor:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+**¿Qué hace este comando?**
+- Construye nuevamente la imagen de la aplicación (`app`) incrustando el código fuente más reciente.
+- Instala cualquier dependencia nueva y recompila el frontend (React/Vite).
+- Al arrancar, el contenedor ejecuta automáticamente las migraciones pendientes en la base de datos (gracias al script interno `docker-entrypoint.sh`).
+- Reemplaza el contenedor viejo por el nuevo **sin borrar ni afectar los datos** almacenados en PostgreSQL.
 
 ---
 
