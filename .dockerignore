@@ -25,3 +25,4 @@ Dockerfile
 .npmrc
 jsconfig.json
 README.md
+public/hot
