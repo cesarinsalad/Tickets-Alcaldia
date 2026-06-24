@@ -63,6 +63,7 @@ class RoleSeeder extends Seeder
             'ver tickets asignados',
             'generar reportes',
             'ver equipos',
+            'gestionar equipos',
             'ver articulos',
             'crear articulos',
         ])->get());
