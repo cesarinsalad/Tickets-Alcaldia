@@ -188,7 +188,7 @@ return [
         'processor' => 'procesador',
         'ram_memory' => 'memoria RAM',
         'storage_disk' => 'disco de almacenamiento',
-        'diagnostic' => 'diagnóstico',
+        'diagnostic' => 'observaciones',
         'assigned_id' => 'técnico asignado',
         'status' => 'estado',
     ],
