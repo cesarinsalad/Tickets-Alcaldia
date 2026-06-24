@@ -163,7 +163,7 @@
     <table class="header-table" width="100%">
         <tr>
             <td width="25%" align="left" valign="middle">
-                <img src="{{ public_path('tickets-logo.png') }}" class="header-logo" alt="Logo">
+                <img src="{{ public_path('tickets-logo.jpg') }}" class="header-logo" alt="Logo">
             </td>
             <td width="50%" align="center" valign="middle">
                 <div class="doc-type">Informe de Retiro de Equipo</div>
@@ -242,7 +242,7 @@
         </tr>
     </table>
 
-    <h2>Estatus de Evaluacion</h2>
+    <h2>Observaciones</h2>
 
     <div class="diagnostic-panel">
         {!! nl2br(e($report->diagnostic)) !!}

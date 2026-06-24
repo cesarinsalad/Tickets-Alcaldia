@@ -76,7 +76,10 @@ export default function GenerateReportModal({ ticket, onClose }) {
                 {
                     method: 'POST',
                     body: formData,
-                    headers: xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {},
+                    headers: {
+                        'Accept': 'application/json',
+                        ...(xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {})
+                    },
                 }
             );
 
@@ -167,7 +170,7 @@ export default function GenerateReportModal({ ticket, onClose }) {
                     </div>
 
                     <div>
-                        <Label htmlFor="ir_diagnostic">Estatus de Evaluacion</Label>
+                        <Label htmlFor="ir_diagnostic">Observaciones</Label>
                         <Textarea
                             id="ir_diagnostic"
                             value={diagnostic}

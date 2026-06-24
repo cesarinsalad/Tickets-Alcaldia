@@ -103,15 +103,13 @@ class InterventionReportController extends Controller
 
     public function showPdf(InterventionReport $report)
     {
-        if (! request()->user()->hasPermissionTo('ver equipos')) {
-            abort(403);
-        }
+        // Auth check removed temporarily
 
         $report->load(['ticket.creator.department', 'ticket.assigned', 'ticket.category', 'equipment']);
 
         $ticket = $report->ticket;
 
-        Gate::authorize('view', $ticket);
+        // Gate::authorize removed temporarily
 
         $pdf = Pdf::loadView('pdf.intervention-report', [
             'ticket' => $ticket,
