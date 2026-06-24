@@ -8,24 +8,24 @@ services:
     ports:
       - "8000:80"
     environment:
-      APP_NAME: "Sistema de Tickets"
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_KEY: "base64:eZh3XNPkCPMvFd+i7k4Ywrres36B9p/Ml7GlSYv8aLQ="
-      APP_URL: "http://localhost:8000"
-      APP_TIMEZONE: "America/Caracas"
-      APP_LOCALE: "es"
+      APP_NAME: "${APP_NAME:-Sistema de Tickets}"
+      APP_ENV: "${APP_ENV:-local}"
+      APP_DEBUG: "${APP_DEBUG:-true}"
+      APP_KEY: "${APP_KEY}"
+      APP_URL: "${APP_URL:-http://localhost:8000}"
+      APP_TIMEZONE: "${APP_TIMEZONE:-America/Caracas}"
+      APP_LOCALE: "${APP_LOCALE:-es}"
       
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: sistema_tickets
-      DB_USERNAME: sistema_tickets
-      DB_PASSWORD: sistema_tickets
+      DB_CONNECTION: "${DB_CONNECTION:-pgsql}"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      DB_DATABASE: "${DB_DATABASE:-sistema_tickets}"
+      DB_USERNAME: "${DB_USERNAME:-sistema_tickets}"
+      DB_PASSWORD: "${DB_PASSWORD:-sistema_tickets}"
       
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: database
-      CACHE_STORE: database
+      SESSION_DRIVER: "${SESSION_DRIVER:-database}"
+      QUEUE_CONNECTION: "${QUEUE_CONNECTION:-database}"
+      CACHE_STORE: "${CACHE_STORE:-database}"
     volumes:
       - storage_data:/var/www/html/storage
     depends_on:
@@ -36,9 +36,9 @@ services:
     container_name: sistema_tickets_db
     restart: always
     environment:
-      POSTGRES_DB: sistema_tickets
-      POSTGRES_USER: sistema_tickets
-      POSTGRES_PASSWORD: sistema_tickets
+      POSTGRES_DB: "${DB_DATABASE:-sistema_tickets}"
+      POSTGRES_USER: "${DB_USERNAME:-sistema_tickets}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-sistema_tickets}"
     ports:
       - "5433:5432"
     volumes:
