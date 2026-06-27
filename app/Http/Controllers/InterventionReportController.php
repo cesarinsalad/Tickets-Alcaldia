@@ -100,6 +100,24 @@ class InterventionReportController extends Controller
         ]);
     }
 
+    public function show(Equipment $equipment)
+    {
+        if (! request()->user()->hasPermissionTo('ver equipos')) {
+            abort(403);
+        }
+
+        $equipment->load([
+            'interventionReports' => fn ($q) => $q->latest()->with([
+                'ticket.creator.department',
+                'ticket.assigned',
+            ]),
+        ]);
+
+        return Inertia::render('Equipments/Show', [
+            'equipment' => $equipment,
+        ]);
+    }
+
     public function lookup(Request $request)
     {
         if (! $request->user()->hasPermissionTo('gestionar equipos')) {

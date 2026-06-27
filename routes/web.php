@@ -90,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['permission:ver equipos|gestionar equipos'])->group(function () {
         Route::get('/equipments', [InterventionReportController::class, 'index'])->name('equipments.index');
+        Route::get('/equipments/{equipment}/detail', [InterventionReportController::class, 'show'])->name('equipments.show');
         Route::get('/equipments/{sku}', [InterventionReportController::class, 'lookup'])->name('equipments.lookup');
         Route::post('/tickets/{ticket}/intervention-report', [InterventionReportController::class, 'generate'])->name('tickets.intervention-report.generate');
         Route::get('/intervention-reports/{report}/pdf', [InterventionReportController::class, 'showPdf'])->name('intervention-reports.pdf');

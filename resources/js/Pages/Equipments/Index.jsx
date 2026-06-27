@@ -1,20 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import { Search, Monitor, ChevronDown, ChevronUp, FileText, AlertTriangle, Cpu, HardDrive } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Search, Monitor, ChevronUp, ChevronDown, AlertTriangle, Cpu, HardDrive } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 
 export default function Index({ equipment, filters, totalCount, highRecurrenceCount, bajaRamCount, hddCount }) {
     const { auth } = usePage().props;
-    const [expanded, setExpanded] = useState({});
     const sort = filters?.sort || '';
     const dir = filters?.dir || '';
-
-    function toggleExpand(id) {
-        setExpanded(e => ({ ...e, [id]: !e[id] }));
-    }
 
     function handleSort(col) {
         const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
@@ -202,77 +196,27 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
-                                {equipment.data.map(eq => {
-                                    const lastReport = eq.intervention_reports?.[0];
-                                    return [
-                                        <tr
-                                            key={eq.id}
-                                            className={`cursor-pointer hover:bg-gris-fondo transition-colors ${expanded[eq.id] ? 'bg-blue-50/30' : ''}`}
-                                            onClick={() => toggleExpand(eq.id)}
-                                        >
-                                            <td className="px-5 py-3 font-mono text-xs text-azul-institucional font-medium">{eq.sku}</td>
-                                            <td className="px-5 py-3 text-gray-900">{eq.brand || '—'}</td>
-                                            <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{eq.model || '—'}</td>
-                                            <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.processor || '—'}</td>
-                                            <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.ram_memory || '—'}</td>
-                                            <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.storage_disk || '—'}</td>
-                                            <td className="px-5 py-3 text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Badge variant={eq.intervention_reports_count > 0 ? 'default' : 'secondary'}>
-                                                        {eq.intervention_reports_count}
-                                                    </Badge>
-                                                    {expanded[eq.id] ? (
-                                                        <ChevronUp className="h-4 w-4 text-gray-400" />
-                                                    ) : (
-                                                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>,
-                                        expanded[eq.id] && lastReport && (
-                                            <tr key={`${eq.id}-report`} className="bg-gray-50/50">
-                                                <td colSpan={7} className="px-5 py-4">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <FileText className="h-4 w-4 text-gray-400" />
-                                                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Ultimo informe
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-wrap items-center gap-x-10 gap-y-1 text-sm mb-2">
-                                                        <span>
-                                                            <span className="text-gray-400">Ticket:</span>{' '}
-                                                            <Link
-                                                                href={route('tickets.show', lastReport.ticket?.id)}
-                                                                className="text-azul-institucional hover:underline font-medium"
-                                                            >
-                                                                {lastReport.ticket?.code}
-                                                            </Link>
-                                                        </span>
-                                                        <span>
-                                                            <span className="text-gray-400">Fecha:</span>{' '}
-                                                            {new Date(lastReport.created_at).toLocaleDateString('es-VE')}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-4">
-                                                        <p className="flex-1 text-sm text-gray-700 line-clamp-3">
-                                                            {lastReport.diagnostic}
-                                                        </p>
-                                                        <Button size="sm" variant="outline" asChild onClick={e => e.stopPropagation()}>
-                                                            <a
-                                                                href={route('intervention-reports.pdf', lastReport.id)}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                            >
-                                                                <FileText className="h-4 w-4" />
-                                                                Ver PDF
-                                                            </a>
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ),
-                                    ].filter(Boolean);
-                                })}
+                                {equipment.data.map(eq => (
+                                    <tr
+                                        key={eq.id}
+                                        className="cursor-pointer hover:bg-gris-fondo transition-colors"
+                                        onClick={() => router.visit(route('equipments.show', eq.id))}
+                                    >
+                                        <td className="px-5 py-3 font-mono text-xs text-azul-institucional font-medium">{eq.sku}</td>
+                                        <td className="px-5 py-3 text-gray-900">{eq.brand || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{eq.model || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.processor || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.ram_memory || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.storage_disk || '—'}</td>
+                                        <td className="px-5 py-3 text-center">
+                                            <div className="flex items-center justify-center">
+                                                <Badge variant={eq.intervention_reports_count > 0 ? 'default' : 'secondary'}>
+                                                    {eq.intervention_reports_count}
+                                                </Badge>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
