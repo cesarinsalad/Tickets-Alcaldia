@@ -1,12 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Search, Monitor, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Search, Monitor, ChevronDown, ChevronUp, FileText, AlertTriangle } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 
-export default function Index({ equipment, filters }) {
+export default function Index({ equipment, filters, totalCount, highRecurrenceCount }) {
     const { auth } = usePage().props;
     const [expanded, setExpanded] = useState({});
 
@@ -27,6 +27,43 @@ export default function Index({ equipment, filters }) {
         >
             <Head title="Registro de Equipos" />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <button
+                    onClick={() => router.get(route('equipments.index'), {}, { preserveState: true, replace: true })}
+                    className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-azul-institucional bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Equipos registrados</p>
+                        <Monitor className="h-5 w-5 text-azul-institucional" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{totalCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Total de equipos en el inventario</p>
+                    <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        Ver más &rarr;
+                    </p>
+                </button>
+                <button
+                    onClick={() => {
+                        if (filters?.recurrence) {
+                            router.get(route('equipments.index'), { search: filters?.search || undefined }, { preserveState: true, replace: true });
+                        } else {
+                            router.get(route('equipments.index'), { search: filters?.search || undefined, recurrence: 1 }, { preserveState: true, replace: true });
+                        }
+                    }}
+                    className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-orange-500 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Alta recurrencia</p>
+                        <AlertTriangle className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{highRecurrenceCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Equipos con 2 o más retiros este mes</p>
+                    <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        {filters?.recurrence ? 'Quitar filtro →' : 'Ver más →'}
+                    </p>
+                </button>
+            </div>
+
             <div className="mb-6">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -37,7 +74,10 @@ export default function Index({ equipment, filters }) {
                         onChange={e => {
                             const val = e.target.value;
                             if (val.length >= 2 || val.length === 0) {
-                                router.get(route('equipments.index'), { search: val || undefined }, {
+                                router.get(route('equipments.index'), {
+                                    search: val || undefined,
+                                    recurrence: filters?.recurrence || undefined,
+                                }, {
                                     preserveState: true,
                                     replace: true,
                                 });
@@ -45,6 +85,14 @@ export default function Index({ equipment, filters }) {
                         }}
                         className="pl-10 h-12 text-base"
                     />
+                    {(filters?.search || filters?.recurrence) && (
+                        <button
+                            onClick={() => router.get(route('equipments.index'), {}, { preserveState: true, replace: true })}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-azul-institucional hover:underline"
+                        >
+                            Limpiar
+                        </button>
+                    )}
                 </div>
             </div>
 

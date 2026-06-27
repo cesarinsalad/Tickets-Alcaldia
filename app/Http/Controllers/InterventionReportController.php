@@ -32,11 +32,29 @@ class InterventionReportController extends Controller
             });
         }
 
+        if ($request->boolean('recurrence')) {
+            $query->whereHas('interventionReports', function ($q) {
+                $q->whereMonth('created_at', now()->month)
+                  ->whereYear('created_at', now()->year);
+            }, '>=', 2);
+        }
+
         $equipment = $query->paginate(15)->withQueryString();
+
+        $totalCount = Equipment::count();
+        $highRecurrenceCount = Equipment::whereHas('interventionReports', function ($q) {
+            $q->whereMonth('created_at', now()->month)
+              ->whereYear('created_at', now()->year);
+        }, '>=', 2)->count();
 
         return Inertia::render('Equipments/Index', [
             'equipment' => $equipment,
-            'filters' => $request->only(['search']),
+            'filters' => array_merge(
+                $request->only(['search']),
+                ['recurrence' => $request->boolean('recurrence')],
+            ),
+            'totalCount' => $totalCount,
+            'highRecurrenceCount' => $highRecurrenceCount,
         ]);
     }
 
