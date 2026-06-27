@@ -60,22 +60,22 @@ function ArticleForm({ article, categories }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <a href={route('articles.index')} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-                            <ArrowLeft className="h-4 w-4" />
-                            Base de Conocimiento
-                        </a>
-                        <span className="text-gray-300">/</span>
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            {isEdit ? 'Editar Artículo' : 'Nuevo Artículo'}
-                        </h2>
-                    </div>
-                    <Button type="submit" form="article-form" disabled={processing}>
-                        <Save className="h-4 w-4" />
-                        {processing ? 'Guardando...' : 'Guardar Borrador'}
-                    </Button>
+                <div className="flex items-center gap-3 min-w-0">
+                    <a href={route('articles.index')} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 shrink-0">
+                        <ArrowLeft className="h-4 w-4" />
+                        Base de Conocimiento
+                    </a>
+                    <span className="text-gray-300 shrink-0">/</span>
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">
+                        {isEdit ? 'Editar Artículo' : 'Nuevo Artículo'}
+                    </h2>
                 </div>
+            }
+            actions={
+                <Button type="submit" form="article-form" disabled={processing}>
+                    <Save className="h-4 w-4" />
+                    {processing ? 'Guardando...' : 'Guardar Borrador'}
+                </Button>
             }
         >
             <Head title={isEdit ? 'Editar Artículo' : 'Nuevo Artículo'} />

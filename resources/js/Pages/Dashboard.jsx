@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users, Layers } from 'lucide-react';
+import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users, Layers, LayoutDashboard } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -1092,44 +1092,47 @@ export default function Dashboard({ stats, unreadNotifications }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                    <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
-                    <div className="flex items-center gap-2">
-                        {!stats.is_solicitante && !stats.is_tecnico && (
-                            <>
-                            <Input
-                                type="date"
-                                value={from}
-                                onChange={e => setFrom(e.target.value)}
-                                className="w-36 text-sm"
-                            />
-                            <span className="text-gray-400 text-sm">—</span>
-                            <Input
-                                type="date"
-                                value={to}
-                                onChange={e => setTo(e.target.value)}
-                                className="w-36 text-sm"
-                            />
-                            <Button size="sm" variant="outline" onClick={applyDates}>
-                                Aplicar
-                            </Button>
-                            {(from || to) && (
-                                <Button size="sm" variant="ghost" onClick={clearDates}>
-                                    Limpiar
-                                </Button>
-                            )}
-                            </>
-                        )}
-                        {!stats.is_solicitante && (
-                        <Link href={route('tickets.create')}>
-                            <Button size="sm">
-                                <Plus className="h-4 w-4" />
-                                Nuevo Ticket
-                            </Button>
-                        </Link>
-                        )}
-                    </div>
+                <div className="flex items-center gap-3 min-w-0">
+                    <LayoutDashboard className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Dashboard</h2>
                 </div>
+            }
+            actions={
+                <>
+                    {!stats.is_solicitante && !stats.is_tecnico && (
+                        <>
+                        <Input
+                            type="date"
+                            value={from}
+                            onChange={e => setFrom(e.target.value)}
+                            className="w-36 text-sm"
+                        />
+                        <span className="text-gray-400 text-sm">—</span>
+                        <Input
+                            type="date"
+                            value={to}
+                            onChange={e => setTo(e.target.value)}
+                            className="w-36 text-sm"
+                        />
+                        <Button size="sm" variant="outline" onClick={applyDates}>
+                            Aplicar
+                        </Button>
+                        {(from || to) && (
+                            <Button size="sm" variant="ghost" onClick={clearDates}>
+                                Limpiar
+                            </Button>
+                        )}
+                        </>
+                    )}
+                    {!stats.is_solicitante && (
+                    <Link href={route('tickets.create')}>
+                        <Button size="sm">
+                            <Plus className="h-4 w-4" />
+                            Nuevo Ticket
+                        </Button>
+                    </Link>
+                    )}
+                </>
             }
         >
             <Head title="Dashboard" />

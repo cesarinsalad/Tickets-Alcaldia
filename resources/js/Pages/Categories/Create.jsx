@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import InputError from '@/Components/InputError';
 import { showValidationErrors } from '@/lib/sweet-alert';
+import { FolderTree } from 'lucide-react';
 
 export default function Create() {
     const [form, setForm] = useState({ name: '', description: '' });
@@ -23,7 +24,12 @@ export default function Create() {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold text-gray-900">Nueva Categoría</h2>}
+            header={
+                <div className="flex items-center gap-3 min-w-0">
+                    <FolderTree className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Nueva Categoría</h2>
+                </div>
+            }
         >
             <Head title="Nueva Categoría" />
 

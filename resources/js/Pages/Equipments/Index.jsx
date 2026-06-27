@@ -17,13 +17,10 @@ export default function Index({ equipment, filters }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Monitor className="h-6 w-6 text-azul-institucional" />
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Registro de Equipos</h2>
-                            <p className="text-sm text-gray-500">Inventario generado a partir de informes de retiro</p>
-                        </div>
+                <div className="flex items-center gap-3 min-w-0">
+                    <Monitor className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">Registro de Equipos</h2>
                     </div>
                 </div>
             }

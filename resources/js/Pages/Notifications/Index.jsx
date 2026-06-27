@@ -23,13 +23,16 @@ export default function Index({ notifications }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Notificaciones</h2>
-                        <Button variant="outline" size="sm" onClick={markAllRead}>
-                            <CheckCheck className="h-4 w-4" />
-                            Limpiar bandeja
-                        </Button>
+                <div className="flex items-center gap-3 min-w-0">
+                    <Bell className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Notificaciones</h2>
                 </div>
+            }
+            actions={
+                <Button variant="outline" size="sm" onClick={markAllRead}>
+                    <CheckCheck className="h-4 w-4" />
+                    Limpiar bandeja
+                </Button>
             }
         >
             <Head title="Notificaciones" />

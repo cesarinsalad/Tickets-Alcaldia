@@ -63,8 +63,9 @@ export default function Index({ configs, workStart, workEnd, workDays, dayOption
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Tiempos de Respuesta</h2>
+                <div className="flex items-center gap-3 min-w-0">
+                    <Clock className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Tiempos de Respuesta</h2>
                 </div>
             }
         >

@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
 import { showValidationErrors } from '@/lib/sweet-alert';
+import { Building2 } from 'lucide-react';
 
 export default function Edit({ department, availableAdmins }) {
     const [form, setForm] = useState({
@@ -28,7 +29,12 @@ export default function Edit({ department, availableAdmins }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold text-gray-900">Editar Departamento</h2>}
+            header={
+                <div className="flex items-center gap-3 min-w-0">
+                    <Building2 className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Editar Departamento</h2>
+                </div>
+            }
         >
             <Head title="Editar Departamento" />
 

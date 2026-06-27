@@ -92,25 +92,28 @@ export default function Index({ tickets, filters, categories, departments, users
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Tickets</h2>
-                    <div className="flex items-center gap-2">
-                        {canFilterAll && (
-                        <a href={reportUrl()} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm">
-                                <FileText className="h-4 w-4" />
-                                Generar Reporte
-                            </Button>
-                        </a>
-                        )}
-                        <a href={route('tickets.create')}>
-                            <Button size="sm">
-                                <Plus className="h-4 w-4" />
-                                Nuevo Ticket
-                            </Button>
-                        </a>
-                    </div>
+                <div className="flex items-center gap-3 min-w-0">
+                    <Ticket className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Tickets</h2>
                 </div>
+            }
+            actions={
+                <>
+                    {canFilterAll && (
+                    <a href={reportUrl()} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm">
+                            <FileText className="h-4 w-4" />
+                            Generar Reporte
+                        </Button>
+                    </a>
+                    )}
+                    <a href={route('tickets.create')}>
+                        <Button size="sm">
+                            <Plus className="h-4 w-4" />
+                            Nuevo Ticket
+                        </Button>
+                    </a>
+                </>
             }
         >
             <Head title="Tickets" />

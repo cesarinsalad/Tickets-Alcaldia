@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
 import { showValidationErrors } from '@/lib/sweet-alert';
+import { Users } from 'lucide-react';
 
 export default function Edit({ user, departments, roles }) {
     const [values, setValues] = useState({
@@ -36,7 +37,12 @@ export default function Edit({ user, departments, roles }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold text-gray-900">Editar Usuario</h2>}
+            header={
+                <div className="flex items-center gap-3 min-w-0">
+                    <Users className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Editar Usuario</h2>
+                </div>
+            }
         >
             <Head title="Editar Usuario" />
 

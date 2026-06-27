@@ -5,7 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Ticket } from 'lucide-react';
 import InputError from '@/Components/InputError';
 import { showValidationErrors } from '@/lib/sweet-alert';
 
@@ -71,7 +71,12 @@ export default function Create({ categories, priorities }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold text-gray-900">Nuevo Ticket</h2>}
+            header={
+                <div className="flex items-center gap-3 min-w-0">
+                    <Ticket className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Nuevo Ticket</h2>
+                </div>
+            }
         >
             <Head title="Nuevo Ticket" />
 

@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import InputError from '@/Components/InputError';
 import { showValidationErrors } from '@/lib/sweet-alert';
+import { FolderTree } from 'lucide-react';
 
 export default function Edit({ category }) {
     const [form, setForm] = useState({
@@ -26,7 +27,12 @@ export default function Edit({ category }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold text-gray-900">Editar Categoría</h2>}
+            header={
+                <div className="flex items-center gap-3 min-w-0">
+                    <FolderTree className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Editar Categoría</h2>
+                </div>
+            }
         >
             <Head title="Editar Categoría" />
 

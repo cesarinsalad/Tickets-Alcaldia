@@ -108,16 +108,17 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-semibold text-gray-900">{ticket.code}</h2>
-                        <Badge variant={statusColors[ticket.status] || 'default'}>{ticket.status_label}</Badge>
-                        <Badge variant={priorityColors[ticket.priority] || 'default'}>
-                            {priorityLabels[ticket.priority] || ticket.priority}
-                        </Badge>
-                    </div>
-                    {canGenerateReport && (
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">{ticket.code}</h2>
+                    <Badge variant={statusColors[ticket.status] || 'default'}>{ticket.status_label}</Badge>
+                    <Badge variant={priorityColors[ticket.priority] || 'default'}>
+                        {priorityLabels[ticket.priority] || ticket.priority}
+                    </Badge>
+                </div>
+            }
+            actions={
+                canGenerateReport ? (
+                    <>
                         <a href={route('tickets.report', ticket.id)} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" size="sm">
                                 <FileText className="h-4 w-4" />
@@ -136,9 +137,8 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             <Wrench className="h-4 w-4" />
                             Retiro de Equipo
                         </Button>
-                    </div>
-                    )}
-                </div>
+                    </>
+                ) : null
             }
         >
             <Head title={`${ticket.code} - ${ticket.title}`} />

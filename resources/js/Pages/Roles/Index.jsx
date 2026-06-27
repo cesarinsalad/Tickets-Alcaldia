@@ -184,19 +184,19 @@ export default function Index({ roles, allPermissions }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Shield className="h-6 w-6 text-azul-institucional" />
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Roles y Permisos</h2>
-                            <p className="text-sm text-gray-500">Gestión de acceso por módulos</p>
-                        </div>
+                <div className="flex items-center gap-3 min-w-0">
+                    <Shield className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">Roles y Permisos</h2>
+                        <p className="text-sm text-gray-500 truncate">Gestión de acceso por módulos</p>
                     </div>
-                    <Button size="sm" onClick={() => setShowModal(true)}>
-                        <Plus className="h-4 w-4" />
-                        Nuevo Rol
-                    </Button>
                 </div>
+            }
+            actions={
+                <Button size="sm" onClick={() => setShowModal(true)}>
+                    <Plus className="h-4 w-4" />
+                    Nuevo Rol
+                </Button>
             }
         >
             <Head title="Roles y Permisos" />

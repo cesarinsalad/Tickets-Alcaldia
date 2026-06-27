@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, X } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, FolderTree } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -103,13 +103,16 @@ export default function Index({ categories, filters }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">Categorías</h2>
-                    <Button size="sm" onClick={() => setModal('create')}>
-                        <Plus className="h-4 w-4" />
-                        Nueva Categoría
-                    </Button>
+                <div className="flex items-center gap-3 min-w-0">
+                    <FolderTree className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Categorías</h2>
                 </div>
+            }
+            actions={
+                <Button size="sm" onClick={() => setModal('create')}>
+                    <Plus className="h-4 w-4" />
+                    Nueva Categoría
+                </Button>
             }
         >
             <Head title="Categorías" />

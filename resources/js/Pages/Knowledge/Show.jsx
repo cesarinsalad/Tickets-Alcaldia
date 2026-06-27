@@ -32,37 +32,37 @@ export default function Show({ article, canEdit, canPublish, canDelete }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <Link
-                        href={route('articles.index')}
-                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Base de Conocimiento
-                    </Link>
-                    <div className="flex items-center gap-2">
-                        {canPublish && (
-                            <Button size="sm" onClick={handlePublish}>
-                                <CheckCircle className="h-4 w-4" />
-                                Publicar
+                <Link
+                    href={route('articles.index')}
+                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 min-w-0"
+                >
+                    <ArrowLeft className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Base de Conocimiento</span>
+                </Link>
+            }
+            actions={
+                <>
+                    {canPublish && (
+                        <Button size="sm" onClick={handlePublish}>
+                            <CheckCircle className="h-4 w-4" />
+                            Publicar
+                        </Button>
+                    )}
+                    {canEdit && (
+                        <Link href={route('articles.edit', article.slug)}>
+                            <Button variant="outline" size="sm">
+                                <Pencil className="h-4 w-4" />
+                                Editar
                             </Button>
-                        )}
-                        {canEdit && (
-                            <Link href={route('articles.edit', article.slug)}>
-                                <Button variant="outline" size="sm">
-                                    <Pencil className="h-4 w-4" />
-                                    Editar
-                                </Button>
-                            </Link>
-                        )}
-                        {canDelete && (
-                            <Button variant="destructive" size="sm" onClick={handleDelete}>
-                                <Trash2 className="h-4 w-4" />
-                                Eliminar
-                            </Button>
-                        )}
-                    </div>
-                </div>
+                        </Link>
+                    )}
+                    {canDelete && (
+                        <Button variant="destructive" size="sm" onClick={handleDelete}>
+                            <Trash2 className="h-4 w-4" />
+                            Eliminar
+                        </Button>
+                    )}
+                </>
             }
         >
             <Head title={article.title} />

@@ -74,21 +74,20 @@ export default function Index({ articles, categories, filters }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <BookOpen className="h-6 w-6 text-azul-institucional" />
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Base de Conocimiento</h2>
-                            <p className="text-sm text-gray-500">Protocolos, procedimientos y guías de resolución</p>
-                        </div>
+                <div className="flex items-center gap-3 min-w-0">
+                    <BookOpen className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">Base de Conocimiento</h2>
                     </div>
-                    <Link href={route('articles.create')}>
-                        <Button size="sm">
-                            <Plus className="h-4 w-4" />
-                            Nuevo Artículo
-                        </Button>
-                    </Link>
                 </div>
+            }
+            actions={
+                <Link href={route('articles.create')}>
+                    <Button size="sm">
+                        <Plus className="h-4 w-4" />
+                        Nuevo Artículo
+                    </Button>
+                </Link>
             }
         >
             <Head title="Base de Conocimiento" />
