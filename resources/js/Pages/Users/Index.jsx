@@ -154,7 +154,7 @@ export default function Index({ users, departments, roles, filters }) {
                                             <>
                                                 <Link href={route('users.edit', user.id)}>
                                                     <Button variant="ghost" size="icon-sm" title="Editar">
-                                                        <Pencil className="h-3.5 w-3.5" />
+                                                        <Pencil className="h-4 w-4" />
                                                     </Button>
                                                 </Link>
                                                 <button
@@ -175,7 +175,7 @@ export default function Index({ users, departments, roles, filters }) {
                                                     title={user.is_active ? 'Desactivar' : 'Activar'}
                                                     className="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                                                 >
-                                                    {user.is_active ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
+                                                    {user.is_active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                                                 </button>
                                                 <button
                                                     onClick={async () => {
@@ -196,7 +196,7 @@ export default function Index({ users, departments, roles, filters }) {
                                                     title="Restablecer contraseña"
                                                     className="inline-flex items-center justify-center rounded-md p-1.5 text-azul-institucional hover:bg-blue-50 transition-colors"
                                                 >
-                                                    <Key className="h-3.5 w-3.5" />
+                                                    <Key className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={async () => {
@@ -215,7 +215,7 @@ export default function Index({ users, departments, roles, filters }) {
                                                     title="Eliminar"
                                                     className="inline-flex items-center justify-center rounded-md p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
                                                 >
-                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </>
                                         )}
