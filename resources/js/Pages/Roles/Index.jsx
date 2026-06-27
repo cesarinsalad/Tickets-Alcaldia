@@ -52,15 +52,17 @@ function ModuleCard({ moduleKey, label, icon: Icon, total, assigned, onClick }) 
 
 function RoleModal({ onClose, roles, rolePerms }) {
     const [name, setName] = useState('');
-    const [template, setTemplate] = useState('');
+    const [template, setTemplate] = useState(
+        roles.filter(r => r.dashboard_template)[0]?.dashboard_template || '',
+    );
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
 
     function handleSubmit(e) {
         e.preventDefault();
         setProcessing(true);
-        const perms = template ? Array.from(rolePerms[template] || []) : [];
-        router.post(route('roles.store'), { name, permissions: perms, dashboard_template: template || null }, {
+        const perms = Array.from(rolePerms[template] || []);
+        router.post(route('roles.store'), { name, permissions: perms, dashboard_template: template }, {
             onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: () => onClose(),
         });
@@ -95,16 +97,13 @@ function RoleModal({ onClose, roles, rolePerms }) {
                             onChange={e => setTemplate(e.target.value)}
                             className="mt-1 w-full rounded-md border border-gris-borde px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-azul-institucional focus:border-transparent"
                         >
-                            <option value="">Sin plantilla (vacío)</option>
                             {roles.filter(r => r.dashboard_template).map(r => (
                                 <option key={r.id} value={r.dashboard_template}>{r.label}</option>
                             ))}
                         </select>
-                        {templatePreviewPerms !== null && (
-                            <p className="text-xs text-gray-400 mt-1">
-                                Heredará {templatePreviewPerms} permisos y el dashboard de este rol.
-                            </p>
-                        )}
+                        <p className="text-xs text-gray-400 mt-1">
+                            Heredará {templatePreviewPerms} permisos y el dashboard de este rol.
+                        </p>
                         {errors.dashboard_template && <p className="text-xs text-red-600 mt-1">{errors.dashboard_template}</p>}
                     </div>
                     <div className="flex items-center gap-3 pt-2">

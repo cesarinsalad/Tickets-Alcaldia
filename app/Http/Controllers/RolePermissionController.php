@@ -56,7 +56,7 @@ class RolePermissionController extends Controller
             'name' => ['required', 'string', 'max:50', 'unique:roles,name'],
             'permissions' => ['array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
-            'dashboard_template' => ['nullable', 'string', 'exists:roles,dashboard_template'],
+            'dashboard_template' => ['required', 'string', 'exists:roles,dashboard_template'],
         ]);
 
         $role = Role::create([
