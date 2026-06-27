@@ -1060,7 +1060,7 @@ export default function Dashboard({ stats, unreadNotifications }) {
             }
             actions={
                 <>
-                    {!stats.is_solicitante && !stats.is_tecnico && (
+                    {stats.is_admin_dept && (
                         <>
                         <Input
                             type="date"
