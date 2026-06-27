@@ -7,6 +7,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import Pagination from '@/Components/Pagination';
+import { confirmAction, showPasswordAlert } from '@/lib/sweet-alert';
 
 const roleLabels = {
     super_admin: 'Super Admin',
@@ -154,8 +155,14 @@ export default function Index({ users, departments, roles, filters }) {
                                                     </Button>
                                                 </Link>
                                                 <button
-                                                    onClick={() => {
-                                                        if (confirm('¿Cambiar estado del usuario?')) {
+                                                    onClick={async () => {
+                                                        const result = await confirmAction({
+                                                            title: '¿Cambiar estado del usuario?',
+                                                            text: user.is_active ? 'El usuario será desactivado.' : 'El usuario será activado.',
+                                                            icon: 'question',
+                                                            confirmText: 'Sí, cambiar',
+                                                        });
+                                                        if (result.isConfirmed) {
                                                             router.post(route('users.toggle', user.id), {}, {
                                                                 preserveState: false,
                                                                 replace: false,
@@ -168,11 +175,17 @@ export default function Index({ users, departments, roles, filters }) {
                                                     {user.is_active ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        if (confirm('¿Restablecer contraseña? Se generará una nueva.')) {
+                                                    onClick={async () => {
+                                                        const result = await confirmAction({
+                                                            title: '¿Restablecer contraseña?',
+                                                            text: 'Se generará una nueva contraseña temporal para el usuario.',
+                                                            icon: 'question',
+                                                            confirmText: 'Sí, restablecer',
+                                                        });
+                                                        if (result.isConfirmed) {
                                                             router.post(route('users.reset-password', user.id), {}, {
                                                                 onSuccess: (page) => {
-                                                                    alert('Nueva contraseña: ' + page.props.flash?.new_password);
+                                                                    showPasswordAlert(page.props.flash?.new_password);
                                                                 }
                                                             });
                                                         }
@@ -183,8 +196,13 @@ export default function Index({ users, departments, roles, filters }) {
                                                     <Key className="h-3.5 w-3.5" />
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        if (confirm('¿Eliminar este usuario permanentemente?')) {
+                                                    onClick={async () => {
+                                                        const result = await confirmAction({
+                                                            title: '¿Eliminar este usuario?',
+                                                            text: 'Esta acción es permanente y no se puede deshacer.',
+                                                            confirmText: 'Eliminar',
+                                                        });
+                                                        if (result.isConfirmed) {
                                                             router.delete(route('users.destroy', user.id), {
                                                                 preserveState: false,
                                                                 replace: false,

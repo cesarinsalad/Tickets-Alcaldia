@@ -7,6 +7,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Badge } from '@/Components/ui/badge';
 import InputError from '@/Components/InputError';
+import { showValidationErrors } from '@/lib/sweet-alert';
 import WysiwygEditor from '@/Components/WysiwygEditor';
 
 function ArticleForm({ article, categories }) {
@@ -51,7 +52,7 @@ function ArticleForm({ article, categories }) {
             : route('articles.store');
 
         router.post(url, formData, {
-            onError: (err) => { setErrors(err); setProcessing(false); },
+            onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: () => { setProcessing(false); },
         });
     }

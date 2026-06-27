@@ -191,6 +191,7 @@ return [
         'diagnostic' => 'observaciones',
         'assigned_id' => 'técnico asignado',
         'status' => 'estado',
+        'content' => 'contenido',
     ],
 
 ];

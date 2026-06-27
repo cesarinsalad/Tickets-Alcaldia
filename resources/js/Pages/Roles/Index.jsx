@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 import { Switch } from '@/Components/ui/switch';
+import { showValidationErrors, confirmAction } from '@/lib/sweet-alert';
 
 const moduleMeta = {
     tickets:        { label: 'Tickets',    icon: Ticket },
@@ -59,7 +60,7 @@ function RoleModal({ onClose, roles, rolePerms }) {
         setProcessing(true);
         const perms = template ? Array.from(rolePerms[template] || []) : [];
         router.post(route('roles.store'), { name, permissions: perms, dashboard_template: template || null }, {
-            onError: (err) => { setErrors(err); setProcessing(false); },
+            onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: () => onClose(),
         });
     }
@@ -163,8 +164,12 @@ export default function Index({ roles, allPermissions }) {
         });
     }
 
-    function handleDeleteRole(role) {
-        if (confirm(`¿Eliminar el rol "${role.label}"?`)) {
+    async function handleDeleteRole(role) {
+        const result = await confirmAction({
+            title: `¿Eliminar el rol "${role.label}"?`,
+            confirmText: 'Eliminar',
+        });
+        if (result.isConfirmed) {
             router.delete(route('roles.destroy', role.id));
         }
     }

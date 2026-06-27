@@ -11,6 +11,7 @@ import { Select } from '@/Components/ui/select';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import GenerateReportModal from '@/Components/GenerateReportModal';
 import InputError from '@/Components/InputError';
+import { showValidationErrors } from '@/lib/sweet-alert';
 
 const statusColors = {
     abierto: 'default',
@@ -58,7 +59,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
         if (commentPhoto) formData.append('photo', commentPhoto);
 
         router.post(route('tickets.comments.store', ticket.id), formData, {
-            onError: (err) => setCommentErrors(err),
+            onError: (err) => { setCommentErrors(err); showValidationErrors(err); },
             onSuccess: () => { setComment(''); setCommentPhoto(null); setCommentPhotoPreview(null); setCommentErrors({}); },
         });
     }
@@ -67,7 +68,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
         router.post(route('tickets.assign', ticket.id), {
             assigned_id: assignTo,
         }, {
-            onError: (err) => setErrors(err),
+            onError: (err) => { setErrors(err); showValidationErrors(err); },
         });
     }
 
@@ -141,12 +142,6 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
             }
         >
             <Head title={`${ticket.code} - ${ticket.title}`} />
-
-            {Object.keys(errors).length > 0 && (
-                <div className="mb-4 rounded-md border border-rojo-urgencia-light bg-rojo-urgencia-light p-3 text-sm text-rojo-urgencia">
-                    {Object.values(errors).join(', ')}
-                        </div>
-                    )}
 
                     {(canChangePriority || canChangeCategory) && (
                         <div className="rounded-lg border border-gris-borde bg-white p-6 mb-6">

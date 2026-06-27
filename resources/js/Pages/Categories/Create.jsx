@@ -5,6 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import InputError from '@/Components/InputError';
+import { showValidationErrors } from '@/lib/sweet-alert';
 
 export default function Create() {
     const [form, setForm] = useState({ name: '', description: '' });
@@ -15,7 +16,7 @@ export default function Create() {
         e.preventDefault();
         setProcessing(true);
         router.post(route('categories.store'), form, {
-            onError: (err) => { setErrors(err); setProcessing(false); },
+            onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: () => setProcessing(false),
         });
     }

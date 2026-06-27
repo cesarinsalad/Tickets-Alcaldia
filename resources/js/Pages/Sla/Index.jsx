@@ -5,6 +5,7 @@ import { Clock, RotateCcw } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { confirmAction } from '@/lib/sweet-alert';
 
 const priorityLabels = {
     critica: 'Crítica',
@@ -48,8 +49,13 @@ export default function Index({ configs, workStart, workEnd, workDays, dayOption
         });
     }
 
-    function handleReset() {
-        if (confirm('¿Restablecer todos los valores predeterminados?')) {
+    async function handleReset() {
+        const result = await confirmAction({
+            title: '¿Restablecer valores predeterminados?',
+            text: 'Se perderán los cambios actuales y se restaurarán los valores originales del sistema.',
+            confirmText: 'Sí, restablecer',
+        });
+        if (result.isConfirmed) {
             router.post(route('sla.reset'));
         }
     }

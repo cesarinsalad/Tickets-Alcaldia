@@ -1,31 +1,40 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, XCircle } from 'lucide-react';
+import { Bell, ChevronDown, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/Components/ui/dropdown';
 import { Badge } from '@/Components/ui/badge';
+import { toastSuccess, toastError, showPasswordAlert } from '@/lib/sweet-alert';
 
-function FlashMessages() {
+function useFlash() {
     const { flash } = usePage().props;
-    const [visible, setVisible] = useState(true);
 
-    if (!visible || (!flash?.success && !flash?.error)) return null;
+    useEffect(() => {
+        if (!flash) return;
 
-    return (
-        <div className={`fixed top-4 right-4 z-50 max-w-sm rounded-md border p-4 shadow-lg ${
-            flash.success ? 'bg-verde-exito-light border-verde-exito text-verde-exito' : 'bg-rojo-urgencia-light border-rojo-urgencia text-rojo-urgencia'
-        }`}>
-            <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium">{flash.success || flash.error}</p>
-                <button onClick={() => setVisible(false)} className="shrink-0">
-                    <XCircle className="h-4 w-4" />
-                </button>
-            </div>
-        </div>
-    );
+        if (flash.new_password) {
+            showPasswordAlert(flash.new_password);
+        }
+
+        if (flash.flashType) {
+            if (flash.flashType === 'success' && flash.flashMessage) {
+                toastSuccess(flash.flashMessage);
+            } else if (flash.flashType === 'error' && flash.flashMessage) {
+                toastError(flash.flashMessage);
+            }
+        } else {
+            if (flash.success) {
+                toastSuccess(flash.success);
+            }
+            if (flash.error) {
+                toastError(flash.error);
+            }
+        }
+    }, [flash]);
 }
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
+    useFlash();
     const user = auth?.user;
     const unreadCount = auth?.unread_notifications ?? 0;
     const latestNotifications = auth?.latest_notifications ?? [];
@@ -260,7 +269,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 {children}
             </main>
 
-            <FlashMessages />
         </div>
     );
 }

@@ -1,6 +1,19 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { toastSuccess, toastError } from '@/lib/sweet-alert';
+
+function useFlash() {
+    const { flash } = usePage().props;
+
+    useEffect(() => {
+        if (!flash) return;
+        if (flash.success) toastSuccess(flash.success);
+        if (flash.error) toastError(flash.error);
+    }, [flash]);
+}
 
 export default function GuestLayout({ children }) {
+    useFlash();
     return (
         <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
             <div>

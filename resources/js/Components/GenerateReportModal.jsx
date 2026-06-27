@@ -5,6 +5,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import InputError from '@/Components/InputError';
+import { showValidationErrors } from '@/lib/sweet-alert';
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -87,6 +88,7 @@ export default function GenerateReportModal({ ticket, onClose }) {
                 if (res.status === 422) {
                     const data = await res.json();
                     setErrors(data.errors || {});
+                    showValidationErrors(data.errors || {});
                 }
                 setProcessing(false);
                 return;

@@ -27,4 +27,31 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->wantsJson() || $request->ajax(),
         );
+
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, Throwable $e) {
+            if ($response->getStatusCode() === 422 && request()->inertia()) {
+                $data = json_decode($response->getContent(), true);
+                return back()->withErrors($data['errors'] ?? []);
+            }
+
+            if ($response->getStatusCode() === 419) {
+                if (request()->inertia()) {
+                    return back()->with('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                }
+            }
+
+            if ($response->getStatusCode() === 403) {
+                if (request()->inertia()) {
+                    return back()->with('error', 'No tienes permiso para realizar esta acción.');
+                }
+            }
+
+            if ($response->getStatusCode() === 500 && !config('app.debug')) {
+                if (request()->inertia()) {
+                    return back()->with('error', 'Ha ocurrido un error inesperado. Por favor, intenta de nuevo.');
+                }
+            }
+
+            return $response;
+        });
     })->create();

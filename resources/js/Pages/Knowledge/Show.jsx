@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Pencil, CheckCircle, FileText, Download, Paperclip, Trash2 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
+import { confirmAction } from '@/lib/sweet-alert';
 
 function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
@@ -17,8 +18,13 @@ export default function Show({ article, canEdit, canPublish, canDelete }) {
         });
     }
 
-    function handleDelete() {
-        if (confirm('¿Estás seguro de que deseas eliminar este artículo?')) {
+    async function handleDelete() {
+        const result = await confirmAction({
+            title: '¿Eliminar este artículo?',
+            text: 'Esta acción es permanente y no se puede deshacer.',
+            confirmText: 'Eliminar',
+        });
+        if (result.isConfirmed) {
             router.delete(route('articles.destroy', article.slug));
         }
     }

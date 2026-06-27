@@ -6,6 +6,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import InputError from '@/Components/InputError';
+import { showValidationErrors, confirmAction } from '@/lib/sweet-alert';
 import Pagination from '@/Components/Pagination';
 
 function CategoryModal({ mode, category, onClose }) {
@@ -23,12 +24,12 @@ function CategoryModal({ mode, category, onClose }) {
 
         if (isEdit) {
             router.put(route('categories.update', category.id), form, {
-                onError: (err) => { setErrors(err); setProcessing(false); },
+                onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
                 onSuccess: () => { setProcessing(false); onClose(); },
             });
         } else {
             router.post(route('categories.store'), form, {
-                onError: (err) => { setErrors(err); setProcessing(false); },
+                onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
                 onSuccess: () => { setProcessing(false); onClose(); },
             });
         }
@@ -89,8 +90,12 @@ export default function Index({ categories, filters }) {
         router.get(route('categories.index'), clean, { preserveState: true, replace: true });
     }
 
-    function handleDelete(id) {
-        if (confirm('¿Eliminar esta categoría?')) {
+    async function handleDelete(id) {
+        const result = await confirmAction({
+            title: '¿Eliminar esta categoría?',
+            confirmText: 'Eliminar',
+        });
+        if (result.isConfirmed) {
             router.delete(route('categories.destroy', id));
         }
     }

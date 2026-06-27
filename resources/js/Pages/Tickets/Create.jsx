@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { ChevronDown } from 'lucide-react';
 import InputError from '@/Components/InputError';
+import { showValidationErrors } from '@/lib/sweet-alert';
 
 export default function Create({ categories, priorities }) {
     const { auth } = usePage().props;
@@ -63,7 +64,7 @@ export default function Create({ categories, priorities }) {
         if (values.photo) formData.append('photo', values.photo);
 
         router.post(route('tickets.store'), formData, {
-            onError: (err) => { setErrors(err); setProcessing(false); },
+            onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: () => setProcessing(false),
         });
     }

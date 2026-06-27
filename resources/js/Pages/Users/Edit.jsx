@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
+import { showValidationErrors } from '@/lib/sweet-alert';
 
 export default function Edit({ user, departments, roles }) {
     const [values, setValues] = useState({
@@ -28,7 +29,7 @@ export default function Edit({ user, departments, roles }) {
         e.preventDefault();
         setProcessing(true);
         router.put(route('users.update', user.id), values, {
-            onError: (err) => { setErrors(err); setProcessing(false); },
+            onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: () => setProcessing(false),
         });
     }

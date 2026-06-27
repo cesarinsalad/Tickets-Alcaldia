@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
+import { toastSuccess, showValidationErrors, showPasswordAlert } from '@/lib/sweet-alert';
 
 export default function Create({ departments, roles }) {
     const [values, setValues] = useState({
@@ -28,13 +29,13 @@ export default function Create({ departments, roles }) {
         e.preventDefault();
         setProcessing(true);
         router.post(route('users.store'), values, {
-            onError: (err) => { setErrors(err); setProcessing(false); },
+            onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
             onSuccess: (page) => {
                 setProcessing(false);
                 setValues({ name: '', last_name: '', position: '', email: '', phone_number: '', department_id: '', role: 'solicitante' });
                 setErrors({});
                 if (page.props.flash?.new_password) {
-                    alert('Usuario creado. Contraseña temporal: ' + page.props.flash.new_password);
+                    showPasswordAlert(page.props.flash.new_password);
                 }
             },
         });

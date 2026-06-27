@@ -7,6 +7,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
+import { showValidationErrors, confirmAction } from '@/lib/sweet-alert';
 import Pagination from '@/Components/Pagination';
 
 function DepartmentModal({ mode, dept, availableAdmins, onClose }) {
@@ -28,12 +29,12 @@ function DepartmentModal({ mode, dept, availableAdmins, onClose }) {
 
         if (isEdit) {
             router.put(route('departments.update', dept.id), payload, {
-                onError: (err) => { setErrors(err); setProcessing(false); },
+                onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
                 onSuccess: () => { setProcessing(false); onClose(); },
             });
         } else {
             router.post(route('departments.store'), payload, {
-                onError: (err) => { setErrors(err); setProcessing(false); },
+                onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
                 onSuccess: () => { setProcessing(false); onClose(); },
             });
         }
@@ -100,8 +101,12 @@ export default function Index({ departments, filters, availableAdmins }) {
         router.get(route('departments.index'), clean, { preserveState: true, replace: true });
     }
 
-    function handleDelete(id) {
-        if (confirm('¿Eliminar este departamento?')) {
+    async function handleDelete(id) {
+        const result = await confirmAction({
+            title: '¿Eliminar este departamento?',
+            confirmText: 'Eliminar',
+        });
+        if (result.isConfirmed) {
             router.delete(route('departments.destroy', id));
         }
     }
