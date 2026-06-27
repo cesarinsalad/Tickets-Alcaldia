@@ -1,12 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Search, Monitor, ChevronDown, ChevronUp, FileText, AlertTriangle } from 'lucide-react';
+import { Search, Monitor, ChevronDown, ChevronUp, FileText, AlertTriangle, Cpu, HardDrive } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 
-export default function Index({ equipment, filters, totalCount, highRecurrenceCount }) {
+export default function Index({ equipment, filters, totalCount, highRecurrenceCount, bajaRamCount, hddCount }) {
     const { auth } = usePage().props;
     const [expanded, setExpanded] = useState({});
 
@@ -27,7 +27,7 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
         >
             <Head title="Inventario de Equipos" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <button
                     onClick={() => router.get(route('equipments.index'), {}, { preserveState: true, replace: true })}
                     className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-azul-institucional bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -44,10 +44,11 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                 </button>
                 <button
                     onClick={() => {
+                        const params = { search: filters?.search || undefined, ram_lt: filters?.ram_lt || undefined, disk_hdd: filters?.disk_hdd || undefined };
                         if (filters?.recurrence) {
-                            router.get(route('equipments.index'), { search: filters?.search || undefined }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { ...params }, { preserveState: true, replace: true });
                         } else {
-                            router.get(route('equipments.index'), { search: filters?.search || undefined, recurrence: 1 }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { ...params, recurrence: 1 }, { preserveState: true, replace: true });
                         }
                     }}
                     className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-orange-500 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -60,6 +61,48 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                     <p className="mt-0.5 text-xs text-gray-400 leading-tight">Equipos con 2 o más retiros este mes</p>
                     <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
                         {filters?.recurrence ? 'Quitar filtro →' : 'Ver más →'}
+                    </p>
+                </button>
+                <button
+                    onClick={() => {
+                        const params = { search: filters?.search || undefined, recurrence: filters?.recurrence || undefined, disk_hdd: filters?.disk_hdd || undefined };
+                        if (filters?.ram_lt) {
+                            router.get(route('equipments.index'), { ...params }, { preserveState: true, replace: true });
+                        } else {
+                            router.get(route('equipments.index'), { ...params, ram_lt: 1 }, { preserveState: true, replace: true });
+                        }
+                    }}
+                    className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-yellow-500 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Baja RAM</p>
+                        <Cpu className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{bajaRamCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Equipos con menos de 8GB de RAM</p>
+                    <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        {filters?.ram_lt ? 'Quitar filtro →' : 'Ver más →'}
+                    </p>
+                </button>
+                <button
+                    onClick={() => {
+                        const params = { search: filters?.search || undefined, recurrence: filters?.recurrence || undefined, ram_lt: filters?.ram_lt || undefined };
+                        if (filters?.disk_hdd) {
+                            router.get(route('equipments.index'), { ...params }, { preserveState: true, replace: true });
+                        } else {
+                            router.get(route('equipments.index'), { ...params, disk_hdd: 1 }, { preserveState: true, replace: true });
+                        }
+                    }}
+                    className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-amber-600 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Discos HDD</p>
+                        <HardDrive className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{hddCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Equipos con discos mecánicos</p>
+                    <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        {filters?.disk_hdd ? 'Quitar filtro →' : 'Ver más →'}
                     </p>
                 </button>
             </div>
@@ -77,6 +120,8 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                                 router.get(route('equipments.index'), {
                                     search: val || undefined,
                                     recurrence: filters?.recurrence || undefined,
+                                    ram_lt: filters?.ram_lt || undefined,
+                                    disk_hdd: filters?.disk_hdd || undefined,
                                 }, {
                                     preserveState: true,
                                     replace: true,
@@ -85,7 +130,7 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                         }}
                         className="pl-10 h-12 text-base"
                     />
-                    {(filters?.search || filters?.recurrence) && (
+                    {(filters?.search || filters?.recurrence || filters?.ram_lt || filters?.disk_hdd) && (
                         <button
                             onClick={() => router.get(route('equipments.index'), {}, { preserveState: true, replace: true })}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-azul-institucional hover:underline"

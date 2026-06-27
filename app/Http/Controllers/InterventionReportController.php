@@ -39,6 +39,17 @@ class InterventionReportController extends Controller
             }, '>=', 2);
         }
 
+        if ($request->boolean('ram_lt')) {
+            $query->whereNotNull('ram_memory')
+                  ->where('ram_memory', '!=', '')
+                  ->whereRaw("ram_memory ~ '^\\d+GB'")
+                  ->whereRaw("CAST(regexp_replace(ram_memory, '^(\\d+)GB.*$', '\\1') AS INTEGER) < ?", [8]);
+        }
+
+        if ($request->boolean('disk_hdd')) {
+            $query->where('storage_disk', 'ilike', '%HDD%');
+        }
+
         $equipment = $query->paginate(15)->withQueryString();
 
         $totalCount = Equipment::count();
@@ -47,14 +58,28 @@ class InterventionReportController extends Controller
               ->whereYear('created_at', now()->year);
         }, '>=', 2)->count();
 
+        $bajaRamCount = Equipment::whereNotNull('ram_memory')
+            ->where('ram_memory', '!=', '')
+            ->whereRaw("ram_memory ~ '^\\d+GB'")
+            ->whereRaw("CAST(regexp_replace(ram_memory, '^(\\d+)GB.*$', '\\1') AS INTEGER) < ?", [8])
+            ->count();
+
+        $hddCount = Equipment::where('storage_disk', 'ilike', '%HDD%')->count();
+
         return Inertia::render('Equipments/Index', [
             'equipment' => $equipment,
             'filters' => array_merge(
                 $request->only(['search']),
-                ['recurrence' => $request->boolean('recurrence')],
+                [
+                    'recurrence' => $request->boolean('recurrence'),
+                    'ram_lt' => $request->boolean('ram_lt'),
+                    'disk_hdd' => $request->boolean('disk_hdd'),
+                ],
             ),
             'totalCount' => $totalCount,
             'highRecurrenceCount' => $highRecurrenceCount,
+            'bajaRamCount' => $bajaRamCount,
+            'hddCount' => $hddCount,
         ]);
     }
 
