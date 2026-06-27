@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 import { Switch } from '@/Components/ui/switch';
+import { Select } from '@/Components/ui/select';
 import { showValidationErrors, confirmAction } from '@/lib/sweet-alert';
 
 const moduleMeta = {
@@ -204,18 +205,20 @@ export default function Index({ roles, allPermissions }) {
             {showModal && <RoleModal onClose={() => setShowModal(false)} roles={roles} rolePerms={rolePerms} />}
 
             <div className="mb-6">
-                <div className="flex flex-wrap items-center gap-2">
-                    {roles.map(role => (
-                        <Button
-                            key={role.id}
-                            variant={selectedRole === role.name ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => handleChangeRole(role.name)}
-                        >
-                            {role.label}
-                        </Button>
-                    ))}
-                </div>
+                <Label className="mb-2 block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Seleccionar rol
+                </Label>
+                <Select
+                    value={selectedRole}
+                    onChange={e => handleChangeRole(e.target.value)}
+                    className="w-full sm:w-64 border-2 border-gris-borde"
+                >
+                    {[...roles]
+                        .sort((a, b) => a.label.localeCompare(b.label, 'es'))
+                        .map(role => (
+                            <option key={role.name} value={role.name}>{role.label}</option>
+                        ))}
+                </Select>
             </div>
 
             {selectedModule ? (
