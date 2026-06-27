@@ -20,12 +20,12 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                 <div className="flex items-center gap-3 min-w-0">
                     <Monitor className="h-6 w-6 text-azul-institucional shrink-0" />
                     <div className="min-w-0">
-                        <h2 className="text-xl font-semibold text-gray-900 truncate">Registro de Equipos</h2>
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">Inventario de Equipos</h2>
                     </div>
                 </div>
             }
         >
-            <Head title="Registro de Equipos" />
+            <Head title="Inventario de Equipos" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <button

@@ -90,10 +90,10 @@ class InterventionReportController extends Controller
 
         $validated = $request->validate([
             'sku' => ['required', 'string', 'max:100'],
-            'brand' => ['nullable', 'string', 'max:100'],
-            'model' => ['nullable', 'string', 'max:100'],
-            'processor' => ['nullable', 'string', 'max:100'],
-            'ram_memory' => ['nullable', 'string', 'max:50'],
+            'brand' => ['nullable', 'string', 'max:20'],
+            'model' => ['nullable', 'string', 'max:30'],
+            'processor' => ['nullable', 'string', 'max:35'],
+            'ram_memory' => ['nullable', 'string', 'max:100'],
             'storage_disk' => ['nullable', 'string', 'max:100'],
             'diagnostic' => ['required', 'string', 'max:5000'],
         ]);

@@ -4,8 +4,14 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
+import { Select } from '@/Components/ui/select';
 import InputError from '@/Components/InputError';
 import { showValidationErrors } from '@/lib/sweet-alert';
+
+const ramSizeOptions = ['', '2GB', '4GB', '8GB', '16GB', '32GB'];
+const ramTypeOptions = ['', 'DDR2', 'DDR3', 'DDR4', 'DDR5'];
+const diskSizeOptions = ['', '128GB', '256GB', '512GB', '1TB', '2TB', '4TB'];
+const diskTypeOptions = ['', 'HDD', 'SSD', 'NVMe'];
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -19,13 +25,23 @@ export default function GenerateReportModal({ ticket, onClose }) {
     const [brand, setBrand] = useState('');
     const [model, setModel] = useState('');
     const [processor, setProcessor] = useState('');
-    const [ramMemory, setRamMemory] = useState('');
-    const [storageDisk, setStorageDisk] = useState('');
+    const [ramSize, setRamSize] = useState('');
+    const [ramType, setRamType] = useState('');
+    const [diskSize, setDiskSize] = useState('');
+    const [diskType, setDiskType] = useState('');
     const [diagnostic, setDiagnostic] = useState('');
     const [searching, setSearching] = useState(false);
     const [notFound, setNotFound] = useState(false);
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
+
+    const knownSizes = ['2GB','4GB','8GB','16GB','32GB','128GB','256GB','512GB','1TB','2TB','4TB'];
+    const knownRamTypes = ['DDR2','DDR3','DDR4','DDR5'];
+    const knownDiskTypes = ['HDD','SSD','NVMe'];
+
+    function isSize(v) { return knownSizes.includes(v); }
+    function isRamType(v) { return knownRamTypes.includes(v); }
+    function isDiskType(v) { return knownDiskTypes.includes(v); }
 
     async function lookupEquipment() {
         if (!sku.trim()) return;
@@ -40,8 +56,16 @@ export default function GenerateReportModal({ ticket, onClose }) {
                     setBrand(data.brand || '');
                     setModel(data.model || '');
                     setProcessor(data.processor || '');
-                    setRamMemory(data.ram_memory || '');
-                    setStorageDisk(data.storage_disk || '');
+                    if (data.ram_memory) {
+                        const parts = data.ram_memory.split(' ');
+                        setRamSize(parts.find(isSize) || '');
+                        setRamType(parts.find(isRamType) || '');
+                    }
+                    if (data.storage_disk) {
+                        const parts = data.storage_disk.split(' ');
+                        setDiskSize(parts.find(isSize) || '');
+                        setDiskType(parts.find(isDiskType) || '');
+                    }
                     setNotFound(false);
                 } else {
                     setNotFound(true);
@@ -65,8 +89,8 @@ export default function GenerateReportModal({ ticket, onClose }) {
         formData.append('brand', brand);
         formData.append('model', model);
         formData.append('processor', processor);
-        formData.append('ram_memory', ramMemory);
-        formData.append('storage_disk', storageDisk);
+        formData.append('ram_memory', [ramSize, ramType].filter(Boolean).join(' '));
+        formData.append('storage_disk', [diskSize, diskType].filter(Boolean).join(' '));
         formData.append('diagnostic', diagnostic);
 
         try {
@@ -151,23 +175,54 @@ export default function GenerateReportModal({ ticket, onClose }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="ir_brand">Marca</Label>
-                            <Input id="ir_brand" value={brand} onChange={e => setBrand(e.target.value)} className="mt-1" />
+                            <Input id="ir_brand" value={brand} onChange={e => setBrand(e.target.value)} maxLength={20} className="mt-1" />
+                            <InputError message={errors.brand} />
                         </div>
                         <div>
                             <Label htmlFor="ir_model">Modelo</Label>
-                            <Input id="ir_model" value={model} onChange={e => setModel(e.target.value)} className="mt-1" />
+                            <Input id="ir_model" value={model} onChange={e => setModel(e.target.value)} maxLength={30} className="mt-1" />
+                            <InputError message={errors.model} />
                         </div>
                         <div>
                             <Label htmlFor="ir_processor">Procesador</Label>
-                            <Input id="ir_processor" value={processor} onChange={e => setProcessor(e.target.value)} className="mt-1" />
+                            <Input id="ir_processor" value={processor} onChange={e => setProcessor(e.target.value)} maxLength={35} className="mt-1" />
+                            <InputError message={errors.processor} />
                         </div>
                         <div>
-                            <Label htmlFor="ir_ram">Memoria RAM</Label>
-                            <Input id="ir_ram" value={ramMemory} onChange={e => setRamMemory(e.target.value)} className="mt-1" />
+                            <Label>Memoria RAM</Label>
+                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                <Select value={ramSize} onChange={e => setRamSize(e.target.value)}>
+                                    <option value="">Capacidad</option>
+                                    {ramSizeOptions.filter(Boolean).map(v => (
+                                        <option key={v} value={v}>{v}</option>
+                                    ))}
+                                </Select>
+                                <Select value={ramType} onChange={e => setRamType(e.target.value)}>
+                                    <option value="">Tipo</option>
+                                    {ramTypeOptions.filter(Boolean).map(v => (
+                                        <option key={v} value={v}>{v}</option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <InputError message={errors.ram_memory} />
                         </div>
                         <div className="sm:col-span-2">
-                            <Label htmlFor="ir_disk">Disco de Almacenamiento</Label>
-                            <Input id="ir_disk" value={storageDisk} onChange={e => setStorageDisk(e.target.value)} className="mt-1" />
+                            <Label>Disco de Almacenamiento</Label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                                <Select value={diskSize} onChange={e => setDiskSize(e.target.value)}>
+                                    <option value="">Capacidad</option>
+                                    {diskSizeOptions.filter(Boolean).map(v => (
+                                        <option key={v} value={v}>{v}</option>
+                                    ))}
+                                </Select>
+                                <Select value={diskType} onChange={e => setDiskType(e.target.value)}>
+                                    <option value="">Tipo</option>
+                                    {diskTypeOptions.filter(Boolean).map(v => (
+                                        <option key={v} value={v}>{v}</option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <InputError message={errors.storage_disk} />
                         </div>
                     </div>
 
