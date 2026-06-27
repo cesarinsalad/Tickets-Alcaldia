@@ -40,7 +40,7 @@ function ArticleCard({ article, isDraftView }) {
     );
 }
 
-export default function Index({ articles, categories, filters }) {
+export default function Index({ articles, categories, filters, totalCount, publishedCount, draftCount }) {
     const { auth } = usePage().props;
     const tab = filters?.status || 'published';
     const [search, setSearch] = useState(filters?.search || '');
@@ -91,6 +91,42 @@ export default function Index({ articles, categories, filters }) {
             }
         >
             <Head title="Base de Conocimiento" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <button
+                    onClick={() => navigate({ status: 'published', search: undefined })}
+                    className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-verde-exito bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Aprobados</p>
+                        <FileText className="h-5 w-5 text-verde-exito" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{publishedCount}</p>
+                    <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        Ver más &rarr;
+                    </p>
+                </button>
+                <button
+                    onClick={() => navigate({ status: 'draft', search: undefined })}
+                    className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-yellow-500 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Borradores</p>
+                        <BookOpen className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{draftCount}</p>
+                    <p className="mt-1 text-xs text-azul-institucional opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        Ver más &rarr;
+                    </p>
+                </button>
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-azul-institucional bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Totales</p>
+                        <FileText className="h-5 w-5 text-azul-institucional" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{totalCount}</p>
+                </div>
+            </div>
 
             <div className="mb-6">
                 <div className="relative">

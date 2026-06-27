@@ -43,10 +43,17 @@ class ArticleController extends Controller
 
         $categories = Category::has('articles')->get();
 
+        $totalCount = Article::count();
+        $publishedCount = Article::where('status', ArticleStatus::Published)->count();
+        $draftCount = Article::where('status', ArticleStatus::Draft)->count();
+
         return Inertia::render('Knowledge/Index', [
             'articles' => $articles,
             'categories' => $categories,
             'filters' => $request->only(['search', 'category', 'status']),
+            'totalCount' => $totalCount,
+            'publishedCount' => $publishedCount,
+            'draftCount' => $draftCount,
         ]);
     }
 
