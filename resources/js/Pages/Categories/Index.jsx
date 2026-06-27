@@ -25,12 +25,12 @@ function CategoryModal({ mode, category, onClose }) {
         if (isEdit) {
             router.put(route('categories.update', category.id), form, {
                 onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
-                onSuccess: () => { setProcessing(false); onClose(); },
+                onSuccess: () => { setProcessing(false); onClose(); router.reload(); },
             });
         } else {
             router.post(route('categories.store'), form, {
                 onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
-                onSuccess: () => { setProcessing(false); onClose(); },
+                onSuccess: () => { setProcessing(false); onClose(); router.reload(); },
             });
         }
     }

@@ -66,6 +66,7 @@ class DepartmentController extends Controller
             ->where('is_active', true)
             ->where(function ($q) use ($department) {
                 $q->whereNull('department_id')
+                    ->orWhere('department_id', $department->id)
                     ->orWhere('id', $department->head_of_area_id);
             })
             ->whereNotIn('id', function ($q) use ($department) {
@@ -108,7 +109,10 @@ class DepartmentController extends Controller
 
                 $newAdmin = User::where('id', $validated['head_of_area_id'])
                     ->where('is_active', true)
-                    ->whereNull('department_id')
+                    ->where(function ($q) use ($department) {
+                        $q->whereNull('department_id')
+                          ->orWhere('department_id', $department->id);
+                    })
                     ->role('admin_departamento')
                     ->first();
 

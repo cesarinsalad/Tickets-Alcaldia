@@ -30,12 +30,12 @@ function DepartmentModal({ mode, dept, availableAdmins, onClose }) {
         if (isEdit) {
             router.put(route('departments.update', dept.id), payload, {
                 onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
-                onSuccess: () => { setProcessing(false); onClose(); },
+                onSuccess: () => { setProcessing(false); onClose(); router.reload(); },
             });
         } else {
             router.post(route('departments.store'), payload, {
                 onError: (err) => { setErrors(err); showValidationErrors(err); setProcessing(false); },
-                onSuccess: () => { setProcessing(false); onClose(); },
+                onSuccess: () => { setProcessing(false); onClose(); router.reload(); },
             });
         }
     }
