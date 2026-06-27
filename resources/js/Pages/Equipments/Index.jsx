@@ -59,11 +59,11 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                 </button>
                 <button
                     onClick={() => {
-                        const params = { search: filters?.search || undefined, ram_lt: filters?.ram_lt || undefined, disk_hdd: filters?.disk_hdd || undefined };
+                        const search = filters?.search || undefined;
                         if (filters?.recurrence) {
-                            router.get(route('equipments.index'), { ...params }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { search }, { preserveState: true, replace: true });
                         } else {
-                            router.get(route('equipments.index'), { ...params, recurrence: 1 }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { search, recurrence: 1 }, { preserveState: true, replace: true });
                         }
                     }}
                     className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-orange-500 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -80,11 +80,11 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                 </button>
                 <button
                     onClick={() => {
-                        const params = { search: filters?.search || undefined, recurrence: filters?.recurrence || undefined, disk_hdd: filters?.disk_hdd || undefined };
+                        const search = filters?.search || undefined;
                         if (filters?.ram_lt) {
-                            router.get(route('equipments.index'), { ...params }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { search }, { preserveState: true, replace: true });
                         } else {
-                            router.get(route('equipments.index'), { ...params, ram_lt: 1 }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { search, ram_lt: 1 }, { preserveState: true, replace: true });
                         }
                     }}
                     className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-yellow-500 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -101,11 +101,11 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                 </button>
                 <button
                     onClick={() => {
-                        const params = { search: filters?.search || undefined, recurrence: filters?.recurrence || undefined, ram_lt: filters?.ram_lt || undefined };
+                        const search = filters?.search || undefined;
                         if (filters?.disk_hdd) {
-                            router.get(route('equipments.index'), { ...params }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { search }, { preserveState: true, replace: true });
                         } else {
-                            router.get(route('equipments.index'), { ...params, disk_hdd: 1 }, { preserveState: true, replace: true });
+                            router.get(route('equipments.index'), { search, disk_hdd: 1 }, { preserveState: true, replace: true });
                         }
                     }}
                     className="group text-left rounded-lg border border-gris-borde border-l-4 border-l-amber-600 bg-white p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -145,14 +145,6 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                         }}
                         className="pl-10 h-12 text-base"
                     />
-                    {(filters?.search || filters?.recurrence || filters?.ram_lt || filters?.disk_hdd) && (
-                        <button
-                            onClick={() => router.get(route('equipments.index'), {}, { preserveState: true, replace: true })}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-azul-institucional hover:underline"
-                        >
-                            Limpiar
-                        </button>
-                    )}
                 </div>
             </div>
 
