@@ -5,7 +5,6 @@ import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, Al
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import SimpleBarChart from '@/Components/SimpleBarChart';
 import SimpleDonutChart from '@/Components/SimpleDonutChart';
 import Pagination from '@/Components/Pagination';
 import RelativeTime from '@/Components/RelativeTime';
@@ -300,25 +299,6 @@ function SuperAdminDashboard({ kpis, extra }) {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
-                    {extra.top_departments.length > 0 ? (
-                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
-                    {extra.category_distribution.length > 0 ? (
-                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
-            </div>
-
         </div>
     );
 }
@@ -557,25 +537,6 @@ function AdminTicketsDashboard({ extra }) {
                 ) : (
                     <p className="text-sm text-gray-500 text-center py-6">No hay técnicos registrados.</p>
                 )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Top 5 Departamentos con Más Solicitudes</h3>
-                    {extra.top_departments?.length > 0 ? (
-                        <SimpleBarChart data={extra.top_departments} onBarClick={(entry) => router.visit(route('tickets.index', { department: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Distribución por Categoría</h3>
-                    {extra.category_distribution?.length > 0 ? (
-                        <SimpleDonutChart data={extra.category_distribution} onPieClick={(entry) => router.visit(route('tickets.index', { category: entry.id, date_from: extra.date_from, date_to: extra.date_to }))} />
-                    ) : (
-                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                    )}
-                </div>
             </div>
 
         </div>

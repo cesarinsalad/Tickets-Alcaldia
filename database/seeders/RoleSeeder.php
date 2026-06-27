@@ -31,6 +31,9 @@ class RoleSeeder extends Seeder
             ['name' => 'eliminar articulos',        'module' => 'knowledge'],
             ['name' => 'gestionar roles',           'module' => 'roles'],
             ['name' => 'gestionar sla',             'module' => 'sla'],
+            ['name' => 'ver metricas',              'module' => 'metricas'],
+            ['name' => 'ver rendimiento',           'module' => 'rendimiento'],
+            ['name' => 'ver reportes administrativos', 'module' => 'reportes_admin'],
         ];
 
         foreach ($permissions as $p) {
@@ -79,6 +82,9 @@ class RoleSeeder extends Seeder
             'ver articulos',
             'crear articulos',
             'publicar articulos',
+            'ver metricas',
+            'ver rendimiento',
+            'ver reportes administrativos',
         ])->get());
 
         $superAdmin->syncPermissions(Permission::whereIn('name', [
@@ -98,6 +104,9 @@ class RoleSeeder extends Seeder
             'eliminar articulos',
             'gestionar roles',
             'gestionar sla',
+            'ver metricas',
+            'ver rendimiento',
+            'ver reportes administrativos',
         ])->get());
     }
 }

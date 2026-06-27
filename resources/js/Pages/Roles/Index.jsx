@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
-import { Plus, X, Shield, Ticket, Users, FileText, FolderTree, BookOpen, Monitor, Circle, ArrowLeft, Save, Building2, Clock, Key } from 'lucide-react';
+import { Plus, X, Shield, Ticket, Users, FileText, FolderTree, BookOpen, Monitor, Circle, ArrowLeft, Save, Building2, Clock, Key, PieChart, TrendingUp, ClipboardList } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
@@ -20,6 +20,9 @@ const moduleMeta = {
     knowledge:      { label: 'Base de Conocimiento', icon: BookOpen },
     equipos:        { label: 'Equipos',        icon: Monitor },
     roles:          { label: 'Roles',          icon: Key },
+    metricas:       { label: 'Métricas',       icon: PieChart },
+    rendimiento:    { label: 'Rendimiento',    icon: TrendingUp },
+    reportes_admin: { label: 'Reportes Admin', icon: ClipboardList },
     otros:          { label: 'Sin módulo',     icon: Circle },
 };
 

@@ -11,6 +11,9 @@ use App\Http\Controllers\InterventionReportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SlaConfigurationController;
+use App\Http\Controllers\MetricasController;
+use App\Http\Controllers\RendimientoController;
+use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +63,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/sla', [SlaConfigurationController::class, 'index'])->name('sla.index');
         Route::put('/sla', [SlaConfigurationController::class, 'update'])->name('sla.update');
         Route::post('/sla/reset', [SlaConfigurationController::class, 'reset'])->name('sla.reset');
+    });
+
+    Route::middleware(['permission:ver metricas'])->group(function () {
+        Route::get('/metricas', [MetricasController::class, 'index'])->name('metricas.index');
+    });
+
+    Route::middleware(['permission:ver rendimiento'])->group(function () {
+        Route::get('/rendimiento', [RendimientoController::class, 'index'])->name('rendimiento.index');
+    });
+
+    Route::middleware(['permission:ver reportes administrativos'])->group(function () {
+        Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
     });
 
     Route::middleware(['permission:gestionar roles'])->group(function () {
