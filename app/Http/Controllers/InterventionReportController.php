@@ -20,8 +20,23 @@ class InterventionReportController extends Controller
 
         $query = Equipment::query()
             ->withCount('interventionReports')
-            ->with(['interventionReports' => fn ($q) => $q->latest()->limit(1)->with('ticket')])
-            ->latest('updated_at');
+            ->with(['interventionReports' => fn ($q) => $q->latest()->limit(1)->with('ticket')]);
+
+        $allowedSorts = ['sku', 'brand', 'model', 'processor', 'ram_memory', 'storage_disk', 'intervention_reports_count'];
+        $sort = $request->input('sort', 'updated_at');
+        $dir = strtolower($request->input('dir', 'desc'));
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'updated_at';
+        }
+        if (!in_array($dir, ['asc', 'desc'])) {
+            $dir = 'desc';
+        }
+
+        if ($sort === 'intervention_reports_count') {
+            $query->orderBy('intervention_reports_count', $dir);
+        } else {
+            $query->orderBy($sort, $dir);
+        }
 
         if ($request->filled('search')) {
             $term = $request->input('search');
@@ -74,6 +89,8 @@ class InterventionReportController extends Controller
                     'recurrence' => $request->boolean('recurrence'),
                     'ram_lt' => $request->boolean('ram_lt'),
                     'disk_hdd' => $request->boolean('disk_hdd'),
+                    'sort' => $sort,
+                    'dir' => $dir,
                 ],
             ),
             'totalCount' => $totalCount,

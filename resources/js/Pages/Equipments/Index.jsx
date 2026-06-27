@@ -9,9 +9,30 @@ import { Input } from '@/Components/ui/input';
 export default function Index({ equipment, filters, totalCount, highRecurrenceCount, bajaRamCount, hddCount }) {
     const { auth } = usePage().props;
     const [expanded, setExpanded] = useState({});
+    const sort = filters?.sort || '';
+    const dir = filters?.dir || '';
 
     function toggleExpand(id) {
         setExpanded(e => ({ ...e, [id]: !e[id] }));
+    }
+
+    function handleSort(col) {
+        const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
+        router.get(route('equipments.index'), {
+            sort: col,
+            dir: newDir,
+            search: filters?.search || undefined,
+            recurrence: filters?.recurrence || undefined,
+            ram_lt: filters?.ram_lt || undefined,
+            disk_hdd: filters?.disk_hdd || undefined,
+        }, { preserveState: true, replace: true });
+    }
+
+    function SortIcon({ col }) {
+        if (sort !== col) return null;
+        return dir === 'asc'
+            ? <ChevronUp className="h-3 w-3 inline ml-1" />
+            : <ChevronDown className="h-3 w-3 inline ml-1" />;
     }
 
     return (
@@ -157,13 +178,27 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                         <table className="w-full text-sm">
                             <thead className="bg-gris-fondo border-b border-gris-borde">
                                 <tr>
-                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
-                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Modelo</th>
-                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Procesador</th>
-                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">RAM</th>
-                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Disco</th>
-                                    <th className="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Informes</th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('sku')}>
+                                        SKU <SortIcon col="sku" />
+                                    </th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('brand')}>
+                                        Marca <SortIcon col="brand" />
+                                    </th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('model')}>
+                                        Modelo <SortIcon col="model" />
+                                    </th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('processor')}>
+                                        Procesador <SortIcon col="processor" />
+                                    </th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('ram_memory')}>
+                                        RAM <SortIcon col="ram_memory" />
+                                    </th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('storage_disk')}>
+                                        Disco <SortIcon col="storage_disk" />
+                                    </th>
+                                    <th className="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('intervention_reports_count')}>
+                                        Informes <SortIcon col="intervention_reports_count" />
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gris-borde">
