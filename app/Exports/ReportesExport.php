@@ -6,26 +6,33 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Excel;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, Responsable
+class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithEvents, Responsable
 {
     private string $fileName = 'reporte.xlsx';
     private string $writerType = Excel::XLSX;
     private array $headers = [
         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ];
+    private int $columnCount;
 
     public function __construct(
         private Collection $rows,
         private array $columns,
         private string $source,
         private ?string $title = null,
+        private ?string $groupBy = 'none',
     ) {
+        $this->columnCount = max(count($this->columns), 1);
+
         $sourceLabels = [
             'tickets' => 'tickets',
             'equipments' => 'equipos',
@@ -50,6 +57,31 @@ class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function map($row): array
     {
+        $rowType = $row['_type'] ?? 'ticket';
+        $emptyCells = array_fill(0, $this->columnCount, '');
+
+        if ($rowType === 'group_header') {
+            $label = $row['group_label'] ?? '—';
+            $total = (int) ($row['group_total'] ?? 0);
+            $emptyCells[0] = "▼ {$label} ({$total} ticket" . ($total === 1 ? '' : 's') . ')';
+            return $emptyCells;
+        }
+
+        if ($rowType === 'subtotal') {
+            $label = $row['group_label'] ?? '—';
+            $total = (int) ($row['total'] ?? 0);
+            $parts = ["Subtotal {$label}: {$total} ticket" . ($total === 1 ? '' : 's')];
+            if (! empty($row['on_time'])) $parts[] = "{$row['on_time']} a tiempo";
+            if (! empty($row['overdue'])) $parts[] = "{$row['overdue']} vencidos";
+            if (! empty($row['pending'])) $parts[] = "{$row['pending']} pendientes";
+            $emptyCells[0] = implode(' | ', $parts);
+            return $emptyCells;
+        }
+
+        if ($rowType === 'group_spacer') {
+            return $emptyCells;
+        }
+
         return array_map(function ($col) use ($row) {
             $key = $col['key'];
             $format = $col['format'] ?? null;
@@ -79,8 +111,8 @@ class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function styles(Worksheet $sheet)
     {
-        $lastCol = count($this->columns);
-        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastCol);
+        $lastCol = $this->columnCount;
+        $colLetter = Coordinate::stringFromColumnIndex($lastCol);
 
         return [
             1 => [
@@ -92,6 +124,41 @@ class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithS
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
                 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1E3A5F']],
             ],
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $lastCol = $this->columnCount;
+                $colLetter = Coordinate::stringFromColumnIndex($lastCol);
+                $rowIndex = 2;
+
+                foreach ($this->rows as $row) {
+                    $type = $row['_type'] ?? 'ticket';
+                    $range = "A{$rowIndex}:{$colLetter}{$rowIndex}";
+
+                    if ($type === 'group_header') {
+                        $sheet->getStyle($range)->applyFromArray([
+                            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+                            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1E3A5F']],
+                            'alignment' => ['horizontal' => 'left', 'vertical' => 'center'],
+                        ]);
+                    } elseif ($type === 'subtotal') {
+                        $sheet->getStyle($range)->applyFromArray([
+                            'font' => ['italic' => true, 'color' => ['rgb' => '475569'], 'size' => 9],
+                            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'F1F5F9']],
+                            'alignment' => ['horizontal' => 'left', 'vertical' => 'center'],
+                        ]);
+                    } elseif ($type === 'group_spacer') {
+                        $sheet->getRowDimension($rowIndex)->setRowHeight(6);
+                    }
+
+                    $rowIndex++;
+                }
+            },
         ];
     }
 }

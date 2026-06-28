@@ -237,6 +237,12 @@ class ReportesController extends Controller
         $totalRows = $rows->count();
         $totalPages = (int) ceil($totalRows / 35);
 
+        $groupBy = $filters['group_by'] ?? 'none';
+        $groupSubtotals = ($source === 'tickets' && $groupBy !== 'none')
+            ? $this->computeGroupSubtotals($rows, $groupBy)
+            : [];
+        $structuredRows = $this->buildStructuredRows($rows, $groupBy, $groupSubtotals);
+
         $sourceLabels = [
             'tickets' => 'Tickets',
             'equipments' => 'Equipos',
@@ -263,7 +269,8 @@ class ReportesController extends Controller
             'generatedBy' => $request->user()->full_name,
             'filtersSummary' => $filtersSummary,
             'columns' => $columns,
-            'rows' => $rows,
+            'rows' => $structuredRows,
+            'groupBy' => $groupBy,
             'totalRows' => $totalRows,
             'totalPages' => $totalPages,
         ]);
@@ -296,6 +303,12 @@ class ReportesController extends Controller
             ? $query->get()->map(fn ($t) => $this->transformTicketRow($t))
             : $query->get();
 
+        $groupBy = $filters['group_by'] ?? 'none';
+        $groupSubtotals = ($source === 'tickets' && $groupBy !== 'none')
+            ? $this->computeGroupSubtotals($rows, $groupBy)
+            : [];
+        $structuredRows = collect($this->buildStructuredRows($rows, $groupBy, $groupSubtotals));
+
         $sourceLabels = [
             'tickets' => 'Tickets',
             'equipments' => 'Equipos',
@@ -306,7 +319,7 @@ class ReportesController extends Controller
         $title = 'Reporte de ' . ($sourceLabels[$source] ?? $source);
 
         return Excel::download(
-            new ReportesExport($rows, $columns, $source, $title),
+            new ReportesExport($structuredRows, $columns, $source, $title, $groupBy),
             "reporte-{$source}-" . now()->format('Ymd-His') . '.xlsx'
         );
     }
@@ -569,6 +582,68 @@ class ReportesController extends Controller
             if ($slaStatus === 'Vencido') $subtotals[$key]['overdue']++;
         }
         return $subtotals;
+    }
+
+    private function buildStructuredRows($rows, string $groupBy, array $groupSubtotals): array
+    {
+        if ($groupBy === 'none') {
+            return $rows->map(fn ($r) => array_merge($r, ['_type' => 'ticket']))->all();
+        }
+
+        $structured = [];
+        $currentGroup = null;
+        $groupCount = 0;
+
+        foreach ($rows as $row) {
+            $groupKey = $this->buildGroupKeyForRow($row, $groupBy);
+
+            if ($groupKey !== $currentGroup) {
+                if ($currentGroup !== null) {
+                    $sub = $groupSubtotals[$currentGroup] ?? ['total' => 0, 'on_time' => 0, 'overdue' => 0, 'pending' => 0];
+                    $structured[] = [
+                        '_type' => 'subtotal',
+                        'group_label' => $currentGroup,
+                        'total' => $sub['total'],
+                        'on_time' => $sub['on_time'],
+                        'overdue' => $sub['overdue'],
+                        'pending' => $sub['pending'],
+                    ];
+                    $structured[] = ['_type' => 'group_spacer'];
+                }
+                $groupCount = 0;
+                $structured[] = [
+                    '_type' => 'group_header',
+                    'group_label' => $groupKey,
+                    'group_total' => 0,
+                ];
+                $currentGroup = $groupKey;
+            }
+
+            $structured[] = array_merge($row, ['_type' => 'ticket']);
+            $groupCount++;
+            // update the total in the most recent group header
+            for ($i = count($structured) - 1; $i >= 0; $i--) {
+                if (($structured[$i]['_type'] ?? null) === 'group_header' && ($structured[$i]['group_label'] ?? null) === $groupKey) {
+                    $structured[$i]['group_total'] = $groupCount;
+                    break;
+                }
+            }
+        }
+
+        // Close the last group
+        if ($currentGroup !== null) {
+            $sub = $groupSubtotals[$currentGroup] ?? ['total' => 0, 'on_time' => 0, 'overdue' => 0, 'pending' => 0];
+            $structured[] = [
+                '_type' => 'subtotal',
+                'group_label' => $currentGroup,
+                'total' => $sub['total'],
+                'on_time' => $sub['on_time'],
+                'overdue' => $sub['overdue'],
+                'pending' => $sub['pending'],
+            ];
+        }
+
+        return $structured;
     }
 
     private function buildEquipmentQuery(Request $request, array $filters)

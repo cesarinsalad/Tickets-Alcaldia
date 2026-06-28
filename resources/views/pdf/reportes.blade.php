@@ -49,9 +49,12 @@
     </div>
     @endif
 
-    @if($rows->isEmpty())
+    @if(empty($rows))
         <p style="text-align:center; color:#999; padding: 30px;">No se encontraron registros con los filtros seleccionados.</p>
     @else
+    @php
+        $isGrouped = isset($groupBy) && $groupBy !== 'none' && $groupBy !== null;
+    @endphp
     <table class="data">
         <thead>
             <tr>
@@ -62,19 +65,51 @@
         </thead>
         <tbody>
             @foreach($rows as $row)
-            <tr>
-                @foreach($columns as $col)
-                    @php
-                        $value = data_get($row, $col['key'], '—');
-                        if ($value instanceof \DateTimeInterface) {
-                            $value = $value->format('d/m/Y H:i');
-                        } elseif (is_bool($value)) {
-                            $value = $value ? 'Sí' : 'No';
-                        }
-                    @endphp
-                    <td>{{ $value ?? '—' }}</td>
-                @endforeach
-            </tr>
+                @php
+                    $rowType = data_get($row, '_type', 'ticket');
+                @endphp
+                @if($rowType === 'group_header')
+                    <tr style="background: #1E3A5F; color: #fff;">
+                        <td colspan="{{ count($columns) }}" style="padding: 6px 10px;">
+                            <strong style="font-size: 8.5pt;">{{ data_get($row, 'group_label', '—') }}</strong>
+                            <span style="opacity: 0.85; font-weight: normal; margin-left: 4px;">
+                                ({{ data_get($row, 'group_total', 0) }} ticket{{ data_get($row, 'group_total', 0) == 1 ? '' : 's' }})
+                            </span>
+                        </td>
+                    </tr>
+                @elseif($rowType === 'subtotal')
+                    <tr style="background: #f1f5f9;">
+                        <td colspan="{{ count($columns) }}" style="padding: 4px 10px; font-style: italic; font-size: 7.5pt; color: #475569;">
+                            <strong>Subtotal {{ data_get($row, 'group_label', '—') }}:</strong>
+                            <span style="margin-left: 4px;">{{ data_get($row, 'total', 0) }} ticket(s)</span>
+                            @if(data_get($row, 'on_time', 0) > 0)
+                                <span style="color: #166534; margin-left: 6px;">{{ data_get($row, 'on_time') }} a tiempo</span>
+                            @endif
+                            @if(data_get($row, 'overdue', 0) > 0)
+                                <span style="color: #991b1b; margin-left: 6px;">{{ data_get($row, 'overdue') }} vencidos</span>
+                            @endif
+                            @if(data_get($row, 'pending', 0) > 0)
+                                <span style="color: #475569; margin-left: 6px;">{{ data_get($row, 'pending') }} pendientes</span>
+                            @endif
+                        </td>
+                    </tr>
+                @elseif($rowType === 'group_spacer')
+                    <tr><td colspan="{{ count($columns) }}" style="padding: 2px;"></td></tr>
+                @else
+                    <tr>
+                        @foreach($columns as $col)
+                            @php
+                                $value = data_get($row, $col['key'], '—');
+                                if ($value instanceof \DateTimeInterface) {
+                                    $value = $value->format('d/m/Y H:i');
+                                } elseif (is_bool($value)) {
+                                    $value = $value ? 'Sí' : 'No';
+                                }
+                            @endphp
+                            <td>{{ $value ?? '—' }}</td>
+                        @endforeach
+                    </tr>
+                @endif
             @endforeach
         </tbody>
     </table>
