@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -17,6 +18,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithEvents, Responsable
 {
+    use Exportable;
+
     private string $fileName = 'reporte.xlsx';
     private string $writerType = Excel::XLSX;
     private array $headers = [
