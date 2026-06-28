@@ -65,34 +65,6 @@ function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
 }
 
 function SuperAdminDashboard({ kpis, extra }) {
-    const crit = extra.critical_expired;
-    const sort = extra.critical_sort || 'entry_date';
-    const dir = extra.critical_dir || 'desc';
-
-    function handleSort(col) {
-        const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
-        router.get(route('dashboard'), {
-            date_from: extra.date_from,
-            date_to: extra.date_to,
-            critical_sort: col,
-            critical_dir: newDir,
-            critical_page: 1,
-        }, { preserveState: true, replace: true });
-    }
-
-    function SortIcon({ col }) {
-        if (sort !== col) return null;
-        return dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
-    }
-
-    function SortHeader({ col, children }) {
-        return (
-            <th className="px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort(col)}>
-                {children}
-                <SortIcon col={col} />
-            </th>
-        );
-    }
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -101,64 +73,6 @@ function SuperAdminDashboard({ kpis, extra }) {
                 <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro de su plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
                 <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
             </div>
-
-            {crit.data?.length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-white">
-                    <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-red-100 bg-red-50/50">
-                        <div className="flex items-center gap-2">
-                            <AlertOctagon className="h-4 w-4 text-red-600" />
-                            <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Vencidos</h3>
-                        </div>
-                        <Link href={route('tickets.index', { critical_overdue: 1 })}>
-                            <Button variant="ghost" size="sm" className="text-red-700 hover:text-red-900 hover:bg-red-100">
-                                Ver todos
-                                <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                            </Button>
-                        </Link>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <SortHeader col="code">Código</SortHeader>
-                                    <SortHeader col="title">Título</SortHeader>
-                                    <SortHeader col="priority">Prioridad</SortHeader>
-                                    <SortHeader col="status">Estado</SortHeader>
-                                    <SortHeader col="department">Departamento</SortHeader>
-                                    <SortHeader col="assigned">Asignado</SortHeader>
-                                    <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gris-borde">
-                                {crit.data.map(t => (
-                                    <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-red-50/30 transition-colors cursor-pointer">
-                                        <td className="px-5 py-3">
-                                            <span className="font-mono text-azul-institucional">{t.code}</span>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-600">{statusLabels[t.status] || t.status}</td>
-                                        <td className="px-5 py-3 text-gray-600">{t.department || '—'}</td>
-                                        <td className="px-5 py-3 text-gray-600">{t.assigned || '—'}</td>
-                                        <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    {crit.links && crit.links.length > 3 && (
-                        <div className="px-5 py-3 border-t border-gris-borde">
-                            <Pagination
-                                links={crit.links}
-                                total={crit.total}
-                                perPage={crit.per_page || 10}
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
 
             <div className="rounded-lg border border-gris-borde bg-white">
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
@@ -219,35 +133,6 @@ function SuperAdminDashboard({ kpis, extra }) {
 }
 
 function AdminTicketsDashboard({ extra }) {
-    const crit = extra.critical_expired;
-    const sort = extra.critical_sort || 'entry_date';
-    const dir = extra.critical_dir || 'desc';
-
-    function handleSort(col) {
-        const newDir = sort === col && dir === 'asc' ? 'desc' : 'asc';
-        router.get(route('dashboard'), {
-            date_from: extra.date_from,
-            date_to: extra.date_to,
-            critical_sort: col,
-            critical_dir: newDir,
-            critical_page: 1,
-        }, { preserveState: true, replace: true });
-    }
-
-    function SortIcon({ col }) {
-        if (sort !== col) return null;
-        return dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
-    }
-
-    function SortHeader({ col, children, className = '' }) {
-        return (
-            <th className={`px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700 ${className}`} onClick={() => handleSort(col)}>
-                {children}
-                <SortIcon col={col} />
-            </th>
-        );
-    }
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -256,64 +141,6 @@ function AdminTicketsDashboard({ extra }) {
                 <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro de su plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
                 <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
             </div>
-
-            {crit?.data?.length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-white">
-                    <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-red-100 bg-red-50/50">
-                        <div className="flex items-center gap-2">
-                            <AlertOctagon className="h-4 w-4 text-red-600" />
-                            <h3 className="text-sm font-semibold text-red-800 uppercase tracking-wide">Tickets Vencidos</h3>
-                        </div>
-                        <Link href={route('tickets.index', { critical_overdue: 1 })}>
-                            <Button variant="ghost" size="sm" className="text-red-700 hover:text-red-900 hover:bg-red-100">
-                                Ver todos
-                                <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                            </Button>
-                        </Link>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <SortHeader col="code">Código</SortHeader>
-                                    <SortHeader col="title">Título</SortHeader>
-                                    <SortHeader col="priority">Prioridad</SortHeader>
-                                    <SortHeader col="status">Estado</SortHeader>
-                                    <SortHeader col="department">Departamento</SortHeader>
-                                    <SortHeader col="assigned">Asignado</SortHeader>
-                                    <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gris-borde">
-                                {crit.data.map(t => (
-                                    <tr key={t.id} onClick={() => router.visit(route('tickets.show', t.id))} className="hover:bg-red-50/30 transition-colors cursor-pointer">
-                                        <td className="px-5 py-3">
-                                            <span className="font-mono text-azul-institucional">{t.code}</span>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-600">{statusLabels[t.status] || t.status}</td>
-                                        <td className="px-5 py-3 text-gray-600">{t.department || '—'}</td>
-                                        <td className="px-5 py-3 text-gray-600">{t.assigned || '—'}</td>
-                                        <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    {crit.links && crit.links.length > 3 && (
-                        <div className="px-5 py-3 border-t border-gris-borde">
-                            <Pagination
-                                links={crit.links}
-                                total={crit.total}
-                                perPage={crit.per_page || 10}
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
 
             <div className="rounded-lg border border-gris-borde bg-white">
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">

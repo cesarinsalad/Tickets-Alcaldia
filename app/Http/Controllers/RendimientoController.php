@@ -48,6 +48,44 @@ class RendimientoController extends Controller
             ->distinct('assigned_id')
             ->count('assigned_id');
 
+        // --- Critical/Expired Tickets Table ---
+        $activeStatusValues = array_map(fn ($s) => $s->value, $activeStatuses);
+
+        $criticalRaw = Ticket::query()
+            ->with(['creator.department', 'category', 'assigned'])
+            ->whereIn('status', $activeStatusValues)
+            ->where(function ($q) {
+                $q->where('priority', TicketPriority::Critica)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNotNull('sla_resolution_deadline')
+                            ->where('sla_resolution_deadline', '<', now());
+                    });
+            })
+            ->orderBy('entry_date', 'desc')
+            ->paginate(10, ['*'], 'critical_page')
+            ->withQueryString();
+
+        $criticalExpired = [
+            'data' => $criticalRaw->getCollection()->map(fn ($t) => [
+                'id' => $t->id,
+                'code' => $t->code,
+                'title' => $t->title,
+                'priority' => $t->priority->value,
+                'priority_label' => $t->priority->label(),
+                'status' => $t->status->value,
+                'status_label' => $t->status->label(),
+                'department' => $t->creator?->department?->name,
+                'assigned' => $t->assigned?->full_name,
+                'category' => $t->category?->name,
+                'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+                'sla_deadline_raw' => $t->sla_resolution_deadline?->toIso8601String(),
+                'entry_date_raw' => $t->entry_date?->toIso8601String(),
+            ])->values()->toArray(),
+            'links' => $criticalRaw->toArray()['links'] ?? [],
+            'total' => $criticalRaw->total(),
+            'per_page' => $criticalRaw->perPage(),
+        ];
+
         // --- Trend Data (Created vs Resolved) ---
         $trendGranularity = $request->input('trend_granularity', 'weeks');
 
@@ -144,6 +182,7 @@ class RendimientoController extends Controller
             'trendData' => $trendData,
             'trendGranularity' => $trendGranularity,
             'technicianWorkload' => $technicianWorkload,
+            'criticalExpired' => $criticalExpired,
             'dateFrom' => $dateFrom->toDateString(),
             'dateTo' => $dateTo->toDateString(),
         ]);
