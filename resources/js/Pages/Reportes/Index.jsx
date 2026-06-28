@@ -166,11 +166,11 @@ export default function Index({
                     </div>
 
                     {/* Step 2: Templates */}
-                    {source && (
-                        <div className="rounded-lg border border-gris-borde bg-white p-4">
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                                <LayoutTemplate className="h-3.5 w-3.5" /> Paso 2: Plantillas
-                            </p>
+                    <div className="rounded-lg border border-gris-borde bg-white p-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                            <LayoutTemplate className="h-3.5 w-3.5" /> Paso 2: Plantillas
+                        </p>
+                        {source ? (
                             <div className="space-y-2">
                                 {templates
                                     .filter(tpl => tpl.source === source)
@@ -188,17 +188,21 @@ export default function Index({
                                         </button>
                                     ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="text-xs text-gray-400 py-2">Selecciona un origen de datos para ver las plantillas.</p>
+                        )}
+                    </div>
 
                     {/* Step 3: Dynamic Filters */}
-                    {source && (
-                        <div className="rounded-lg border border-gris-borde bg-white p-4">
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                                <Search className="h-3.5 w-3.5" /> Paso 3: Filtros
-                            </p>
+                    <div className="rounded-lg border border-gris-borde bg-white p-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                            <Search className="h-3.5 w-3.5" /> Paso 3: Filtros
+                        </p>
 
-                            {/* Tickets Filters */}
+                        {!source ? (
+                            <p className="text-xs text-gray-400 py-2">Selecciona un origen de datos para ver los filtros disponibles.</p>
+                        ) : (
+                            <>
                             {source === 'tickets' && (
                                 <div className="space-y-3">
                                     <div>
@@ -253,7 +257,6 @@ export default function Index({
                                 </div>
                             )}
 
-                            {/* Equipments Filters */}
                             {source === 'equipments' && (
                                 <div className="space-y-3">
                                     <div>
@@ -284,7 +287,6 @@ export default function Index({
                                 </div>
                             )}
 
-                            {/* Users Filters */}
                             {source === 'users' && (
                                 <div className="space-y-3">
                                     <div>
@@ -316,7 +318,6 @@ export default function Index({
                                 </div>
                             )}
 
-                            {/* Categories Filters */}
                             {source === 'categories' && (
                                 <div className="space-y-3">
                                     <div>
@@ -330,7 +331,6 @@ export default function Index({
                                 </div>
                             )}
 
-                            {/* Departments Filters */}
                             {source === 'departments' && (
                                 <div className="space-y-3">
                                     <div>
@@ -343,8 +343,9 @@ export default function Index({
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    )}
+                            </>
+                        )}
+                    </div>
 
                     {/* Step 4: Actions */}
                     <div className="rounded-lg border border-gris-borde bg-white p-4 space-y-2">
