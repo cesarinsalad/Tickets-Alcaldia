@@ -233,17 +233,18 @@ export default function GenerateReportModal({ ticket, departments = [], onClose 
                         </div>
                         <div className="sm:col-span-2">
                             <Label htmlFor="ir_department">Departamento de Origen</Label>
-                            <Select
-                                id="ir_department"
-                                value={departmentId}
-                                onChange={e => setDepartmentId(e.target.value)}
-                                className="mt-1"
-                            >
-                                <option value="">Sin asignar</option>
-                                {departments.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
-                            </Select>
+                            <div className="mt-2">
+                                <Select
+                                    id="ir_department"
+                                    value={departmentId}
+                                    onChange={e => setDepartmentId(e.target.value)}
+                                >
+                                    <option value="">Sin asignar</option>
+                                    {departments.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                    ))}
+                                </Select>
+                            </div>
                             <InputError message={errors.department_id} />
                         </div>
                     </div>

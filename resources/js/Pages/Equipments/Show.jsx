@@ -189,12 +189,14 @@ export default function Show({ equipment, departments = [], canManageEquipment =
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="text-xs text-gray-500 mb-1 block">Departamento</label>
-                                    <Select value={form.department_id} onChange={e => handleChange('department_id', e.target.value)} className="text-sm">
-                                        <option value="">Sin asignar</option>
-                                        {departments.map(d => (
-                                            <option key={d.id} value={d.id}>{d.name}</option>
-                                        ))}
-                                    </Select>
+                                    <div className="mt-2">
+                                        <Select value={form.department_id} onChange={e => handleChange('department_id', e.target.value)} className="text-sm">
+                                            <option value="">Sin asignar</option>
+                                            {departments.map(d => (
+                                                <option key={d.id} value={d.id}>{d.name}</option>
+                                            ))}
+                                        </Select>
+                                    </div>
                                     {errors.department_id && <p className="text-xs text-red-600 mt-1">{errors.department_id}</p>}
                                 </div>
                             </div>
