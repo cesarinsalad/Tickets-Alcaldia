@@ -1,8 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, X, FolderTree } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, FolderTree, TrendingUp, CircleOff, Ticket } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
+import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import InputError from '@/Components/InputError';
@@ -78,7 +79,7 @@ function CategoryModal({ mode, category, onClose }) {
     );
 }
 
-export default function Index({ categories, filters }) {
+export default function Index({ categories, filters, totalCount, unusedCount, mostUsedName, mostUsedCount }) {
     const [search, setSearch] = useState(filters.search || '');
     const [modal, setModal] = useState(null);
 
@@ -125,6 +126,33 @@ export default function Index({ categories, filters }) {
                 />
             )}
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-azul-institucional bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total categorías</p>
+                        <FolderTree className="h-5 w-5 text-azul-institucional" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{totalCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Categorías registradas en el sistema</p>
+                </div>
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-verde-exito bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Más usada</p>
+                        <TrendingUp className="h-5 w-5 text-verde-exito" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold text-gray-900 truncate">{mostUsedName ?? '—'}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">{mostUsedCount > 0 ? `${mostUsedCount} tickets` : 'Sin datos'}</p>
+                </div>
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-gray-400 bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sin uso</p>
+                        <CircleOff className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{unusedCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Categorías sin tickets asociados</p>
+                </div>
+            </div>
+
             <div className="space-y-4">
                 <div className="rounded-lg border border-gris-borde bg-white p-4">
                     <form onSubmit={handleSearch} className="flex gap-3">
@@ -156,13 +184,28 @@ export default function Index({ categories, filters }) {
                         <div className="divide-y divide-gris-borde">
                             {categories.data.map(cat => (
                                 <div key={cat.id} className="flex items-center justify-between p-4">
-                                    <div>
+                                    <div className="min-w-0 flex-1">
                                         <p className="text-sm font-medium text-gray-900">{cat.name}</p>
                                         {cat.description && (
-                                            <p className="text-xs text-gray-500">{cat.description}</p>
+                                            <p className="text-xs text-gray-500 truncate">{cat.description}</p>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-3 shrink-0 ml-4">
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="default" className="text-xs gap-1">
+                                                <Ticket className="h-3 w-3" />
+                                                {cat.tickets_count}
+                                            </Badge>
+                                            {cat.active_tickets_count > 0 ? (
+                                                <Badge variant="warning" className="text-xs">
+                                                    {cat.active_tickets_count} activos
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="secondary" className="text-xs">
+                                                    0 activos
+                                                </Badge>
+                                            )}
+                                        </div>
                                         <Button variant="ghost" size="sm" onClick={() => setModal(cat)}>
                                             <Pencil className="h-4 w-4" />
                                         </Button>

@@ -15,7 +15,11 @@ class CategoryController extends Controller
             abort(403, 'No autorizado.');
         }
 
-        $query = Category::query();
+        $query = Category::query()
+            ->withCount('tickets')
+            ->withCount(['tickets as active_tickets_count' => function ($q) {
+                $q->whereIn('status', ['abierto', 'en_proceso', 'pendiente_informacion']);
+            }]);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -29,9 +33,20 @@ class CategoryController extends Controller
 
         $categories = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
+        $totalCount = Category::count();
+        $unusedCount = Category::whereDoesntHave('tickets')->count();
+
+        $mostUsed = Category::withCount('tickets')
+            ->orderByDesc('tickets_count')
+            ->first();
+
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
             'filters' => $request->only(['search', 'per_page']),
+            'totalCount' => $totalCount,
+            'unusedCount' => $unusedCount,
+            'mostUsedName' => $mostUsed && $mostUsed->tickets_count > 0 ? $mostUsed->name : null,
+            'mostUsedCount' => $mostUsed ? $mostUsed->tickets_count : 0,
         ]);
     }
 
