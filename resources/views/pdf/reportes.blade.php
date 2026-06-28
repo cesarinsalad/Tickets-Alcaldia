@@ -21,6 +21,9 @@
         table.data th { background: #1e3a5f; color: #fff; padding: 6px 8px; font-size: 7pt; text-transform: uppercase; text-align: left; }
         table.data td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; font-size: 7.5pt; }
         table.data tr:nth-child(even) td { background: #f8fafc; }
+        table.data tr.group-header-row td { background: #1E3A5F !important; color: #fff !important; }
+        table.data tr.subtotal-row td { background: #f1f5f9 !important; }
+        table.data tr.group-spacer-row td { background: transparent !important; }
         .footer { position: fixed; bottom: -2.0cm; left: 0; right: 0; height: 1.2cm; border-top: 1px solid #d0d5dd; font-size: 7pt; color: #999; }
     </style>
 </head>
@@ -69,16 +72,16 @@
                     $rowType = data_get($row, '_type', 'ticket');
                 @endphp
                 @if($rowType === 'group_header')
-                    <tr style="background: #1E3A5F; color: #fff;">
+                    <tr class="group-header-row">
                         <td colspan="{{ count($columns) }}" style="padding: 6px 10px;">
                             <strong style="font-size: 8.5pt;">{{ data_get($row, 'group_label', '—') }}</strong>
                             <span style="opacity: 0.85; font-weight: normal; margin-left: 4px;">
-                                ({{ data_get($row, 'group_total', 0) }} ticket{{ data_get($row, 'group_total', 0) == 1 ? '' : 's' }})
+                                ({{ data_get($row, 'group_total', 0) }} {{ ($source ?? 'tickets') === 'tickets' ? 'ticket' : 'equipo' }}{{ data_get($row, 'group_total', 0) == 1 ? '' : 's' }})
                             </span>
                         </td>
                     </tr>
                 @elseif($rowType === 'subtotal')
-                    <tr style="background: #f1f5f9;">
+                    <tr class="subtotal-row">
                         <td colspan="{{ count($columns) }}" style="padding: 4px 10px; font-style: italic; font-size: 7.5pt; color: #475569;">
                             <strong>Subtotal {{ data_get($row, 'group_label', '—') }}:</strong>
                             <span style="margin-left: 4px;">{{ data_get($row, 'total', 0) }} {{ ($source ?? 'tickets') === 'tickets' ? 'ticket(s)' : 'equipo(s)' }}</span>
@@ -100,7 +103,7 @@
                         </td>
                     </tr>
                 @elseif($rowType === 'group_spacer')
-                    <tr><td colspan="{{ count($columns) }}" style="padding: 2px;"></td></tr>
+                    <tr class="group-spacer-row"><td colspan="{{ count($columns) }}" style="padding: 2px;"></td></tr>
                 @else
                     <tr>
                         @foreach($columns as $col)

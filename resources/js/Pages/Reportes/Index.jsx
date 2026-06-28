@@ -589,10 +589,10 @@ export default function Index({
                                                     lastGroupIndex = i;
                                                     const totalForGroup = groupSubtotals?.[currentGroup]?.total ?? '?';
                                                     elements.push(
-                                                        <tr key={`grp-${i}`} className="bg-azul-institucional/10">
-                                                            <td colSpan={columns.length} className="px-4 py-2 text-xs font-semibold text-azul-institucional">
+                                                        <tr key={`grp-${i}`} className="bg-blue-50">
+                                                            <td colSpan={columns.length} className="px-4 py-2 text-xs font-semibold text-blue-900">
                                                                 <span className="inline-flex items-center gap-2">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-azul-institucional" />
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
                                                                     {currentGroup}
                                                                     <span className="text-gray-500 font-normal">({totalForGroup} ticket{totalForGroup === 1 ? '' : 's'})</span>
                                                                 </span>
@@ -636,10 +636,16 @@ export default function Index({
                                                     <tr key={`sub-${lastGroupIndex}-end`} className="bg-gray-50 text-xs">
                                                         <td colSpan={columns.length} className="px-4 py-1.5 italic text-gray-600">
                                                             <span className="font-semibold">Subtotal {lastGroup}:</span>
-                                                            <span className="ml-3">{sub.total} ticket(s)</span>
-                                                            {sub.on_time > 0 && <span className="ml-2 text-green-700">{sub.on_time} a tiempo</span>}
-                                                            {sub.overdue > 0 && <span className="ml-2 text-red-700">{sub.overdue} vencidos</span>}
-                                                            {sub.pending > 0 && <span className="ml-2 text-gray-600">{sub.pending} pendientes</span>}
+                                                            <span className="ml-3">{sub.total} {source === 'tickets' ? 'ticket(s)' : 'equipo(s)'}</span>
+                                                            {source === 'tickets' ? (
+                                                                <>
+                                                                    {sub.on_time > 0 && <span className="ml-2 text-green-700">{sub.on_time} a tiempo</span>}
+                                                                    {sub.overdue > 0 && <span className="ml-2 text-red-700">{sub.overdue} vencidos</span>}
+                                                                    {sub.pending > 0 && <span className="ml-2 text-gray-600">{sub.pending} pendientes</span>}
+                                                                </>
+                                                            ) : (
+                                                                (sub.interventions || 0) > 0 && <span className="ml-2 text-azul-institucional">{sub.interventions} intervenciones</span>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 );
