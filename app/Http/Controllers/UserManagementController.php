@@ -57,11 +57,30 @@ class UserManagementController extends Controller
             'label' => $this->roleLabel($r->name) ?? ucfirst($r->name),
         ]);
 
+        $activeCount = User::where('is_active', true)->count();
+
+        $recentActiveCount = User::where('is_active', true)
+            ->whereHas('createdTickets', function ($q) {
+                $q->where('entry_date', '>=', now()->subDays(30));
+            })
+            ->count();
+
+        $departmentDistribution = Department::select('id', 'name')
+            ->withCount('users')
+            ->orderByDesc('users_count')
+            ->get()
+            ->filter(fn ($d) => $d->users_count > 0)
+            ->values()
+            ->map(fn ($d) => ['id' => $d->id, 'name' => $d->name, 'count' => $d->users_count]);
+
         return Inertia::render('Users/Index', [
             'users' => $users,
             'departments' => $departments,
             'roles' => $roles,
             'filters' => $request->only(['search', 'role', 'department', 'status', 'per_page']),
+            'activeCount' => $activeCount,
+            'recentActiveCount' => $recentActiveCount,
+            'departmentDistribution' => $departmentDistribution,
         ]);
     }
 

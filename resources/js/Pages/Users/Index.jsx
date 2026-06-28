@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Shield, Check, X, Trash2, Pencil, Key, UserCheck, UserX, Users } from 'lucide-react';
+import { Plus, Search, Shield, Check, X, Trash2, Pencil, Key, UserCheck, UserX, Users, Activity } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
@@ -17,7 +17,7 @@ const roleLabels = {
     solicitante: 'Solicitante',
 };
 
-export default function Index({ users, departments, roles, filters }) {
+export default function Index({ users, departments, roles, filters, activeCount, recentActiveCount }) {
     const { auth } = usePage().props;
     const currentUser = auth?.user;
     const isSuperAdmin = currentUser?.roles?.some(r => r.name === 'super_admin');
@@ -55,6 +55,25 @@ export default function Index({ users, departments, roles, filters }) {
             }
         >
             <Head title="Usuarios" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-verde-exito bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Usuarios activos</p>
+                        <UserCheck className="h-5 w-5 text-verde-exito" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{activeCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Usuarios activos en el sistema</p>
+                </div>
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-azul-institucional bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Activos 30 días</p>
+                        <Activity className="h-5 w-5 text-azul-institucional" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{recentActiveCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Usuarios que crearon tickets en el último mes</p>
+                </div>
+            </div>
 
             <div className="space-y-4">
                 <div className="rounded-lg border border-gris-borde bg-white p-4">
