@@ -29,11 +29,6 @@ class ReportesController extends Controller
             'source' => 'equipments',
             'filters' => ['disk_type' => 'HDD', 'ram_max' => 8],
         ],
-        'auditoria_accesos' => [
-            'label' => 'Auditoría de Accesos',
-            'source' => 'users',
-            'filters' => ['role' => 'tecnico,admin_tickets,super_admin'],
-        ],
     ];
 
     private const COLUMNS = [
@@ -58,14 +53,6 @@ class ReportesController extends Controller
             ['key' => 'storage_disk', 'label' => 'Disco'],
             ['key' => 'interventions_count', 'label' => 'Total Intervenciones'],
         ],
-        'users' => [
-            ['key' => 'full_name', 'label' => 'Nombre'],
-            ['key' => 'email', 'label' => 'Email'],
-            ['key' => 'phone_number', 'label' => 'Teléfono'],
-            ['key' => 'role_label', 'label' => 'Rol'],
-            ['key' => 'department_name', 'label' => 'Departamento'],
-            ['key' => 'is_active', 'label' => 'Activo', 'format' => 'boolean'],
-        ],
     ];
 
     public function index(Request $request)
@@ -79,7 +66,6 @@ class ReportesController extends Controller
         $departments = Department::orderBy('name')->get(['id', 'name']);
         $technicians = User::role('tecnico')->where('is_active', true)->orderBy('name')->get(['id', 'name', 'last_name']);
         $equipmentBrands = Equipment::whereNotNull('brand')->distinct()->orderBy('brand')->pluck('brand');
-        $roles = ['solicitante', 'tecnico', 'admin_departamento', 'admin_tickets', 'super_admin'];
         $categories = Category::orderBy('name')->get(['id', 'name']);
 
         $rows = null;
@@ -93,7 +79,6 @@ class ReportesController extends Controller
             $query = match ($source) {
                 'tickets' => $this->buildTicketQuery($request, $filters),
                 'equipments' => $this->buildEquipmentQuery($request, $filters),
-                'users' => $this->buildUserQuery($request, $filters),
                 default => null,
             };
 
@@ -136,7 +121,6 @@ class ReportesController extends Controller
                 'full_name' => $u->full_name,
             ]),
             'equipmentBrands' => $equipmentBrands,
-            'roles' => $roles,
             'categories' => $categories,
             'dateFrom' => $filters['date_from'] ?? null,
             'dateTo' => $filters['date_to'] ?? null,
@@ -222,7 +206,6 @@ class ReportesController extends Controller
         $query = match ($source) {
             'tickets' => $this->buildTicketQuery($request, $filters),
             'equipments' => $this->buildEquipmentQuery($request, $filters),
-            'users' => $this->buildUserQuery($request, $filters),
             default => abort(400),
         };
 
@@ -243,7 +226,6 @@ class ReportesController extends Controller
         $sourceLabels = [
             'tickets' => 'Tickets',
             'equipments' => 'Equipos',
-            'users' => 'Usuarios',
         ];
 
         $title = 'Reporte de ' . ($sourceLabels[$source] ?? $source);
@@ -289,7 +271,6 @@ class ReportesController extends Controller
         $query = match ($source) {
             'tickets' => $this->buildTicketQuery($request, $filters),
             'equipments' => $this->buildEquipmentQuery($request, $filters),
-            'users' => $this->buildUserQuery($request, $filters),
             default => abort(400),
         };
 
@@ -308,7 +289,6 @@ class ReportesController extends Controller
         $sourceLabels = [
             'tickets' => 'Tickets',
             'equipments' => 'Equipos',
-            'users' => 'Usuarios',
         ];
         $title = 'Reporte de ' . ($sourceLabels[$source] ?? $source);
 
@@ -343,11 +323,6 @@ class ReportesController extends Controller
             $filters['ram_max'] = $request->input('ram_max');
             $filters['disk_type'] = $request->input('disk_type');
             $filters['sku'] = $request->input('sku');
-            $filters['group_by'] = $request->input('group_by') ?: 'none';
-        } elseif ($sourceParam === 'users') {
-            $filters['role'] = $request->input('role');
-            $filters['department_id'] = $request->input('department_id');
-            $filters['is_active'] = $request->input('is_active');
             $filters['group_by'] = $request->input('group_by') ?: 'none';
         }
 
@@ -494,15 +469,6 @@ class ReportesController extends Controller
                 ['value' => 'storage', 'label' => 'Almacenamiento'],
                 ['value' => 'department', 'label' => 'Departamento'],
             ],
-            'users' => [
-                ['value' => 'none', 'label' => 'Ninguno'],
-                ['value' => 'role', 'label' => 'Rol'],
-                ['value' => 'department', 'label' => 'Departamento'],
-                ['value' => 'is_active', 'label' => 'Estado'],
-            ],
-            'departments' => [
-                ['value' => 'none', 'label' => 'Ninguno'],
-            ],
             default => [['value' => 'none', 'label' => 'Ninguno']],
         };
     }
@@ -522,10 +488,6 @@ class ReportesController extends Controller
                 return $row['sla_status'] ?? 'Sin resolución';
             case 'assigned':
                 return $row['assigned_name'] ?? 'Sin asignar';
-            case 'role':
-                return $row['role_label'] ?? 'Sin rol';
-            case 'is_active':
-                return $row['is_active'] ? 'Activo' : 'Inactivo';
             case 'brand':
                 return $row['brand'] ?? 'Sin marca';
             case 'ram':
@@ -698,26 +660,6 @@ class ReportesController extends Controller
         return $query;
     }
 
-    private function buildUserQuery(Request $request, array $filters)
-    {
-        $query = User::query()->with('department', 'roles');
-
-        if (! empty($filters['role'])) {
-            $roles = explode(',', $filters['role']);
-            $query->role($roles);
-        }
-
-        if (! empty($filters['department_id'])) {
-            $query->where('department_id', $filters['department_id']);
-        }
-
-        if (isset($filters['is_active']) && $filters['is_active'] !== '' && $filters['is_active'] !== null) {
-            $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN));
-        }
-
-        return $query->orderBy('name');
-    }
-
     private function filterLabel(string $key, mixed $value): ?string
     {
         return match ($key) {
@@ -732,8 +674,6 @@ class ReportesController extends Controller
             'ram_max' => 'RAM máx: <strong>' . e((string) $value) . ' GB</strong>',
             'disk_type' => 'Disco: <strong>' . e($value) . '</strong>',
             'sku' => 'SKU: <strong>' . e($value) . '</strong>',
-            'role' => 'Rol: <strong>' . e($value) . '</strong>',
-            'is_active' => 'Estado: <strong>' . (filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'Activo' : 'Inactivo') . '</strong>',
             'date_from', 'date_to', 'source', 'template' => null,
             default => null,
         };
@@ -749,8 +689,6 @@ class ReportesController extends Controller
             'status' => 'Estado',
             'resolution' => 'Resolución (SLA)',
             'assigned' => 'Técnico',
-            'role' => 'Rol',
-            'is_active' => 'Estado',
             'brand' => 'Marca',
             'model' => 'Modelo',
             default => $value,

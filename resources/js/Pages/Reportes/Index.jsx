@@ -12,13 +12,11 @@ const SOURCES = [
     { value: '', label: 'Seleccionar origen...' },
     { value: 'tickets', label: 'Tickets' },
     { value: 'equipments', label: 'Equipos (Inventario)' },
-    { value: 'users', label: 'Usuarios' },
 ];
 
 const SOURCE_LABELS = {
     tickets: 'Tickets',
     equipments: 'Equipos',
-    users: 'Usuarios',
 };
 
 const GROUP_BY_OPTIONS_BY_SOURCE = {
@@ -38,12 +36,6 @@ const GROUP_BY_OPTIONS_BY_SOURCE = {
         { value: 'storage', label: 'Almacenamiento' },
         { value: 'department', label: 'Departamento' },
     ],
-    users: [
-        { value: 'none', label: 'Ninguno' },
-        { value: 'role', label: 'Rol' },
-        { value: 'department', label: 'Departamento' },
-        { value: 'is_active', label: 'Estado' },
-    ],
     '': [{ value: 'none', label: 'Ninguno' }],
 };
 
@@ -53,7 +45,7 @@ export default function Index({
     source: initialSource, template: initialTemplate,
     filters: initialFilters, columns, rows,
     groupSubtotals, groupBy: initialGroupBy,
-    templates, departments, technicians, equipmentBrands, roles, categories,
+    templates, departments, technicians, equipmentBrands, categories,
     dateFrom, dateTo,
 }) {
     const [source, setSource] = useState(initialSource || '');
@@ -70,8 +62,6 @@ export default function Index({
     const [brand, setBrand] = useState(initialFilters?.brand || '');
     const [ramMax, setRamMax] = useState(initialFilters?.ram_max ?? '');
     const [diskType, setDiskType] = useState(initialFilters?.disk_type || '');
-    const [roleFilter, setRoleFilter] = useState(initialFilters?.role || '');
-    const [isActive, setIsActive] = useState(initialFilters?.is_active ?? '');
 
     const groupByOptions = useMemo(
         () => GROUP_BY_OPTIONS_BY_SOURCE[source] || DEFAULT_GROUP_BY_OPTIONS,
@@ -103,15 +93,10 @@ export default function Index({
             if (ramMax) f.ram_max = ramMax;
             if (diskType) f.disk_type = diskType;
             if (groupBy && groupBy !== 'none') f.group_by = groupBy;
-        } else if (source === 'users') {
-            if (roleFilter) f.role = roleFilter;
-            if (departmentId) f.department_id = departmentId;
-            if (isActive !== '') f.is_active = isActive;
-            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         }
 
         return f;
-    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType, roleFilter, isActive]);
+    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType]);
 
     function handleSourceChange(newSource) {
         setSource(newSource);
@@ -126,8 +111,6 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
-        setRoleFilter('');
-        setIsActive('');
     }
 
     function handleTemplateClick(tpl) {
@@ -143,8 +126,6 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
-        setRoleFilter('');
-        setIsActive('');
         setFrom('');
         setTo('');
 
@@ -156,7 +137,6 @@ export default function Index({
         if (f.brand) setBrand(f.brand);
         if (f.ram_max !== undefined) setRamMax(f.ram_max);
         if (f.disk_type) setDiskType(f.disk_type);
-        if (f.role) setRoleFilter(f.role);
     }
 
     function handlePreview() {
@@ -176,8 +156,6 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
-        setRoleFilter('');
-        setIsActive('');
         router.get(route('reportes.index'), {}, { preserveState: true, replace: true });
     }
 
@@ -393,39 +371,6 @@ export default function Index({
                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                                             ))}
                                         </Select>
-                                    </div>
-                                </div>
-                            )}
-
-                            {source === 'users' && (
-                                <div>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">Rol</label>
-                                            <Select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="w-full text-xs">
-                                                <option value="">Todos</option>
-                                                {roles.map(r => (
-                                                    <option key={r} value={r}>{r === 'solicitante' ? 'Solicitante' : r === 'tecnico' ? 'Técnico' : r === 'admin_departamento' ? 'Admin Departamento' : r === 'admin_tickets' ? 'Admin Tickets' : r === 'super_admin' ? 'Super Admin' : r}</option>
-                                                ))}
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">Departamento</label>
-                                            <Select value={departmentId} onChange={e => setDepartmentId(e.target.value)} className="w-full text-xs">
-                                                <option value="">Todos</option>
-                                                {departments.map(d => (
-                                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                                ))}
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">Estado</label>
-                                            <Select value={isActive} onChange={e => setIsActive(e.target.value)} className="w-full text-xs">
-                                                <option value="">Todos</option>
-                                                <option value="1">Activo</option>
-                                                <option value="0">Inactivo</option>
-                                            </Select>
-                                        </div>
                                     </div>
                                 </div>
                             )}
