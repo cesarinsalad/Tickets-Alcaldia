@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Building, X, Building2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Building, X, Building2, Users } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -89,7 +89,7 @@ function DepartmentModal({ mode, dept, availableAdmins, onClose }) {
     );
 }
 
-export default function Index({ departments, filters, availableAdmins }) {
+export default function Index({ departments, filters, availableAdmins, totalCount, largestDeptName, largestDeptCount }) {
     const [search, setSearch] = useState(filters.search || '');
     const [modal, setModal] = useState(null);
 
@@ -127,6 +127,25 @@ export default function Index({ departments, filters, availableAdmins }) {
             }
         >
             <Head title="Departamentos" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-azul-institucional bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total departamentos</p>
+                        <Building2 className="h-5 w-5 text-azul-institucional" />
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{totalCount}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">Departamentos registrados en el sistema</p>
+                </div>
+                <div className="rounded-lg border border-gris-borde border-l-4 border-l-verde-exito bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Más grande</p>
+                        <Users className="h-5 w-5 text-verde-exito" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold text-gray-900 truncate">{largestDeptName ?? '—'}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 leading-tight">{largestDeptCount > 0 ? `${largestDeptCount} usuarios` : 'Sin datos'}</p>
+                </div>
+            </div>
 
             {modal && (
                 <DepartmentModal

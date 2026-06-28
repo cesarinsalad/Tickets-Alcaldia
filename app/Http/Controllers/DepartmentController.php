@@ -30,10 +30,19 @@ class DepartmentController extends Controller
             ->get()
             ->append('full_name');
 
+        $totalCount = Department::count();
+
+        $largestDept = Department::withCount('users')
+            ->orderByDesc('users_count')
+            ->first();
+
         return Inertia::render('Departments/Index', [
             'departments' => $departments,
             'availableAdmins' => $availableAdmins,
             'filters' => $request->only(['search', 'per_page']),
+            'totalCount' => $totalCount,
+            'largestDeptName' => $largestDept && $largestDept->users_count > 0 ? $largestDept->name : null,
+            'largestDeptCount' => $largestDept ? $largestDept->users_count : 0,
         ]);
     }
 
