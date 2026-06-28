@@ -79,7 +79,6 @@ export default function Index({
     const [brand, setBrand] = useState(initialFilters?.brand || '');
     const [ramMax, setRamMax] = useState(initialFilters?.ram_max ?? '');
     const [diskType, setDiskType] = useState(initialFilters?.disk_type || '');
-    const [sku, setSku] = useState(initialFilters?.sku || '');
     const [roleFilter, setRoleFilter] = useState(initialFilters?.role || '');
     const [isActive, setIsActive] = useState(initialFilters?.is_active ?? '');
     const [hasHead, setHasHead] = useState(initialFilters?.has_head ?? '');
@@ -113,7 +112,6 @@ export default function Index({
             if (brand) f.brand = brand;
             if (ramMax) f.ram_max = ramMax;
             if (diskType) f.disk_type = diskType;
-            if (sku) f.sku = sku;
             if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         } else if (source === 'users') {
             if (roleFilter) f.role = roleFilter;
@@ -126,7 +124,7 @@ export default function Index({
         }
 
         return f;
-    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType, sku, roleFilter, isActive, hasHead]);
+    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType, roleFilter, isActive, hasHead]);
 
     function handleSourceChange(newSource) {
         setSource(newSource);
@@ -141,7 +139,6 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
-        setSku('');
         setRoleFilter('');
         setIsActive('');
         setHasHead('');
@@ -160,7 +157,6 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
-        setSku('');
         setRoleFilter('');
         setIsActive('');
         setHasHead('');
@@ -175,7 +171,6 @@ export default function Index({
         if (f.brand) setBrand(f.brand);
         if (f.ram_max !== undefined) setRamMax(f.ram_max);
         if (f.disk_type) setDiskType(f.disk_type);
-        if (f.sku) setSku(f.sku);
         if (f.role) setRoleFilter(f.role);
     }
 
@@ -357,30 +352,35 @@ export default function Index({
                                             </div>
                                             <p className="text-[10px] text-gray-400 mt-1">Filtra los equipos que tuvieron informes de intervención entre estas fechas.</p>
                                         </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">Marca</label>
-                                            <Select value={brand} onChange={e => setBrand(e.target.value)} className="w-full text-xs">
-                                                <option value="">Todas</option>
-                                                {equipmentBrands.map(b => (
-                                                    <option key={b} value={b}>{b}</option>
-                                                ))}
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">RAM menor a (GB)</label>
-                                            <Input type="number" placeholder="Ej: 8" value={ramMax} onChange={e => setRamMax(e.target.value)} className="w-full text-xs" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">Tipo de Disco</label>
-                                            <Select value={diskType} onChange={e => setDiskType(e.target.value)} className="w-full text-xs">
-                                                <option value="">Todos</option>
-                                                <option value="HDD">HDD</option>
-                                                <option value="SSD">SSD</option>
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">SKU / Código de Bienes</label>
-                                            <Input type="text" placeholder="Buscar por SKU..." value={sku} onChange={e => setSku(e.target.value)} className="w-full text-xs" />
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label className="text-xs text-gray-500 mb-1 block">Marca</label>
+                                                <Select value={brand} onChange={e => setBrand(e.target.value)} className="w-full text-xs">
+                                                    <option value="">Todas</option>
+                                                    {equipmentBrands.map(b => (
+                                                        <option key={b} value={b}>{b}</option>
+                                                    ))}
+                                                </Select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-gray-500 mb-1 block">RAM menor a</label>
+                                                <Select value={ramMax} onChange={e => setRamMax(e.target.value)} className="w-full text-xs">
+                                                    <option value="">Todas</option>
+                                                    <option value="2">2 GB</option>
+                                                    <option value="4">4 GB</option>
+                                                    <option value="8">8 GB</option>
+                                                    <option value="16">16 GB</option>
+                                                    <option value="32">32 GB</option>
+                                                </Select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-gray-500 mb-1 block">Tipo de Disco</label>
+                                                <Select value={diskType} onChange={e => setDiskType(e.target.value)} className="w-full text-xs">
+                                                    <option value="">Todos</option>
+                                                    <option value="HDD">HDD</option>
+                                                    <option value="SSD">SSD</option>
+                                                </Select>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="mt-3 pt-3 border-t border-gris-borde">

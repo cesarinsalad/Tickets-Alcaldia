@@ -704,7 +704,9 @@ class ReportesController extends Controller
         }
 
         if (isset($filters['ram_max']) && $filters['ram_max'] !== '' && $filters['ram_max'] !== null) {
-            $query->where('ram_memory', '<', (int) $filters['ram_max']);
+            $ramLimit = (int) $filters['ram_max'];
+            $query->whereRaw("ram_memory ~ '^\\d+GB'")
+                  ->whereRaw("CAST(regexp_replace(ram_memory, '^(\\d+)GB.*$', '\\1') AS INTEGER) < ?", [$ramLimit]);
         }
 
         if (! empty($filters['disk_type'])) {
