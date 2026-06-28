@@ -52,16 +52,6 @@ class MetricasController extends Controller
             ->distinct('assigned_id')
             ->count('assigned_id');
 
-        // --- MTTR (Mean Time to Resolution) in hours ---
-        $mttr = Ticket::whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
-            ->whereBetween('exit_date', [$dateFrom, $dateTo])
-            ->whereNotNull('entry_date')
-            ->whereNotNull('exit_date')
-            ->selectRaw('ROUND(AVG(EXTRACT(EPOCH FROM (exit_date - entry_date))) / 3600.0, 1) as avg_hours')
-            ->value('avg_hours');
-
-        $mttr = $mttr !== null ? (float) $mttr : null;
-
         // --- Priority Distribution (Donut Chart) ---
         $priorityColors = [
             'critica' => '#991B1B',
@@ -85,54 +75,6 @@ class MetricasController extends Controller
                 'color' => $priorityColors[$r->priority->value] ?? '#94A3B8',
             ])
             ->values();
-
-        // --- Trend Data (Created vs Resolved) — independent of date filter ---
-        $trendGranularity = $request->input('trend_granularity', 'weeks');
-
-        $trendConfig = match ($trendGranularity) {
-            'days' => ['trunc' => 'day', 'period' => 'P30D'],
-            'months' => ['trunc' => 'month', 'period' => 'P12M'],
-            default => ['trunc' => 'week', 'period' => 'P84D'],
-        };
-
-        $trendStart = now()->sub(new \DateInterval($trendConfig['period']));
-
-        $created = Ticket::where('entry_date', '>=', $trendStart)
-            ->selectRaw("DATE_TRUNC('{$trendConfig['trunc']}', entry_date)::date as period, count(*) as count")
-            ->groupBy('period')
-            ->orderBy('period')
-            ->pluck('count', 'period');
-
-        $resolved = Ticket::whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
-            ->where('exit_date', '>=', $trendStart)
-            ->selectRaw("DATE_TRUNC('{$trendConfig['trunc']}', exit_date)::date as period, count(*) as count")
-            ->groupBy('period')
-            ->orderBy('period')
-            ->pluck('count', 'period');
-
-        $periodKeys = [];
-        $cursor = $trendStart->copy();
-        while ($cursor->lte(now())) {
-            match ($trendGranularity) {
-                'days' => $cursor->startOfDay(),
-                'months' => $cursor->startOfMonth(),
-                default => $cursor->startOfWeek(),
-            };
-            $periodKeys[] = $cursor->format('Y-m-d');
-            match ($trendGranularity) {
-                'days' => $cursor->addDay(),
-                'months' => $cursor->addMonth(),
-                default => $cursor->addWeek(),
-            };
-        }
-
-        $trendData = collect($periodKeys)->map(function ($period) use ($created, $resolved) {
-            return [
-                'date' => Carbon::parse($period)->format('d/m'),
-                'created' => (int) ($created[$period] ?? 0),
-                'resolved' => (int) ($resolved[$period] ?? 0),
-            ];
-        })->values();
 
         // --- Top 5 Problematic Equipment ---
         $topEquipment = DB::table('intervention_reports')
@@ -199,10 +141,7 @@ class MetricasController extends Controller
                 'sla_pct' => $slaPct,
                 'technicians_overdue' => $techniciansOverdue,
             ],
-            'mttr' => $mttr,
             'priorityDistribution' => $priorityDistribution,
-            'trendData' => $trendData,
-            'trendGranularity' => $trendGranularity,
             'topEquipment' => $topEquipment,
             'technicianChart' => $technicianChart,
             'topDepartments' => $topDepartments,

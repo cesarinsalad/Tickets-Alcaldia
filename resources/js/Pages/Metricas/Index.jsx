@@ -1,13 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { BarChart, BarChart3, FolderTree, Ticket, CheckCircle, TrendingUp, AlertOctagon, Clock, Cpu } from 'lucide-react';
+import { BarChart, BarChart3, FolderTree, Ticket, CheckCircle, TrendingUp, AlertOctagon, Cpu } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import SimpleBarChart from '@/Components/SimpleBarChart';
 import SimpleDonutChart from '@/Components/SimpleDonutChart';
 import StackedBarChart from '@/Components/StackedBarChart';
-import LineAreaChart from '@/Components/LineAreaChart';
 
 function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
     const colors = {
@@ -40,7 +39,7 @@ function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
 }
 
 export default function Index({
-    kpis, mttr, priorityDistribution, trendData, trendGranularity,
+    kpis, priorityDistribution,
     topEquipment, technicianChart,
     topDepartments, categoryDistribution, dateFrom, dateTo,
 }) {
@@ -50,31 +49,14 @@ export default function Index({
     function applyDates() {
         router.get(route('metricas.index'), {
             date_from: from, date_to: to,
-            trend_granularity: trendGranularity,
         }, { preserveState: true, replace: true });
     }
 
     function clearDates() {
         setFrom('');
         setTo('');
-        router.get(route('metricas.index'), {
-            trend_granularity: trendGranularity,
-        }, { preserveState: true, replace: true });
+        router.get(route('metricas.index'), {}, { preserveState: true, replace: true });
     }
-
-    function handleGranularityChange(newGranularity) {
-        const extra = { trend_granularity: newGranularity };
-        if (from) extra.date_from = from;
-        if (to) extra.date_to = to;
-        router.reload({
-            only: ['trendData', 'trendGranularity'],
-            data: extra,
-        });
-    }
-
-    const mttrDisplay = mttr != null
-        ? `${mttr} hrs`
-        : '—';
 
     return (
         <AuthenticatedLayout
@@ -149,45 +131,28 @@ export default function Index({
                     />
                 </div>
 
-                {/* ROW 2: MTTR + Priority Donut */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    <div className="rounded-lg border border-gris-borde bg-white p-5 flex flex-col items-center justify-center text-center">
-                        <Clock className="h-8 w-8 text-azul-institucional mb-2" />
-                        <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">MTTR</p>
-                        <p className="mt-2 text-4xl font-bold text-gray-900">{mttrDisplay}</p>
-                        <p className="mt-1 text-xs text-gray-400">Tiempo medio de resolución</p>
-                    </div>
-                    <div className="rounded-lg border border-gris-borde bg-white p-5 lg:col-span-2">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide inline-flex items-center gap-2">
-                            <FolderTree className="h-4 w-4 text-azul-institucional" />
-                            Distribución por Prioridad
-                        </h3>
-                        {priorityDistribution && priorityDistribution.length > 0 ? (
-                            <SimpleDonutChart
-                                data={priorityDistribution}
-                                colors={priorityDistribution.map((p) => p.color)}
-                                onPieClick={(entry) => router.visit(route('tickets.index', {
-                                    priority: entry.value,
-                                    date_from: from || dateFrom,
-                                    date_to: to || dateTo,
-                                }))}
-                            />
-                        ) : (
-                            <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* ROW 3: Trend Chart (Created vs Resolved) */}
+                {/* ROW 2: Priority Donut */}
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <LineAreaChart
-                        data={trendData}
-                        granularity={trendGranularity}
-                        onGranularityChange={handleGranularityChange}
-                    />
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide inline-flex items-center gap-2">
+                        <FolderTree className="h-4 w-4 text-azul-institucional" />
+                        Distribución por Prioridad
+                    </h3>
+                    {priorityDistribution && priorityDistribution.length > 0 ? (
+                        <SimpleDonutChart
+                            data={priorityDistribution}
+                            colors={priorityDistribution.map((p) => p.color)}
+                            onPieClick={(entry) => router.visit(route('tickets.index', {
+                                priority: entry.value,
+                                date_from: from || dateFrom,
+                                date_to: to || dateTo,
+                            }))}
+                        />
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-10">Sin datos</p>
+                    )}
                 </div>
 
-                {/* ROW 4: Technician Stacked Bar + Top 5 Equipment */}
+                {/* ROW 3: Technician Stacked Bar + Top 5 Equipment */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div className="rounded-lg border border-gris-borde bg-white p-5">
                         <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide inline-flex items-center gap-2">
@@ -238,7 +203,7 @@ export default function Index({
                     </div>
                 </div>
 
-                {/* ROW 5: Existing — Top Departments + Category Distribution */}
+                {/* ROW 4: Existing — Top Departments + Category Distribution */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div className="rounded-lg border border-gris-borde bg-white p-5">
                         <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide inline-flex items-center gap-2">
