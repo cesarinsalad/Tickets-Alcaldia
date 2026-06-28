@@ -74,6 +74,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['permission:ver reportes administrativos'])->group(function () {
         Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
+        Route::get('/reportes/export-pdf', [ReportesController::class, 'exportPdf'])->name('reportes.export-pdf');
+        Route::get('/reportes/export-excel', [ReportesController::class, 'exportExcel'])->name('reportes.export-excel');
     });
 
     Route::middleware(['permission:gestionar roles'])->group(function () {
