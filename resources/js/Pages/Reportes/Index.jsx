@@ -38,7 +38,9 @@ const GROUP_BY_OPTIONS_BY_SOURCE = {
     equipments: [
         { value: 'none', label: 'Ninguno' },
         { value: 'brand', label: 'Marca' },
-        { value: 'model', label: 'Modelo' },
+        { value: 'ram', label: 'Memoria RAM' },
+        { value: 'storage', label: 'Almacenamiento' },
+        { value: 'department', label: 'Departamento' },
     ],
     users: [
         { value: 'none', label: 'Ninguno' },
@@ -539,7 +541,7 @@ export default function Index({
                                     </thead>
                                     <tbody className="divide-y divide-gris-borde">
                                         {(() => {
-                                            const isGrouped = groupBy && groupBy !== 'none' && source === 'tickets';
+                                            const isGrouped = groupBy && groupBy !== 'none' && (source === 'tickets' || source === 'equipments');
                                             const groupKeyOf = (row) => {
                                                 if (!isGrouped) return null;
                                                 switch (groupBy) {
@@ -549,6 +551,10 @@ export default function Index({
                                                     case 'status': return row.status_label ?? '—';
                                                     case 'resolution': return row.sla_status ?? '—';
                                                     case 'assigned': return row.assigned_name ?? '—';
+                                                    case 'brand': return row.brand ?? '—';
+                                                    case 'ram': return row.ram_memory ?? '—';
+                                                    case 'storage': return row.storage_disk ?? '—';
+                                                    case 'model': return row.model ?? '—';
                                                     default: return '—';
                                                 }
                                             };
@@ -565,10 +571,16 @@ export default function Index({
                                                             <tr key={`sub-${lastGroupIndex}`} className="bg-gray-50 text-xs">
                                                                 <td colSpan={columns.length} className="px-4 py-1.5 italic text-gray-600">
                                                                     <span className="font-semibold">Subtotal {lastGroup}:</span>
-                                                                    <span className="ml-3">{sub.total} ticket(s)</span>
-                                                                    {sub.on_time > 0 && <span className="ml-2 text-green-700">{sub.on_time} a tiempo</span>}
-                                                                    {sub.overdue > 0 && <span className="ml-2 text-red-700">{sub.overdue} vencidos</span>}
-                                                                    {sub.pending > 0 && <span className="ml-2 text-gray-600">{sub.pending} pendientes</span>}
+                                                                    <span className="ml-3">{sub.total} {source === 'tickets' ? 'ticket(s)' : 'equipo(s)'}</span>
+                                                                    {source === 'tickets' ? (
+                                                                        <>
+                                                                            {sub.on_time > 0 && <span className="ml-2 text-green-700">{sub.on_time} a tiempo</span>}
+                                                                            {sub.overdue > 0 && <span className="ml-2 text-red-700">{sub.overdue} vencidos</span>}
+                                                                            {sub.pending > 0 && <span className="ml-2 text-gray-600">{sub.pending} pendientes</span>}
+                                                                        </>
+                                                                    ) : (
+                                                                        (sub.interventions || 0) > 0 && <span className="ml-2 text-azul-institucional">{sub.interventions} intervenciones</span>
+                                                                    )}
                                                                 </td>
                                                             </tr>
                                                         );

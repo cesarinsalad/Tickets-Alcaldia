@@ -81,15 +81,21 @@
                     <tr style="background: #f1f5f9;">
                         <td colspan="{{ count($columns) }}" style="padding: 4px 10px; font-style: italic; font-size: 7.5pt; color: #475569;">
                             <strong>Subtotal {{ data_get($row, 'group_label', '—') }}:</strong>
-                            <span style="margin-left: 4px;">{{ data_get($row, 'total', 0) }} ticket(s)</span>
-                            @if(data_get($row, 'on_time', 0) > 0)
-                                <span style="color: #166534; margin-left: 6px;">{{ data_get($row, 'on_time') }} a tiempo</span>
-                            @endif
-                            @if(data_get($row, 'overdue', 0) > 0)
-                                <span style="color: #991b1b; margin-left: 6px;">{{ data_get($row, 'overdue') }} vencidos</span>
-                            @endif
-                            @if(data_get($row, 'pending', 0) > 0)
-                                <span style="color: #475569; margin-left: 6px;">{{ data_get($row, 'pending') }} pendientes</span>
+                            <span style="margin-left: 4px;">{{ data_get($row, 'total', 0) }} {{ ($source ?? 'tickets') === 'tickets' ? 'ticket(s)' : 'equipo(s)' }}</span>
+                            @if(($source ?? 'tickets') === 'tickets')
+                                @if(data_get($row, 'on_time', 0) > 0)
+                                    <span style="color: #166534; margin-left: 6px;">{{ data_get($row, 'on_time') }} a tiempo</span>
+                                @endif
+                                @if(data_get($row, 'overdue', 0) > 0)
+                                    <span style="color: #991b1b; margin-left: 6px;">{{ data_get($row, 'overdue') }} vencidos</span>
+                                @endif
+                                @if(data_get($row, 'pending', 0) > 0)
+                                    <span style="color: #475569; margin-left: 6px;">{{ data_get($row, 'pending') }} pendientes</span>
+                                @endif
+                            @else
+                                @if(data_get($row, 'interventions', 0) > 0)
+                                    <span style="color: #1E3A5F; margin-left: 6px;">{{ data_get($row, 'interventions') }} intervenciones</span>
+                                @endif
                             @endif
                         </td>
                     </tr>

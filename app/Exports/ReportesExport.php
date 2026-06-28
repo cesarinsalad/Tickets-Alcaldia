@@ -70,10 +70,15 @@ class ReportesExport implements FromCollection, WithHeadings, WithMapping, WithS
         if ($rowType === 'subtotal') {
             $label = $row['group_label'] ?? '—';
             $total = (int) ($row['total'] ?? 0);
-            $parts = ["Subtotal {$label}: {$total} ticket" . ($total === 1 ? '' : 's')];
-            if (! empty($row['on_time'])) $parts[] = "{$row['on_time']} a tiempo";
-            if (! empty($row['overdue'])) $parts[] = "{$row['overdue']} vencidos";
-            if (! empty($row['pending'])) $parts[] = "{$row['pending']} pendientes";
+            $itemLabel = $this->source === 'tickets' ? 'ticket' : 'equipo';
+            $parts = ["Subtotal {$label}: {$total} {$itemLabel}" . ($total === 1 ? '' : 's')];
+            if ($this->source === 'tickets') {
+                if (! empty($row['on_time'])) $parts[] = "{$row['on_time']} a tiempo";
+                if (! empty($row['overdue'])) $parts[] = "{$row['overdue']} vencidos";
+                if (! empty($row['pending'])) $parts[] = "{$row['pending']} pendientes";
+            } else {
+                if (! empty($row['interventions'])) $parts[] = "{$row['interventions']} intervenciones";
+            }
             $emptyCells[0] = implode(' | ', $parts);
             return $emptyCells;
         }

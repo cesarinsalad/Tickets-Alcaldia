@@ -128,6 +128,12 @@ class ReportesController extends Controller
                     $groupSubtotals = $groupBy !== 'none'
                         ? $this->computeGroupSubtotals($allRows, $groupBy)
                         : [];
+                } elseif ($source === 'equipments') {
+                    $allRows = $query->get()->map(fn ($e) => $this->transformEquipmentRow($e));
+                    $rows = $this->paginateCollection($allRows, 15, $request);
+                    $groupSubtotals = $groupBy !== 'none'
+                        ? $this->computeGroupSubtotals($allRows, $groupBy)
+                        : [];
                 } else {
                     $rows = $query->paginate(15)->withQueryString();
                 }
@@ -181,6 +187,21 @@ class ReportesController extends Controller
         ];
     }
 
+    private function transformEquipmentRow(Equipment $equipment): array
+    {
+        return [
+            'id' => $equipment->id,
+            'sku' => $equipment->sku,
+            'brand' => $equipment->brand ?? '—',
+            'model' => $equipment->model ?? '—',
+            'processor' => $equipment->processor ?? '—',
+            'ram_memory' => $equipment->ram_memory ?? '—',
+            'storage_disk' => $equipment->storage_disk ?? '—',
+            'department_name' => $equipment->department?->name ?? '—',
+            'interventions_count' => (int) $equipment->interventions_count,
+        ];
+    }
+
     private function computeSlaStatus(Ticket $ticket): string
     {
         $statusValue = $ticket->status->value;
@@ -231,14 +252,16 @@ class ReportesController extends Controller
             default => abort(400),
         };
 
-        $rows = $source === 'tickets'
-            ? $query->get()->map(fn ($t) => $this->transformTicketRow($t))
-            : $query->get();
+        $rows = match (true) {
+            $source === 'tickets' => $query->get()->map(fn ($t) => $this->transformTicketRow($t)),
+            $source === 'equipments' => $query->get()->map(fn ($e) => $this->transformEquipmentRow($e)),
+            default => $query->get(),
+        };
         $totalRows = $rows->count();
         $totalPages = (int) ceil($totalRows / 35);
 
         $groupBy = $filters['group_by'] ?? 'none';
-        $groupSubtotals = ($source === 'tickets' && $groupBy !== 'none')
+        $groupSubtotals = (in_array($source, ['tickets', 'equipments'], true) && $groupBy !== 'none')
             ? $this->computeGroupSubtotals($rows, $groupBy)
             : [];
         $structuredRows = $this->buildStructuredRows($rows, $groupBy, $groupSubtotals);
@@ -271,6 +294,7 @@ class ReportesController extends Controller
             'columns' => $columns,
             'rows' => $structuredRows,
             'groupBy' => $groupBy,
+            'source' => $source,
             'totalRows' => $totalRows,
             'totalPages' => $totalPages,
         ]);
@@ -299,12 +323,14 @@ class ReportesController extends Controller
             default => abort(400),
         };
 
-        $rows = $source === 'tickets'
-            ? $query->get()->map(fn ($t) => $this->transformTicketRow($t))
-            : $query->get();
+        $rows = match (true) {
+            $source === 'tickets' => $query->get()->map(fn ($t) => $this->transformTicketRow($t)),
+            $source === 'equipments' => $query->get()->map(fn ($e) => $this->transformEquipmentRow($e)),
+            default => $query->get(),
+        };
 
         $groupBy = $filters['group_by'] ?? 'none';
-        $groupSubtotals = ($source === 'tickets' && $groupBy !== 'none')
+        $groupSubtotals = (in_array($source, ['tickets', 'equipments'], true) && $groupBy !== 'none')
             ? $this->computeGroupSubtotals($rows, $groupBy)
             : [];
         $structuredRows = collect($this->buildStructuredRows($rows, $groupBy, $groupSubtotals));
@@ -508,7 +534,9 @@ class ReportesController extends Controller
             'equipments' => [
                 ['value' => 'none', 'label' => 'Ninguno'],
                 ['value' => 'brand', 'label' => 'Marca'],
-                ['value' => 'model', 'label' => 'Modelo'],
+                ['value' => 'ram', 'label' => 'Memoria RAM'],
+                ['value' => 'storage', 'label' => 'Almacenamiento'],
+                ['value' => 'department', 'label' => 'Departamento'],
             ],
             'users' => [
                 ['value' => 'none', 'label' => 'Ninguno'],
@@ -545,6 +573,10 @@ class ReportesController extends Controller
                 return $row['is_active'] ? 'Activo' : 'Inactivo';
             case 'brand':
                 return $row['brand'] ?? 'Sin marca';
+            case 'ram':
+                return $row['ram_memory'] ?? 'Sin RAM';
+            case 'storage':
+                return $row['storage_disk'] ?? 'Sin almacenamiento';
             case 'model':
                 return $row['model'] ?? 'Sin modelo';
             case 'has_head':
@@ -567,6 +599,7 @@ class ReportesController extends Controller
                     'pending' => 0,
                     'resolved' => 0,
                     'closed' => 0,
+                    'interventions' => 0,
                 ];
             }
             $subtotals[$key]['total']++;
@@ -580,6 +613,9 @@ class ReportesController extends Controller
             }
             if ($slaStatus === 'A tiempo') $subtotals[$key]['on_time']++;
             if ($slaStatus === 'Vencido') $subtotals[$key]['overdue']++;
+            if (isset($row['interventions_count'])) {
+                $subtotals[$key]['interventions'] += (int) $row['interventions_count'];
+            }
         }
         return $subtotals;
     }
@@ -649,6 +685,7 @@ class ReportesController extends Controller
     private function buildEquipmentQuery(Request $request, array $filters)
     {
         $query = Equipment::query()
+            ->with('department')
             ->withCount('interventionReports as interventions_count');
 
         if (! empty($filters['brand'])) {
@@ -667,7 +704,32 @@ class ReportesController extends Controller
             $query->where('sku', 'ilike', '%' . $filters['sku'] . '%');
         }
 
-        return $query->orderBy('interventions_count', 'desc');
+        $groupBy = $filters['group_by'] ?? 'none';
+        if ($groupBy !== 'none' && $groupBy !== null) {
+            switch ($groupBy) {
+                case 'brand':
+                    $query->orderBy('brand', 'asc')->orderBy('sku', 'asc');
+                    break;
+                case 'ram':
+                    $query->orderBy('ram_memory', 'asc')->orderBy('sku', 'asc');
+                    break;
+                case 'storage':
+                    $query->orderBy('storage_disk', 'asc')->orderBy('sku', 'asc');
+                    break;
+                case 'department':
+                    $query->leftJoin('departments', 'equipment.department_id', '=', 'departments.id')
+                        ->orderBy('departments.name', 'asc')
+                        ->orderBy('sku', 'asc')
+                        ->select('equipment.*');
+                    break;
+                default:
+                    $query->orderBy('interventions_count', 'desc');
+            }
+        } else {
+            $query->orderBy('interventions_count', 'desc');
+        }
+
+        return $query;
     }
 
     private function buildUserQuery(Request $request, array $filters)
