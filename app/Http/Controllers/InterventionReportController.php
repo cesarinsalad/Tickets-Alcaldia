@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Equipment;
 use App\Models\InterventionReport;
 use App\Models\Ticket;
@@ -107,14 +108,20 @@ class InterventionReportController extends Controller
         }
 
         $equipment->load([
+            'department',
             'interventionReports' => fn ($q) => $q->latest()->with([
                 'ticket.creator.department',
                 'ticket.assigned',
             ]),
         ]);
 
+        $departments = Department::orderBy('name')->get(['id', 'name']);
+        $canManageEquipment = request()->user()->hasPermissionTo('gestionar equipos');
+
         return Inertia::render('Equipments/Show', [
             'equipment' => $equipment,
+            'departments' => $departments,
+            'canManageEquipment' => $canManageEquipment,
         ]);
     }
 
@@ -137,6 +144,7 @@ class InterventionReportController extends Controller
             'processor' => $equipment->processor,
             'ram_memory' => $equipment->ram_memory,
             'storage_disk' => $equipment->storage_disk,
+            'department_id' => $equipment->department_id,
         ]);
     }
 
@@ -155,12 +163,13 @@ class InterventionReportController extends Controller
             'processor' => ['nullable', 'string', 'max:35'],
             'ram_memory' => ['nullable', 'string', 'max:100'],
             'storage_disk' => ['nullable', 'string', 'max:100'],
+            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'diagnostic' => ['required', 'string', 'max:5000'],
         ]);
 
         $equipment = Equipment::updateOrCreate(
             ['sku' => $validated['sku']],
-            collect($validated)->only(['brand', 'model', 'processor', 'ram_memory', 'storage_disk'])->toArray()
+            collect($validated)->only(['brand', 'model', 'processor', 'ram_memory', 'storage_disk', 'department_id'])->toArray()
         );
 
         $report = $ticket->interventionReports()->create([
@@ -196,5 +205,25 @@ class InterventionReportController extends Controller
         ]);
 
         return $pdf->stream("informe-retiro-{$ticket->code}.pdf");
+    }
+
+    public function updateEquipment(Request $request, Equipment $equipment)
+    {
+        if (! $request->user()->hasPermissionTo('gestionar equipos')) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'brand' => ['nullable', 'string', 'max:20'],
+            'model' => ['nullable', 'string', 'max:30'],
+            'processor' => ['nullable', 'string', 'max:35'],
+            'ram_memory' => ['nullable', 'string', 'max:100'],
+            'storage_disk' => ['nullable', 'string', 'max:100'],
+            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+        ]);
+
+        $equipment->update($validated);
+
+        return back()->with('success', 'Equipo actualizado correctamente.');
     }
 }

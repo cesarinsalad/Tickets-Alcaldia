@@ -287,6 +287,8 @@ class TicketController extends Controller
             $p->value => $p->description(),
         ]);
 
+        $departments = Department::orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Tickets/Show', [
             'ticket' => array_merge($ticket->toArray(), [
                 'code' => $ticket->code,
@@ -332,6 +334,7 @@ class TicketController extends Controller
             'technicians' => $technicians,
             'categories' => Category::all(),
             'priorityLabels' => $priorityLabels,
+            'departments' => $departments,
         ]);
     }
 

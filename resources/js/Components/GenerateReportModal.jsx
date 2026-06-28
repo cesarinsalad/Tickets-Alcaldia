@@ -20,7 +20,7 @@ function getCookie(name) {
     return null;
 }
 
-export default function GenerateReportModal({ ticket, onClose }) {
+export default function GenerateReportModal({ ticket, departments = [], onClose }) {
     const [sku, setSku] = useState('');
     const [brand, setBrand] = useState('');
     const [model, setModel] = useState('');
@@ -29,6 +29,7 @@ export default function GenerateReportModal({ ticket, onClose }) {
     const [ramType, setRamType] = useState('');
     const [diskSize, setDiskSize] = useState('');
     const [diskType, setDiskType] = useState('');
+    const [departmentId, setDepartmentId] = useState('');
     const [diagnostic, setDiagnostic] = useState('');
     const [searching, setSearching] = useState(false);
     const [notFound, setNotFound] = useState(false);
@@ -66,6 +67,9 @@ export default function GenerateReportModal({ ticket, onClose }) {
                         setDiskSize(parts.find(isSize) || '');
                         setDiskType(parts.find(isDiskType) || '');
                     }
+                    if (data.department_id) {
+                        setDepartmentId(String(data.department_id));
+                    }
                     setNotFound(false);
                 } else {
                     setNotFound(true);
@@ -91,6 +95,9 @@ export default function GenerateReportModal({ ticket, onClose }) {
         formData.append('processor', processor);
         formData.append('ram_memory', [ramSize, ramType].filter(Boolean).join(' '));
         formData.append('storage_disk', [diskSize, diskType].filter(Boolean).join(' '));
+        if (departmentId) {
+            formData.append('department_id', departmentId);
+        }
         formData.append('diagnostic', diagnostic);
 
         try {
@@ -223,6 +230,21 @@ export default function GenerateReportModal({ ticket, onClose }) {
                                 </Select>
                             </div>
                             <InputError message={errors.storage_disk} />
+                        </div>
+                        <div className="sm:col-span-2">
+                            <Label htmlFor="ir_department">Departamento de Origen</Label>
+                            <Select
+                                id="ir_department"
+                                value={departmentId}
+                                onChange={e => setDepartmentId(e.target.value)}
+                                className="mt-1"
+                            >
+                                <option value="">Sin asignar</option>
+                                {departments.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </Select>
+                            <InputError message={errors.department_id} />
                         </div>
                     </div>
 

@@ -37,7 +37,7 @@ const priorityLabels = {
     critica: 'Crítica',
 };
 
-export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canChangeCategory, canUploadPhoto, canSeeInternalComments, canGenerateReport, categories, priorityLabels }) {
+export default function Show({ ticket, sla, transitions, technicians, canAssign, canChangePriority, canChangeCategory, canUploadPhoto, canSeeInternalComments, canGenerateReport, categories, priorityLabels, departments }) {
     const [comment, setComment] = useState('');
     const [commentPhoto, setCommentPhoto] = useState(null);
     const [commentPhotoPreview, setCommentPhotoPreview] = useState(null);
@@ -535,6 +535,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
             {showInterventionModal && (
                 <GenerateReportModal
                     ticket={ticket}
+                    departments={departments || []}
                     onClose={() => setShowInterventionModal(false)}
                 />
             )}
