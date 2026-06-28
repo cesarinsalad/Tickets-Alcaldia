@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ClipboardList, FileText, Table2, Search, Download, FileSpreadsheet, Database, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -25,10 +25,42 @@ const SOURCE_LABELS = {
     departments: 'Departamentos',
 };
 
+const GROUP_BY_OPTIONS_BY_SOURCE = {
+    tickets: [
+        { value: 'none', label: 'Ninguno' },
+        { value: 'department', label: 'Departamento' },
+        { value: 'category', label: 'Categoría' },
+        { value: 'priority', label: 'Prioridad' },
+        { value: 'status', label: 'Estado' },
+        { value: 'resolution', label: 'Resolución (SLA)' },
+        { value: 'assigned', label: 'Técnico' },
+    ],
+    equipments: [
+        { value: 'none', label: 'Ninguno' },
+        { value: 'brand', label: 'Marca' },
+        { value: 'model', label: 'Modelo' },
+    ],
+    users: [
+        { value: 'none', label: 'Ninguno' },
+        { value: 'role', label: 'Rol' },
+        { value: 'department', label: 'Departamento' },
+        { value: 'is_active', label: 'Estado' },
+    ],
+    departments: [
+        { value: 'none', label: 'Ninguno' },
+        { value: 'has_head', label: 'Tiene Jefe' },
+    ],
+    categories: [{ value: 'none', label: 'Ninguno' }],
+    '': [{ value: 'none', label: 'Ninguno' }],
+};
+
+const DEFAULT_GROUP_BY_OPTIONS = [{ value: 'none', label: 'Ninguno' }];
+
 export default function Index({
     source: initialSource, template: initialTemplate,
     filters: initialFilters, columns, rows,
-    templates, departments, technicians, equipmentBrands, roles,
+    groupSubtotals, groupBy: initialGroupBy,
+    templates, departments, technicians, equipmentBrands, roles, categories,
     dateFrom, dateTo,
 }) {
     const [source, setSource] = useState(initialSource || '');
@@ -38,7 +70,10 @@ export default function Index({
     const [status, setStatus] = useState(initialFilters?.status || '');
     const [priority, setPriority] = useState(initialFilters?.priority || '');
     const [departmentId, setDepartmentId] = useState(initialFilters?.department_id || '');
+    const [categoryId, setCategoryId] = useState(initialFilters?.category_id || '');
     const [assignedId, setAssignedId] = useState(initialFilters?.assigned_id || '');
+    const [resolution, setResolution] = useState(initialFilters?.resolution || '');
+    const [groupBy, setGroupBy] = useState(initialFilters?.group_by || 'none');
     const [brand, setBrand] = useState(initialFilters?.brand || '');
     const [ramMax, setRamMax] = useState(initialFilters?.ram_max ?? '');
     const [diskType, setDiskType] = useState(initialFilters?.disk_type || '');
@@ -46,6 +81,18 @@ export default function Index({
     const [roleFilter, setRoleFilter] = useState(initialFilters?.role || '');
     const [isActive, setIsActive] = useState(initialFilters?.is_active ?? '');
     const [hasHead, setHasHead] = useState(initialFilters?.has_head ?? '');
+
+    const groupByOptions = useMemo(
+        () => GROUP_BY_OPTIONS_BY_SOURCE[source] || DEFAULT_GROUP_BY_OPTIONS,
+        [source]
+    );
+
+    useEffect(() => {
+        const valid = groupByOptions.some(o => o.value === groupBy);
+        if (!valid) {
+            setGroupBy('none');
+        }
+    }, [groupByOptions, groupBy]);
 
     const activeFilters = useMemo(() => {
         const f = { source: source || undefined, template: template || undefined };
@@ -56,22 +103,28 @@ export default function Index({
             if (status) f.status = status;
             if (priority) f.priority = priority;
             if (departmentId) f.department_id = departmentId;
+            if (categoryId) f.category_id = categoryId;
             if (assignedId) f.assigned_id = assignedId;
+            if (resolution) f.resolution = resolution;
+            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         } else if (source === 'equipments') {
             if (brand) f.brand = brand;
             if (ramMax) f.ram_max = ramMax;
             if (diskType) f.disk_type = diskType;
             if (sku) f.sku = sku;
+            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         } else if (source === 'users') {
             if (roleFilter) f.role = roleFilter;
             if (departmentId) f.department_id = departmentId;
             if (isActive !== '') f.is_active = isActive;
+            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         } else if (source === 'departments') {
             if (hasHead !== '') f.has_head = hasHead;
+            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         }
 
         return f;
-    }, [source, template, from, to, status, priority, departmentId, assignedId, brand, ramMax, diskType, sku, roleFilter, isActive, hasHead]);
+    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType, sku, roleFilter, isActive, hasHead]);
 
     function handleSourceChange(newSource) {
         setSource(newSource);
@@ -79,7 +132,10 @@ export default function Index({
         setStatus('');
         setPriority('');
         setDepartmentId('');
+        setCategoryId('');
         setAssignedId('');
+        setResolution('');
+        setGroupBy('none');
         setBrand('');
         setRamMax('');
         setDiskType('');
@@ -95,7 +151,10 @@ export default function Index({
         setStatus('');
         setPriority('');
         setDepartmentId('');
+        setCategoryId('');
         setAssignedId('');
+        setResolution('');
+        setGroupBy('none');
         setBrand('');
         setRamMax('');
         setDiskType('');
@@ -204,53 +263,80 @@ export default function Index({
                         ) : (
                             <>
                             {source === 'tickets' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Rango de Fechas</label>
-                                        <div className="flex items-center gap-2">
-                                            <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="flex-1 text-xs" />
-                                            <span className="text-gray-400 text-xs">—</span>
-                                            <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="flex-1 text-xs" />
+                                <div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="col-span-2">
+                                            <label className="text-xs text-gray-500 mb-1 block">Rango de Fechas</label>
+                                            <div className="flex items-center gap-2">
+                                                <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="flex-1 text-xs" />
+                                                <span className="text-gray-400 text-xs">—</span>
+                                                <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="flex-1 text-xs" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Departamento</label>
+                                            <Select value={departmentId} onChange={e => setDepartmentId(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                {departments.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Categoría</label>
+                                            <Select value={categoryId} onChange={e => setCategoryId(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todas</option>
+                                                {categories?.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Estado</label>
+                                            <Select value={status} onChange={e => setStatus(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                <option value="abierto,en_proceso">Pendientes</option>
+                                                <option value="resuelto,cerrado">Cerrados</option>
+                                                <option value="abierto">Abierto</option>
+                                                <option value="en_proceso">En Proceso</option>
+                                                <option value="pendiente_informacion">Pendiente de Info</option>
+                                                <option value="resuelto">Resuelto</option>
+                                                <option value="cerrado">Cerrado</option>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Prioridad</label>
+                                            <Select value={priority} onChange={e => setPriority(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todas</option>
+                                                <option value="critica">Crítica</option>
+                                                <option value="alta">Alta</option>
+                                                <option value="media">Media</option>
+                                                <option value="baja">Baja</option>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Técnico Asignado</label>
+                                            <Select value={assignedId} onChange={e => setAssignedId(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                {technicians.map(t => (
+                                                    <option key={t.id} value={t.id}>{t.full_name}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Resolución</label>
+                                            <Select value={resolution} onChange={e => setResolution(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todas</option>
+                                                <option value="on_time">A tiempo</option>
+                                                <option value="overdue">Vencidos</option>
+                                            </Select>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Estado</label>
-                                        <Select value={status} onChange={e => setStatus(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            <option value="abierto,en_proceso">Pendientes</option>
-                                            <option value="resuelto,cerrado">Cerrados</option>
-                                            <option value="abierto">Abierto</option>
-                                            <option value="en_proceso">En Proceso</option>
-                                            <option value="pendiente_informacion">Pendiente de Info</option>
-                                            <option value="resuelto">Resuelto</option>
-                                            <option value="cerrado">Cerrado</option>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Prioridad</label>
-                                        <Select value={priority} onChange={e => setPriority(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todas</option>
-                                            <option value="critica">Crítica</option>
-                                            <option value="alta">Alta</option>
-                                            <option value="media">Media</option>
-                                            <option value="baja">Baja</option>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Departamento Solicitante</label>
-                                        <Select value={departmentId} onChange={e => setDepartmentId(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            {departments.map(d => (
-                                                <option key={d.id} value={d.id}>{d.name}</option>
-                                            ))}
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Técnico Asignado</label>
-                                        <Select value={assignedId} onChange={e => setAssignedId(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            {technicians.map(t => (
-                                                <option key={t.id} value={t.id}>{t.full_name}</option>
+                                    <div className="mt-3 pt-3 border-t border-gris-borde">
+                                        <label className="text-xs text-gray-500 mb-1 block">Agrupar por</label>
+                                        <Select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="w-full text-xs">
+                                            {groupByOptions.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                                             ))}
                                         </Select>
                                     </div>
@@ -258,61 +344,81 @@ export default function Index({
                             )}
 
                             {source === 'equipments' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Marca</label>
-                                        <Select value={brand} onChange={e => setBrand(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todas</option>
-                                            {equipmentBrands.map(b => (
-                                                <option key={b} value={b}>{b}</option>
+                                <div>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Marca</label>
+                                            <Select value={brand} onChange={e => setBrand(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todas</option>
+                                                {equipmentBrands.map(b => (
+                                                    <option key={b} value={b}>{b}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">RAM menor a (GB)</label>
+                                            <Input type="number" placeholder="Ej: 8" value={ramMax} onChange={e => setRamMax(e.target.value)} className="w-full text-xs" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Tipo de Disco</label>
+                                            <Select value={diskType} onChange={e => setDiskType(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                <option value="HDD">HDD</option>
+                                                <option value="SSD">SSD</option>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">SKU / Código de Bienes</label>
+                                            <Input type="text" placeholder="Buscar por SKU..." value={sku} onChange={e => setSku(e.target.value)} className="w-full text-xs" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 pt-3 border-t border-gris-borde">
+                                        <label className="text-xs text-gray-500 mb-1 block">Agrupar por</label>
+                                        <Select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="w-full text-xs">
+                                            {groupByOptions.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                                             ))}
                                         </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">RAM menor a (GB)</label>
-                                        <Input type="number" placeholder="Ej: 8" value={ramMax} onChange={e => setRamMax(e.target.value)} className="w-full text-xs" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Tipo de Disco</label>
-                                        <Select value={diskType} onChange={e => setDiskType(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            <option value="HDD">HDD</option>
-                                            <option value="SSD">SSD</option>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">SKU / Código de Bienes</label>
-                                        <Input type="text" placeholder="Buscar por SKU..." value={sku} onChange={e => setSku(e.target.value)} className="w-full text-xs" />
                                     </div>
                                 </div>
                             )}
 
                             {source === 'users' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Rol</label>
-                                        <Select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            {roles.map(r => (
-                                                <option key={r} value={r}>{r === 'solicitante' ? 'Solicitante' : r === 'tecnico' ? 'Técnico' : r === 'admin_departamento' ? 'Admin Departamento' : r === 'admin_tickets' ? 'Admin Tickets' : r === 'super_admin' ? 'Super Admin' : r}</option>
-                                            ))}
-                                        </Select>
+                                <div>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Rol</label>
+                                            <Select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                {roles.map(r => (
+                                                    <option key={r} value={r}>{r === 'solicitante' ? 'Solicitante' : r === 'tecnico' ? 'Técnico' : r === 'admin_departamento' ? 'Admin Departamento' : r === 'admin_tickets' ? 'Admin Tickets' : r === 'super_admin' ? 'Super Admin' : r}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Departamento</label>
+                                            <Select value={departmentId} onChange={e => setDepartmentId(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                {departments.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Estado</label>
+                                            <Select value={isActive} onChange={e => setIsActive(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                <option value="1">Activo</option>
+                                                <option value="0">Inactivo</option>
+                                            </Select>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Departamento</label>
-                                        <Select value={departmentId} onChange={e => setDepartmentId(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            {departments.map(d => (
-                                                <option key={d.id} value={d.id}>{d.name}</option>
+                                    <div className="mt-3 pt-3 border-t border-gris-borde">
+                                        <label className="text-xs text-gray-500 mb-1 block">Agrupar por</label>
+                                        <Select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="w-full text-xs">
+                                            {groupByOptions.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                                             ))}
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Estado</label>
-                                        <Select value={isActive} onChange={e => setIsActive(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            <option value="1">Activo</option>
-                                            <option value="0">Inactivo</option>
                                         </Select>
                                     </div>
                                 </div>
@@ -332,13 +438,23 @@ export default function Index({
                             )}
 
                             {source === 'departments' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Tiene Jefe Asignado</label>
-                                        <Select value={hasHead} onChange={e => setHasHead(e.target.value)} className="w-full text-xs">
-                                            <option value="">Todos</option>
-                                            <option value="1">Sí</option>
-                                            <option value="0">No</option>
+                                <div>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Tiene Jefe Asignado</label>
+                                            <Select value={hasHead} onChange={e => setHasHead(e.target.value)} className="w-full text-xs">
+                                                <option value="">Todos</option>
+                                                <option value="1">Sí</option>
+                                                <option value="0">No</option>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 pt-3 border-t border-gris-borde">
+                                        <label className="text-xs text-gray-500 mb-1 block">Agrupar por</label>
+                                        <Select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="w-full text-xs">
+                                            {groupByOptions.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                            ))}
                                         </Select>
                                     </div>
                                 </div>
@@ -422,34 +538,103 @@ export default function Index({
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gris-borde">
-                                        {rows.data.map((row, i) => (
-                                            <tr key={row.id || i} className="hover:bg-gris-fondo transition-colors">
-                                                {columns.map(col => {
-                                                    const value = row[col.key] ?? '—';
-                                                    const fmt = col.format;
-                                                    if (fmt === 'boolean') {
-                                                        return (
-                                                            <td key={col.key} className="px-4 py-2.5 text-xs">
-                                                                {value ? (
-                                                                    <span className="inline-flex items-center gap-1 text-green-700">
-                                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Sí
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="inline-flex items-center gap-1 text-gray-400">
-                                                                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> No
-                                                                    </span>
-                                                                )}
-                                                            </td>
+                                        {(() => {
+                                            const isGrouped = groupBy && groupBy !== 'none' && source === 'tickets';
+                                            const groupKeyOf = (row) => {
+                                                if (!isGrouped) return null;
+                                                switch (groupBy) {
+                                                    case 'department': return row.department_name ?? '—';
+                                                    case 'category': return row.category_name ?? '—';
+                                                    case 'priority': return row.priority_label ?? '—';
+                                                    case 'status': return row.status_label ?? '—';
+                                                    case 'resolution': return row.sla_status ?? '—';
+                                                    case 'assigned': return row.assigned_name ?? '—';
+                                                    default: return '—';
+                                                }
+                                            };
+
+                                            const elements = [];
+                                            let lastGroup = null;
+                                            let lastGroupIndex = -1;
+                                            rows.data.forEach((row, i) => {
+                                                const currentGroup = groupKeyOf(row);
+                                                if (isGrouped && currentGroup !== lastGroup) {
+                                                    if (lastGroup !== null) {
+                                                        const sub = groupSubtotals?.[lastGroup] || { total: 0, on_time: 0, overdue: 0, pending: 0, resolved: 0 };
+                                                        elements.push(
+                                                            <tr key={`sub-${lastGroupIndex}`} className="bg-gray-50 text-xs">
+                                                                <td colSpan={columns.length} className="px-4 py-1.5 italic text-gray-600">
+                                                                    <span className="font-semibold">Subtotal {lastGroup}:</span>
+                                                                    <span className="ml-3">{sub.total} ticket(s)</span>
+                                                                    {sub.on_time > 0 && <span className="ml-2 text-green-700">{sub.on_time} a tiempo</span>}
+                                                                    {sub.overdue > 0 && <span className="ml-2 text-red-700">{sub.overdue} vencidos</span>}
+                                                                    {sub.pending > 0 && <span className="ml-2 text-gray-600">{sub.pending} pendientes</span>}
+                                                                </td>
+                                                            </tr>
                                                         );
                                                     }
-                                                    return (
-                                                        <td key={col.key} className="px-4 py-2.5 text-xs text-gray-700 whitespace-nowrap max-w-[180px] truncate">
-                                                            {value === '—' ? <span className="text-gray-400">—</span> : value}
-                                                        </td>
+                                                    lastGroup = currentGroup;
+                                                    lastGroupIndex = i;
+                                                    const totalForGroup = groupSubtotals?.[currentGroup]?.total ?? '?';
+                                                    elements.push(
+                                                        <tr key={`grp-${i}`} className="bg-azul-institucional/10">
+                                                            <td colSpan={columns.length} className="px-4 py-2 text-xs font-semibold text-azul-institucional">
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-azul-institucional" />
+                                                                    {currentGroup}
+                                                                    <span className="text-gray-500 font-normal">({totalForGroup} ticket{totalForGroup === 1 ? '' : 's'})</span>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
                                                     );
-                                                })}
-                                            </tr>
-                                        ))}
+                                                }
+                                                elements.push(
+                                                    <tr key={row.id || `row-${i}`} className="hover:bg-gris-fondo transition-colors">
+                                                        {columns.map(col => {
+                                                            const value = row[col.key] ?? '—';
+                                                            const fmt = col.format;
+                                                            if (fmt === 'boolean') {
+                                                                return (
+                                                                    <td key={col.key} className="px-4 py-2.5 text-xs">
+                                                                        {value ? (
+                                                                            <span className="inline-flex items-center gap-1 text-green-700">
+                                                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Sí
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="inline-flex items-center gap-1 text-gray-400">
+                                                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> No
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            }
+                                                            return (
+                                                                <td key={col.key} className="px-4 py-2.5 text-xs text-gray-700 whitespace-nowrap max-w-[180px] truncate">
+                                                                    {value === '—' ? <span className="text-gray-400">—</span> : value}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                );
+                                            });
+
+                                            if (isGrouped && lastGroup !== null) {
+                                                const sub = groupSubtotals?.[lastGroup] || { total: 0, on_time: 0, overdue: 0, pending: 0, resolved: 0 };
+                                                elements.push(
+                                                    <tr key={`sub-${lastGroupIndex}-end`} className="bg-gray-50 text-xs">
+                                                        <td colSpan={columns.length} className="px-4 py-1.5 italic text-gray-600">
+                                                            <span className="font-semibold">Subtotal {lastGroup}:</span>
+                                                            <span className="ml-3">{sub.total} ticket(s)</span>
+                                                            {sub.on_time > 0 && <span className="ml-2 text-green-700">{sub.on_time} a tiempo</span>}
+                                                            {sub.overdue > 0 && <span className="ml-2 text-red-700">{sub.overdue} vencidos</span>}
+                                                            {sub.pending > 0 && <span className="ml-2 text-gray-600">{sub.pending} pendientes</span>}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }
+
+                                            return elements;
+                                        })()}
                                     </tbody>
                                 </table>
                             </div>
