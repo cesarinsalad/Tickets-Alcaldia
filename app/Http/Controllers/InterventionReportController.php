@@ -20,10 +20,11 @@ class InterventionReportController extends Controller
         }
 
         $query = Equipment::query()
+            ->with('department')
             ->withCount('interventionReports')
             ->with(['interventionReports' => fn ($q) => $q->latest()->limit(1)->with('ticket')]);
 
-        $allowedSorts = ['sku', 'brand', 'model', 'processor', 'ram_memory', 'storage_disk', 'intervention_reports_count'];
+        $allowedSorts = ['sku', 'brand', 'model', 'processor', 'ram_memory', 'storage_disk', 'department', 'intervention_reports_count'];
         $sort = $request->input('sort', 'updated_at');
         $dir = strtolower($request->input('dir', 'desc'));
         if (!in_array($sort, $allowedSorts)) {
@@ -35,6 +36,10 @@ class InterventionReportController extends Controller
 
         if ($sort === 'intervention_reports_count') {
             $query->orderBy('intervention_reports_count', $dir);
+        } elseif ($sort === 'department') {
+            $query->leftJoin('departments', 'equipment.department_id', '=', 'departments.id')
+                ->orderBy('departments.name', $dir)
+                ->select('equipment.*');
         } else {
             $query->orderBy($sort, $dir);
         }

@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Search, Monitor, ChevronUp, ChevronDown, AlertTriangle, Cpu, HardDrive } from 'lucide-react';
+import { Search, Monitor, ChevronUp, ChevronDown, AlertTriangle, Cpu, HardDrive, Building2 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
@@ -182,6 +182,9 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                                     <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('storage_disk')}>
                                         Disco <SortIcon col="storage_disk" />
                                     </th>
+                                    <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('department')}>
+                                        Departamento <SortIcon col="department" />
+                                    </th>
                                     <th className="text-center px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700" onClick={() => handleSort('intervention_reports_count')}>
                                         Informes <SortIcon col="intervention_reports_count" />
                                     </th>
@@ -200,6 +203,16 @@ export default function Index({ equipment, filters, totalCount, highRecurrenceCo
                                         <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.processor || '—'}</td>
                                         <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.ram_memory || '—'}</td>
                                         <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{eq.storage_disk || '—'}</td>
+                                        <td className="px-5 py-3 text-gray-700">
+                                            {eq.department?.name ? (
+                                                <span className="inline-flex items-center gap-1.5 text-xs">
+                                                    <Building2 className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                                                    <span className="truncate max-w-[180px]">{eq.department.name}</span>
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs">Sin asignar</span>
+                                            )}
+                                        </td>
                                         <td className="px-5 py-3 text-center">
                                             <div className="flex items-center justify-center">
                                                 <Badge variant={eq.intervention_reports_count > 0 ? 'default' : 'secondary'}>
