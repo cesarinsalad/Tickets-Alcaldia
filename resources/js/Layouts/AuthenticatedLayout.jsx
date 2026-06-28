@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, User, LogOut, PieChart, TrendingUp, ClipboardList } from 'lucide-react';
+import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, User, LogOut, BarChart, TrendingUp, ClipboardList } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import { toastSuccess, toastError, showPasswordAlert } from '@/lib/sweet-alert';
@@ -118,7 +118,7 @@ export default function AuthenticatedLayout({ header, actions, children }) {
         navItems.push({ href: route('sla.index'), label: 'Tiempos de Respuesta', icon: Clock, active: route().current('sla.*') });
     }
     if (can('ver metricas')) {
-        navItems.push({ href: route('metricas.index'), label: 'Métricas', icon: PieChart, active: route().current('metricas.*') });
+        navItems.push({ href: route('metricas.index'), label: 'Métricas', icon: BarChart, active: route().current('metricas.*') });
     }
     if (can('ver rendimiento')) {
         navItems.push({ href: route('rendimiento.index'), label: 'Rendimiento', icon: TrendingUp, active: route().current('rendimiento.*') });

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { PieChart, BarChart3, FolderTree } from 'lucide-react';
+import { BarChart, BarChart3, FolderTree } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import SimpleBarChart from '@/Components/SimpleBarChart';
@@ -25,7 +25,7 @@ export default function Index({ topDepartments, categoryDistribution, dateFrom, 
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3 min-w-0">
-                    <PieChart className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <BarChart className="h-6 w-6 text-azul-institucional shrink-0" />
                     <h2 className="text-xl font-semibold text-gray-900 truncate">Métricas</h2>
                 </div>
             }
