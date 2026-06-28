@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo, useEffect } from 'react';
-import { ClipboardList, FileText, Table2, Search, Download, FileSpreadsheet, Database, LayoutTemplate } from 'lucide-react';
+import { ClipboardList, FileText, Table2, Search, Download, FileSpreadsheet, Database, LayoutTemplate, Pencil, Trash2, Plus, X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -41,6 +41,47 @@ const GROUP_BY_OPTIONS_BY_SOURCE = {
 
 const DEFAULT_GROUP_BY_OPTIONS = [{ value: 'none', label: 'Ninguno' }];
 
+function getDatesFromPreset(preset) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const fmt = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const d_ = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d_}`;
+    };
+
+    switch (preset) {
+        case 'current_month':
+            return {
+                from: fmt(new Date(now.getFullYear(), now.getMonth(), 1)),
+                to: fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+            };
+        case 'previous_month': {
+            const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const last = new Date(now.getFullYear(), now.getMonth(), 0);
+            return { from: fmt(first), to: fmt(last) };
+        }
+        case 'last_7_days': {
+            const seven = new Date(today);
+            seven.setDate(today.getDate() - 7);
+            return { from: fmt(seven), to: fmt(today) };
+        }
+        case 'last_30_days': {
+            const thirty = new Date(today);
+            thirty.setDate(today.getDate() - 30);
+            return { from: fmt(thirty), to: fmt(today) };
+        }
+        case 'last_90_days': {
+            const ninety = new Date(today);
+            ninety.setDate(today.getDate() - 90);
+            return { from: fmt(ninety), to: fmt(today) };
+        }
+        default:
+            return null;
+    }
+}
+
 export default function Index({
     source: initialSource, template: initialTemplate,
     filters: initialFilters, columns, rows,
@@ -62,6 +103,11 @@ export default function Index({
     const [brand, setBrand] = useState(initialFilters?.brand || '');
     const [ramMax, setRamMax] = useState(initialFilters?.ram_max ?? '');
     const [diskType, setDiskType] = useState(initialFilters?.disk_type || '');
+
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
+    const [templateName, setTemplateName] = useState('');
+    const [editingTemplate, setEditingTemplate] = useState(null);
+    const [dateRangePreset, setDateRangePreset] = useState('');
 
     const groupByOptions = useMemo(
         () => GROUP_BY_OPTIONS_BY_SOURCE[source] || DEFAULT_GROUP_BY_OPTIONS,
@@ -87,12 +133,12 @@ export default function Index({
             if (categoryId) f.category_id = categoryId;
             if (assignedId) f.assigned_id = assignedId;
             if (resolution) f.resolution = resolution;
-            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
+            if (groupBy) f.group_by = groupBy;
         } else if (source === 'equipments') {
             if (brand) f.brand = brand;
             if (ramMax) f.ram_max = ramMax;
             if (diskType) f.disk_type = diskType;
-            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
+            if (groupBy) f.group_by = groupBy;
         }
 
         return f;
@@ -115,7 +161,7 @@ export default function Index({
 
     function handleTemplateClick(tpl) {
         setSource(tpl.source);
-        setTemplate(tpl.key);
+        setTemplate(tpl.id);
         setStatus('');
         setPriority('');
         setDepartmentId('');
@@ -126,17 +172,31 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
-        setFrom('');
-        setTo('');
+        setDateRangePreset(tpl.filters?.date_range_preset || '');
 
         const f = { ...tpl.filters };
+
+        if (f.date_range_preset) {
+            const dates = getDatesFromPreset(f.date_range_preset);
+            if (dates) {
+                setFrom(dates.from);
+                setTo(dates.to);
+            }
+        } else {
+            if (f.date_from) setFrom(f.date_from);
+            if (f.date_to) setTo(f.date_to);
+        }
+
         if (f.status) setStatus(f.status);
         if (f.priority) setPriority(f.priority);
         if (f.department_id) setDepartmentId(f.department_id);
+        if (f.category_id) setCategoryId(f.category_id);
         if (f.assigned_id) setAssignedId(f.assigned_id);
+        if (f.resolution) setResolution(f.resolution);
         if (f.brand) setBrand(f.brand);
         if (f.ram_max !== undefined) setRamMax(f.ram_max);
         if (f.disk_type) setDiskType(f.disk_type);
+        if (f.group_by) setGroupBy(f.group_by);
     }
 
     function handlePreview() {
@@ -167,6 +227,49 @@ export default function Index({
     function handleExportExcel() {
         const params = new URLSearchParams(activeFilters).toString();
         window.open(route('reportes.export-excel') + '?' + params, '_blank');
+    }
+
+    function openSaveTemplateModal() {
+        setTemplateName('');
+        setEditingTemplate(null);
+        setDateRangePreset('');
+        setShowTemplateModal(true);
+    }
+
+    function openEditTemplateModal(tpl) {
+        setTemplateName(tpl.name);
+        setEditingTemplate(tpl);
+        setShowTemplateModal(true);
+    }
+
+    function handleSaveTemplate() {
+        const filtersToSave = { ...activeFilters };
+
+        if (dateRangePreset) {
+            filtersToSave.date_range_preset = dateRangePreset;
+            delete filtersToSave.date_from;
+            delete filtersToSave.date_to;
+        }
+
+        router.post(route('report-templates.store'), {
+            name: templateName,
+            source: source,
+            filters: filtersToSave,
+        }, { preserveState: false });
+    }
+
+    function handleUpdateTemplate() {
+        router.put(route('report-templates.update', editingTemplate.id), {
+            name: templateName,
+        }, { preserveState: false });
+    }
+
+    function handleDeleteTemplate(tpl) {
+        if (confirm(`¿Eliminar la plantilla "${tpl.name}"? Esta acción no se puede deshacer.`)) {
+            router.delete(route('report-templates.destroy', tpl.id), {
+                preserveState: false,
+            });
+        }
     }
 
     const showPreview = rows && rows.data && rows.data.length > 0;
@@ -212,23 +315,129 @@ export default function Index({
                                 {templates
                                     .filter(tpl => tpl.source === source)
                                     .map(tpl => (
-                                        <button
-                                            key={tpl.key}
-                                            onClick={() => handleTemplateClick(tpl)}
-                                            className={`w-full text-left text-xs px-3 py-2 rounded-md border transition-colors ${
-                                                template === tpl.key
-                                                    ? 'border-azul-institucional bg-blue-50 text-azul-institucional font-medium'
-                                                    : 'border-gris-borde hover:border-azul-institucional/50 text-gray-600 hover:text-gray-900'
-                                            }`}
-                                        >
-                                            {tpl.label}
-                                        </button>
+                                        <div key={tpl.id} className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => handleTemplateClick(tpl)}
+                                                className={`flex-1 text-left text-xs px-3 py-2 rounded-md border transition-colors ${
+                                                    template === tpl.id
+                                                        ? 'border-azul-institucional bg-blue-50 text-azul-institucional font-medium'
+                                                        : 'border-gris-borde hover:border-azul-institucional/50 text-gray-600 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                {tpl.name}
+                                            </button>
+                                            {tpl.can_edit && (
+                                                <>
+                                                    <button
+                                                        onClick={() => openEditTemplateModal(tpl)}
+                                                        className="p-1.5 text-gray-400 hover:text-azul-institucional rounded-md hover:bg-blue-50 transition-colors"
+                                                        title="Editar plantilla"
+                                                    >
+                                                        <Pencil className="h-3.5 w-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteTemplate(tpl)}
+                                                        className="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
+                                                        title="Eliminar plantilla"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     ))}
+                                <button
+                                    onClick={openSaveTemplateModal}
+                                    className="w-full text-left text-xs px-3 py-2 rounded-md border border-dashed border-gris-borde text-gray-500 hover:border-azul-institucional hover:text-azul-institucional hover:bg-blue-50/50 transition-colors flex items-center gap-1.5"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Guardar Plantilla
+                                </button>
                             </div>
                         ) : (
                             <p className="text-xs text-gray-400 py-2">Selecciona un origen de datos para ver las plantillas.</p>
                         )}
                     </div>
+
+                    {/* Template Modal */}
+                    {showTemplateModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowTemplateModal(false)}>
+                            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-sm font-semibold text-gray-900">
+                                        {editingTemplate ? 'Editar Plantilla' : 'Guardar Plantilla'}
+                                    </h3>
+                                    <button onClick={() => setShowTemplateModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Nombre</label>
+                                        <Input
+                                            value={templateName}
+                                            onChange={e => setTemplateName(e.target.value)}
+                                            placeholder="Ej: Mi reporte mensual"
+                                            className="text-sm"
+                                            maxLength={100}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Rango de fechas</label>
+                                        <Select
+                                            value={dateRangePreset}
+                                            onChange={e => setDateRangePreset(e.target.value)}
+                                            className="text-sm"
+                                        >
+                                            <option value="">Fechas personalizadas (usar lo que se ve)</option>
+                                            <option value="current_month">Mes actual</option>
+                                            <option value="previous_month">Mes anterior</option>
+                                            <option value="last_7_days">Últimos 7 días</option>
+                                            <option value="last_30_days">Últimos 30 días</option>
+                                            <option value="last_90_days">Últimos 90 días</option>
+                                        </Select>
+                                        {dateRangePreset && (
+                                            <p className="text-[10px] text-gray-400 mt-1">
+                                                Las fechas se calcularán dinámicamente cada vez que se aplique esta plantilla.
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="text-xs text-gray-500 bg-gris-fondo rounded-md p-3 space-y-1">
+                                        <p className="font-medium text-gray-600">Filtros que se guardarán:</p>
+                                        <p>Origen: <span className="text-gray-900">{SOURCE_LABELS[source] || source}</span></p>
+                                        {dateRangePreset ? (
+                                            <p>Rango: <span className="text-gray-900">{
+                                                {current_month: 'Mes actual', previous_month: 'Mes anterior', last_7_days: 'Últimos 7 días', last_30_days: 'Últimos 30 días', last_90_days: 'Últimos 90 días'}[dateRangePreset]
+                                            }</span></p>
+                                        ) : (
+                                            <>
+                                                {from && <p>Desde: <span className="text-gray-900">{from}</span></p>}
+                                                {to && <p>Hasta: <span className="text-gray-900">{to}</span></p>}
+                                            </>
+                                        )}
+                                        {status && <p>Estado: <span className="text-gray-900">{status}</span></p>}
+                                        {priority && <p>Prioridad: <span className="text-gray-900">{priority}</span></p>}
+                                        {brand && <p>Marca: <span className="text-gray-900">{brand}</span></p>}
+                                        {ramMax && <p>RAM menor a: <span className="text-gray-900">{ramMax} GB</span></p>}
+                                        {diskType && <p>Disco: <span className="text-gray-900">{diskType}</span></p>}
+                                        {groupBy !== 'none' && <p>Agrupar por: <span className="text-gray-900">{groupByOptions.find(o => o.value === groupBy)?.label || groupBy}</span></p>}
+                                    </div>
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <Button
+                                            size="sm"
+                                            onClick={editingTemplate ? handleUpdateTemplate : handleSaveTemplate}
+                                            disabled={!templateName.trim()}
+                                        >
+                                            {editingTemplate ? 'Actualizar' : 'Guardar'}
+                                        </Button>
+                                        <Button size="sm" variant="outline" onClick={() => setShowTemplateModal(false)}>
+                                            Cancelar
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Step 3: Dynamic Filters */}
                     <div className="rounded-lg border border-gris-borde bg-white p-4">

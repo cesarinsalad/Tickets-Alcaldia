@@ -13,6 +13,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SlaConfigurationController;
 use App\Http\Controllers\RendimientoController;
 use App\Http\Controllers\ReportesController;
+use App\Http\Controllers\ReportTemplateController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
         Route::get('/reportes/export-pdf', [ReportesController::class, 'exportPdf'])->name('reportes.export-pdf');
         Route::get('/reportes/export-excel', [ReportesController::class, 'exportExcel'])->name('reportes.export-excel');
+        Route::post('/reportes/templates', [ReportTemplateController::class, 'store'])->name('report-templates.store');
+        Route::put('/reportes/templates/{reportTemplate}', [ReportTemplateController::class, 'update'])->name('report-templates.update');
+        Route::delete('/reportes/templates/{reportTemplate}', [ReportTemplateController::class, 'destroy'])->name('report-templates.destroy');
     });
 
     Route::middleware(['permission:gestionar roles'])->group(function () {

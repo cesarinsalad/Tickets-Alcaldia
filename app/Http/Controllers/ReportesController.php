@@ -8,6 +8,7 @@ use App\Exports\ReportesExport;
 use App\Models\Category;
 use App\Models\Department;
 use App\Models\Equipment;
+use App\Models\ReportTemplate;
 use App\Models\Ticket;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -18,19 +19,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportesController extends Controller
 {
-    private const TEMPLATES = [
-        'cierre_mes' => [
-            'label' => 'Cierre de Mes Operativo',
-            'source' => 'tickets',
-            'filters' => ['status' => 'cerrado'],
-        ],
-        'obsolescencia' => [
-            'label' => 'Reporte de Obsolescencia',
-            'source' => 'equipments',
-            'filters' => ['disk_type' => 'HDD', 'ram_max' => 8],
-        ],
-    ];
-
     private const COLUMNS = [
         'tickets' => [
             ['key' => 'code', 'label' => 'Código'],
@@ -109,11 +97,12 @@ class ReportesController extends Controller
             'rows' => $rows,
             'groupSubtotals' => $groupSubtotals,
             'groupBy' => $groupBy,
-            'templates' => collect(self::TEMPLATES)->map(fn ($t, $key) => [
-                'key' => $key,
-                'label' => $t['label'],
-                'source' => $t['source'],
-                'filters' => $t['filters'],
+            'templates' => ReportTemplate::orderBy('name')->get()->map(fn ($t) => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'source' => $t->source,
+                'filters' => $t->filters,
+                'can_edit' => $t->created_by === $user->id,
             ])->values(),
             'departments' => $departments,
             'technicians' => $technicians->map(fn ($u) => [
@@ -326,22 +315,14 @@ class ReportesController extends Controller
             $filters['group_by'] = $request->input('group_by') ?: 'none';
         }
 
-        if ($templateKey && isset(self::TEMPLATES[$templateKey])) {
-            $preset = self::TEMPLATES[$templateKey];
-            $filters['source'] = $preset['source'];
-
-            foreach ($preset['filters'] as $key => $value) {
-                if (! array_key_exists($key, $filters) || $filters[$key] === null) {
-                    $filters[$key] = $value;
-                }
-            }
-
-            if ($templateKey === 'cierre_mes') {
-                if (empty($filters['date_from'])) {
-                    $filters['date_from'] = now()->startOfMonth()->toDateString();
-                }
-                if (empty($filters['date_to'])) {
-                    $filters['date_to'] = now()->endOfMonth()->toDateString();
+        if ($templateKey) {
+            $template = ReportTemplate::find($templateKey);
+            if ($template) {
+                $filters['source'] = $template->source;
+                foreach ($template->filters as $key => $value) {
+                    if (! array_key_exists($key, $filters) || $filters[$key] === null) {
+                        $filters[$key] = $value;
+                    }
                 }
             }
         }
