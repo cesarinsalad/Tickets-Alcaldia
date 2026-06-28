@@ -1,13 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Shield, Check, X, Trash2, Pencil, Key, UserCheck, UserX, Users, Activity } from 'lucide-react';
+import { Plus, Search, Shield, Check, X, Trash2, Pencil, UserCheck, UserX, Users, Activity } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import Pagination from '@/Components/Pagination';
-import { confirmAction, showPasswordAlert } from '@/lib/sweet-alert';
+import { confirmAction } from '@/lib/sweet-alert';
 
 const roleLabels = {
     super_admin: 'Super Admin',
@@ -195,27 +195,6 @@ export default function Index({ users, departments, roles, filters, activeCount,
                                                     className="inline-flex items-center justify-center rounded-md p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                                                 >
                                                     {user.is_active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                                                </button>
-                                                <button
-                                                    onClick={async () => {
-                                                        const result = await confirmAction({
-                                                            title: '¿Restablecer contraseña?',
-                                                            text: 'Se generará una nueva contraseña temporal para el usuario.',
-                                                            icon: 'question',
-                                                            confirmText: 'Sí, restablecer',
-                                                        });
-                                                        if (result.isConfirmed) {
-                                                            router.post(route('users.reset-password', user.id), {}, {
-                                                                onSuccess: (page) => {
-                                                                    showPasswordAlert(page.props.flash?.new_password);
-                                                                }
-                                                            });
-                                                        }
-                                                    }}
-                                                    title="Restablecer contraseña"
-                                                    className="inline-flex items-center justify-center rounded-md p-1.5 text-azul-institucional hover:bg-blue-50 transition-colors"
-                                                >
-                                                    <Key className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={async () => {

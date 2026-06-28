@@ -191,6 +191,8 @@ class UserManagementController extends Controller
             'phone_number' => ['nullable', 'string', 'max:20'],
             'department_id' => ['required', 'exists:departments,id'],
             'role' => ['nullable', 'string', 'in:' . implode(',', $allowedRoles)],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'password_confirmation' => ['nullable', 'string'],
         ]);
 
         if ($request->filled('role') && $validated['role'] === 'admin_departamento') {
@@ -216,6 +218,10 @@ class UserManagementController extends Controller
             'phone_number' => $validated['phone_number'] ?? null,
             'department_id' => $validated['department_id'],
         ]);
+
+        if ($request->filled('password')) {
+            $user->update(['password' => Hash::make($validated['password'])]);
+        }
 
         if ($request->filled('role')) {
             $user->syncRoles([$validated['role']]);
@@ -269,23 +275,6 @@ class UserManagementController extends Controller
         }
 
         $department->update(['head_of_area_id' => $user->id]);
-    }
-
-    public function resetPassword(User $user)
-    {
-        if (! request()->user()->hasPermissionTo('gestionar usuarios')) {
-            abort(403, 'No autorizado.');
-        }
-
-        $password = Str::random(10);
-
-        $user->update([
-            'password' => Hash::make($password),
-        ]);
-
-        return back()
-            ->with('success', "Contraseña restablecida exitosamente.")
-            ->with('new_password', $password);
     }
 
     public function toggle(User $user)

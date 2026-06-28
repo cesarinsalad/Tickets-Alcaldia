@@ -47,7 +47,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['permission:gestionar usuarios'])->group(function () {
         Route::resource('users', UserManagementController::class)->except(['show']);
-        Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/users/{user}/toggle', [UserManagementController::class, 'toggle'])->name('users.toggle');
     });
 

@@ -83,24 +83,30 @@ export default function Create({ departments, roles }) {
                             <Input id="email" type="email" name="email" value={values.email} onChange={handleChange} className="mt-1" />
                             <InputError message={errors.email} />
                         </div>
-                        <div>
-                            <Label htmlFor="department_id">Departamento</Label>
-                            <Select id="department_id" name="department_id" value={values.department_id} onChange={handleChange} className="mt-1">
-                                <option value="">Seleccionar departamento</option>
-                                {departments.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
-                            </Select>
-                            <InputError message={errors.department_id} />
-                        </div>
-                        <div>
-                            <Label htmlFor="role">Rol</Label>
-                            <Select id="role" name="role" value={values.role} onChange={handleChange} className="mt-1">
-                                {Object.entries(roles).map(([val, label]) => (
-                                    <option key={val} value={val}>{label}</option>
-                                ))}
-                            </Select>
-                            <InputError message={errors.role} />
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="department_id" className="mb-1">Departamento</Label>
+                                <div className="mt-2">
+                                    <Select id="department_id" name="department_id" value={values.department_id} onChange={handleChange}>
+                                        <option value="">Seleccionar departamento</option>
+                                        {departments.map(d => (
+                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                        ))}
+                                    </Select>
+                                </div>
+                                <InputError message={errors.department_id} />
+                            </div>
+                            <div>
+                                <Label htmlFor="role" className="mb-1">Rol</Label>
+                                <div className="mt-2">
+                                    <Select id="role" name="role" value={values.role} onChange={handleChange}>
+                                        {Object.entries(roles).map(([val, label]) => (
+                                            <option key={val} value={val}>{label}</option>
+                                        ))}
+                                    </Select>
+                                </div>
+                                <InputError message={errors.role} />
+                            </div>
                         </div>
                         <div className="flex items-center gap-3 pt-2">
                             <Button type="submit" disabled={processing}>
