@@ -146,10 +146,10 @@ export default function Index({
                     />
                     <KpiCard
                         icon={TrendingUp}
-                        label="Cumplimiento de tiempos"
+                        label="Tickets Resueltos a Tiempo"
                         value={kpis?.sla_pct != null ? `${kpis.sla_pct}%` : '—'}
                         color="orange"
-                        subtitle="Tickets resueltos dentro de su plazo establecido"
+                        subtitle="Porcentaje de tickets resueltos a tiempo"
                         href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: from || dateFrom, date_to: to || dateTo })}
                     />
                     <KpiCard
