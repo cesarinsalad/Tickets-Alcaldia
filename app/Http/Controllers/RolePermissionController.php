@@ -115,9 +115,13 @@ class RolePermissionController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50', 'unique:permissions,name'],
+            'module' => ['nullable', 'string', 'max:50'],
         ]);
 
-        Permission::create(['name' => $validated['name']]);
+        Permission::create([
+            'name' => $validated['name'],
+            'module' => $validated['module'] ?? null,
+        ]);
 
         return back()->with('success', 'Permiso creado exitosamente.');
     }
