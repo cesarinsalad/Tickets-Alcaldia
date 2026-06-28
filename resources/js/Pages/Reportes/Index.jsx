@@ -349,6 +349,15 @@ export default function Index({
                                 <div>
                                     <div className="space-y-3">
                                         <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Rango de Fechas de Intervención</label>
+                                            <div className="flex items-center gap-2">
+                                                <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="flex-1 text-xs" />
+                                                <span className="text-gray-400 text-xs">—</span>
+                                                <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="flex-1 text-xs" />
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mt-1">Filtra los equipos que tuvieron informes de intervención entre estas fechas.</p>
+                                        </div>
+                                        <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Marca</label>
                                             <Select value={brand} onChange={e => setBrand(e.target.value)} className="w-full text-xs">
                                                 <option value="">Todas</option>

@@ -688,6 +688,17 @@ class ReportesController extends Controller
             ->with('department')
             ->withCount('interventionReports as interventions_count');
 
+        if (! empty($filters['date_from']) || ! empty($filters['date_to'])) {
+            $query->whereHas('interventionReports', function ($q) use ($filters) {
+                if (! empty($filters['date_from'])) {
+                    $q->whereDate('created_at', '>=', $filters['date_from']);
+                }
+                if (! empty($filters['date_to'])) {
+                    $q->whereDate('created_at', '<=', $filters['date_to']);
+                }
+            });
+        }
+
         if (! empty($filters['brand'])) {
             $query->where('brand', 'ilike', '%' . $filters['brand'] . '%');
         }
