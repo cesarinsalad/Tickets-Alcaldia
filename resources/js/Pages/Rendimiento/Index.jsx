@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { TrendingUp, Ticket, CheckCircle, AlertOctagon, Clock, Users, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Ticket, CheckCircle, AlertOctagon, Users, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -54,7 +54,7 @@ function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
 }
 
 export default function Index({
-    kpis, mttr, trendData, trendGranularity,
+    kpis, trendData, trendGranularity,
     technicianWorkload, dateFrom, dateTo,
 }) {
     const [from, setFrom] = useState(dateFrom || '');
@@ -84,10 +84,6 @@ export default function Index({
             data: extra,
         });
     }
-
-    const mttrDisplay = mttr != null
-        ? `${mttr} hrs`
-        : '—';
 
     return (
         <AuthenticatedLayout
@@ -162,24 +158,7 @@ export default function Index({
                     />
                 </div>
 
-                {/* ROW 2: MTTR */}
-                <div className="rounded-lg border border-gris-borde bg-white p-6 flex flex-col items-center justify-center text-center">
-                    <Clock className="h-8 w-8 text-azul-institucional mb-2" />
-                    <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">MTTR</p>
-                    <p className="mt-2 text-4xl font-bold text-gray-900">{mttrDisplay}</p>
-                    <p className="mt-1 text-xs text-gray-400">Tiempo medio de resolución en el período elegido</p>
-                </div>
-
-                {/* ROW 3: Trend Chart (Created vs Resolved) */}
-                <div className="rounded-lg border border-gris-borde bg-white p-5">
-                    <LineAreaChart
-                        data={trendData}
-                        granularity={trendGranularity}
-                        onGranularityChange={handleGranularityChange}
-                    />
-                </div>
-
-                {/* ROW 4: Technician Workload Table */}
+                {/* ROW 2: Technician Workload Table */}
                 <div className="rounded-lg border border-gris-borde bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide inline-flex items-center gap-2">
                         <Users className="h-4 w-4 text-azul-institucional" />
@@ -266,6 +245,15 @@ export default function Index({
                     ) : (
                         <p className="text-sm text-gray-500 text-center py-6">No hay técnicos registrados.</p>
                     )}
+                </div>
+
+                {/* ROW 3: Trend Chart (Created vs Resolved) */}
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <LineAreaChart
+                        data={trendData}
+                        granularity={trendGranularity}
+                        onGranularityChange={handleGranularityChange}
+                    />
                 </div>
             </div>
         </AuthenticatedLayout>

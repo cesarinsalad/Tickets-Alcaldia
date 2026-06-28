@@ -48,16 +48,6 @@ class RendimientoController extends Controller
             ->distinct('assigned_id')
             ->count('assigned_id');
 
-        // --- MTTR (Mean Time to Resolution) in hours ---
-        $mttr = Ticket::whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
-            ->whereBetween('exit_date', [$dateFrom, $dateTo])
-            ->whereNotNull('entry_date')
-            ->whereNotNull('exit_date')
-            ->selectRaw('ROUND(AVG(EXTRACT(EPOCH FROM (exit_date - entry_date))) / 3600.0, 1) as avg_hours')
-            ->value('avg_hours');
-
-        $mttr = $mttr !== null ? (float) $mttr : null;
-
         // --- Trend Data (Created vs Resolved) ---
         $trendGranularity = $request->input('trend_granularity', 'weeks');
 
@@ -151,7 +141,6 @@ class RendimientoController extends Controller
                 'sla_pct' => $slaPct,
                 'technicians_overdue' => $techniciansOverdue,
             ],
-            'mttr' => $mttr,
             'trendData' => $trendData,
             'trendGranularity' => $trendGranularity,
             'technicianWorkload' => $technicianWorkload,
