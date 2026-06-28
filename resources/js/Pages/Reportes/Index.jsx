@@ -178,6 +178,25 @@ export default function Index({
         router.get(route('reportes.index'), activeFilters, { preserveState: true, replace: true });
     }
 
+    function handleClearFilters() {
+        setFrom('');
+        setTo('');
+        setStatus('');
+        setPriority('');
+        setDepartmentId('');
+        setCategoryId('');
+        setAssignedId('');
+        setResolution('');
+        setGroupBy('none');
+        setBrand('');
+        setRamMax('');
+        setDiskType('');
+        setRoleFilter('');
+        setIsActive('');
+        setHasHead('');
+        router.get(route('reportes.index'), {}, { preserveState: true, replace: true });
+    }
+
     function handleExportPdf() {
         const params = new URLSearchParams(activeFilters).toString();
         window.open(route('reportes.export-pdf') + '?' + params, '_blank');
@@ -510,6 +529,14 @@ export default function Index({
                                 Excel
                             </Button>
                         </div>
+                        <Button
+                            onClick={handleClearFilters}
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-gray-500 hover:text-gray-700"
+                        >
+                            Limpiar filtros
+                        </Button>
                     </div>
                 </div>
 
