@@ -13,16 +13,12 @@ const SOURCES = [
     { value: 'tickets', label: 'Tickets' },
     { value: 'equipments', label: 'Equipos (Inventario)' },
     { value: 'users', label: 'Usuarios' },
-    { value: 'categories', label: 'Categorías' },
-    { value: 'departments', label: 'Departamentos' },
 ];
 
 const SOURCE_LABELS = {
     tickets: 'Tickets',
     equipments: 'Equipos',
     users: 'Usuarios',
-    categories: 'Categorías',
-    departments: 'Departamentos',
 };
 
 const GROUP_BY_OPTIONS_BY_SOURCE = {
@@ -48,11 +44,6 @@ const GROUP_BY_OPTIONS_BY_SOURCE = {
         { value: 'department', label: 'Departamento' },
         { value: 'is_active', label: 'Estado' },
     ],
-    departments: [
-        { value: 'none', label: 'Ninguno' },
-        { value: 'has_head', label: 'Tiene Jefe' },
-    ],
-    categories: [{ value: 'none', label: 'Ninguno' }],
     '': [{ value: 'none', label: 'Ninguno' }],
 };
 
@@ -81,7 +72,6 @@ export default function Index({
     const [diskType, setDiskType] = useState(initialFilters?.disk_type || '');
     const [roleFilter, setRoleFilter] = useState(initialFilters?.role || '');
     const [isActive, setIsActive] = useState(initialFilters?.is_active ?? '');
-    const [hasHead, setHasHead] = useState(initialFilters?.has_head ?? '');
 
     const groupByOptions = useMemo(
         () => GROUP_BY_OPTIONS_BY_SOURCE[source] || DEFAULT_GROUP_BY_OPTIONS,
@@ -118,13 +108,10 @@ export default function Index({
             if (departmentId) f.department_id = departmentId;
             if (isActive !== '') f.is_active = isActive;
             if (groupBy && groupBy !== 'none') f.group_by = groupBy;
-        } else if (source === 'departments') {
-            if (hasHead !== '') f.has_head = hasHead;
-            if (groupBy && groupBy !== 'none') f.group_by = groupBy;
         }
 
         return f;
-    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType, roleFilter, isActive, hasHead]);
+    }, [source, template, from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType, roleFilter, isActive]);
 
     function handleSourceChange(newSource) {
         setSource(newSource);
@@ -141,7 +128,6 @@ export default function Index({
         setDiskType('');
         setRoleFilter('');
         setIsActive('');
-        setHasHead('');
     }
 
     function handleTemplateClick(tpl) {
@@ -159,7 +145,6 @@ export default function Index({
         setDiskType('');
         setRoleFilter('');
         setIsActive('');
-        setHasHead('');
         setFrom('');
         setTo('');
 
@@ -193,7 +178,6 @@ export default function Index({
         setDiskType('');
         setRoleFilter('');
         setIsActive('');
-        setHasHead('');
         router.get(route('reportes.index'), {}, { preserveState: true, replace: true });
     }
 
@@ -443,52 +427,9 @@ export default function Index({
                                             </Select>
                                         </div>
                                     </div>
-                                    <div className="mt-3 pt-3 border-t border-gris-borde">
-                                        <label className="text-xs text-gray-500 mb-1 block">Agrupar por</label>
-                                        <Select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="w-full text-xs">
-                                            {groupByOptions.map(opt => (
-                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                            ))}
-                                        </Select>
-                                    </div>
                                 </div>
                             )}
 
-                            {source === 'categories' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-gray-500 mb-1 block">Rango de Fechas de Uso</label>
-                                        <div className="flex items-center gap-2">
-                                            <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="flex-1 text-xs" />
-                                            <span className="text-gray-400 text-xs">—</span>
-                                            <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="flex-1 text-xs" />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {source === 'departments' && (
-                                <div>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="text-xs text-gray-500 mb-1 block">Tiene Jefe Asignado</label>
-                                            <Select value={hasHead} onChange={e => setHasHead(e.target.value)} className="w-full text-xs">
-                                                <option value="">Todos</option>
-                                                <option value="1">Sí</option>
-                                                <option value="0">No</option>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3 pt-3 border-t border-gris-borde">
-                                        <label className="text-xs text-gray-500 mb-1 block">Agrupar por</label>
-                                        <Select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="w-full text-xs">
-                                            {groupByOptions.map(opt => (
-                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                            ))}
-                                        </Select>
-                                    </div>
-                                </div>
-                            )}
                             </>
                         )}
                     </div>

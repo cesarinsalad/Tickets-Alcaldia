@@ -34,16 +34,6 @@ class ReportesController extends Controller
             'source' => 'users',
             'filters' => ['role' => 'tecnico,admin_tickets,super_admin'],
         ],
-        'frecuencia_fallas' => [
-            'label' => 'Frecuencia de Fallas',
-            'source' => 'categories',
-            'filters' => [],
-        ],
-        'carga_soporte' => [
-            'label' => 'Carga de Soporte Departamental',
-            'source' => 'departments',
-            'filters' => [],
-        ],
     ];
 
     private const COLUMNS = [
@@ -76,18 +66,6 @@ class ReportesController extends Controller
             ['key' => 'department_name', 'label' => 'Departamento'],
             ['key' => 'is_active', 'label' => 'Activo', 'format' => 'boolean'],
         ],
-        'categories' => [
-            ['key' => 'name', 'label' => 'Categoría'],
-            ['key' => 'total_tickets', 'label' => 'Total Tickets'],
-            ['key' => 'tickets_in_period', 'label' => 'Tickets en Período'],
-        ],
-        'departments' => [
-            ['key' => 'name', 'label' => 'Departamento'],
-            ['key' => 'physical_address', 'label' => 'Dirección'],
-            ['key' => 'head_name', 'label' => 'Jefe de Área'],
-            ['key' => 'users_count', 'label' => 'Total Usuarios'],
-            ['key' => 'tickets_count', 'label' => 'Total Tickets'],
-        ],
     ];
 
     public function index(Request $request)
@@ -116,8 +94,6 @@ class ReportesController extends Controller
                 'tickets' => $this->buildTicketQuery($request, $filters),
                 'equipments' => $this->buildEquipmentQuery($request, $filters),
                 'users' => $this->buildUserQuery($request, $filters),
-                'categories' => $this->buildCategoryQuery($request, $filters),
-                'departments' => $this->buildDepartmentQuery($request, $filters),
                 default => null,
             };
 
@@ -247,8 +223,6 @@ class ReportesController extends Controller
             'tickets' => $this->buildTicketQuery($request, $filters),
             'equipments' => $this->buildEquipmentQuery($request, $filters),
             'users' => $this->buildUserQuery($request, $filters),
-            'categories' => $this->buildCategoryQuery($request, $filters),
-            'departments' => $this->buildDepartmentQuery($request, $filters),
             default => abort(400),
         };
 
@@ -270,8 +244,6 @@ class ReportesController extends Controller
             'tickets' => 'Tickets',
             'equipments' => 'Equipos',
             'users' => 'Usuarios',
-            'categories' => 'Categorías',
-            'departments' => 'Departamentos',
         ];
 
         $title = 'Reporte de ' . ($sourceLabels[$source] ?? $source);
@@ -318,8 +290,6 @@ class ReportesController extends Controller
             'tickets' => $this->buildTicketQuery($request, $filters),
             'equipments' => $this->buildEquipmentQuery($request, $filters),
             'users' => $this->buildUserQuery($request, $filters),
-            'categories' => $this->buildCategoryQuery($request, $filters),
-            'departments' => $this->buildDepartmentQuery($request, $filters),
             default => abort(400),
         };
 
@@ -339,8 +309,6 @@ class ReportesController extends Controller
             'tickets' => 'Tickets',
             'equipments' => 'Equipos',
             'users' => 'Usuarios',
-            'categories' => 'Categorías',
-            'departments' => 'Departamentos',
         ];
         $title = 'Reporte de ' . ($sourceLabels[$source] ?? $source);
 
@@ -381,11 +349,6 @@ class ReportesController extends Controller
             $filters['department_id'] = $request->input('department_id');
             $filters['is_active'] = $request->input('is_active');
             $filters['group_by'] = $request->input('group_by') ?: 'none';
-        } elseif ($sourceParam === 'categories') {
-            // date_from/to already captured
-        } elseif ($sourceParam === 'departments') {
-            $filters['has_head'] = $request->input('has_head');
-            $filters['group_by'] = $request->input('group_by') ?: 'none';
         }
 
         if ($templateKey && isset(self::TEMPLATES[$templateKey])) {
@@ -404,13 +367,6 @@ class ReportesController extends Controller
                 }
                 if (empty($filters['date_to'])) {
                     $filters['date_to'] = now()->endOfMonth()->toDateString();
-                }
-            } elseif ($templateKey === 'frecuencia_fallas') {
-                if (empty($filters['date_from'])) {
-                    $filters['date_from'] = now()->subMonths(6)->startOfMonth()->toDateString();
-                }
-                if (empty($filters['date_to'])) {
-                    $filters['date_to'] = now()->toDateString();
                 }
             }
         }
@@ -546,7 +502,6 @@ class ReportesController extends Controller
             ],
             'departments' => [
                 ['value' => 'none', 'label' => 'Ninguno'],
-                ['value' => 'has_head', 'label' => 'Tiene Jefe'],
             ],
             default => [['value' => 'none', 'label' => 'Ninguno']],
         };
@@ -579,8 +534,6 @@ class ReportesController extends Controller
                 return $row['storage_disk'] ?? 'Sin almacenamiento';
             case 'model':
                 return $row['model'] ?? 'Sin modelo';
-            case 'has_head':
-                return $row['head_name'] ? 'Con jefe' : 'Sin jefe';
             default:
                 return '—';
         }
@@ -765,50 +718,6 @@ class ReportesController extends Controller
         return $query->orderBy('name');
     }
 
-    private function buildCategoryQuery(Request $request, array $filters)
-    {
-        $query = Category::query()->withCount('tickets as total_tickets');
-
-        if (! empty($filters['date_from']) || ! empty($filters['date_to'])) {
-            $query->withCount(['tickets as tickets_in_period' => function ($q) use ($filters) {
-                if (! empty($filters['date_from'])) {
-                    $q->whereDate('entry_date', '>=', $filters['date_from']);
-                }
-                if (! empty($filters['date_to'])) {
-                    $q->whereDate('entry_date', '<=', $filters['date_to']);
-                }
-            }]);
-        } else {
-            $query->withCount(['tickets as tickets_in_period' => function ($q) {
-                $q->whereBetween('entry_date', [now()->subMonths(6), now()]);
-            }]);
-        }
-
-        return $query->orderByDesc('total_tickets');
-    }
-
-    private function buildDepartmentQuery(Request $request, array $filters)
-    {
-        $query = Department::query()
-            ->with('headOfArea')
-            ->withCount('users')
-            ->withCount(['users as tickets_count' => function ($q) {
-                $q->join('tickets', 'users.id', '=', 'tickets.creator_id')
-                    ->whereNull('tickets.deleted_at');
-            }]);
-
-        if (isset($filters['has_head']) && $filters['has_head'] !== '' && $filters['has_head'] !== null) {
-            $hasHead = filter_var($filters['has_head'], FILTER_VALIDATE_BOOLEAN);
-            if ($hasHead) {
-                $query->whereNotNull('head_of_area_id');
-            } else {
-                $query->whereNull('head_of_area_id');
-            }
-        }
-
-        return $query->orderBy('name');
-    }
-
     private function filterLabel(string $key, mixed $value): ?string
     {
         return match ($key) {
@@ -825,7 +734,6 @@ class ReportesController extends Controller
             'sku' => 'SKU: <strong>' . e($value) . '</strong>',
             'role' => 'Rol: <strong>' . e($value) . '</strong>',
             'is_active' => 'Estado: <strong>' . (filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'Activo' : 'Inactivo') . '</strong>',
-            'has_head' => 'Jefe asignado: <strong>' . (filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'Sí' : 'No') . '</strong>',
             'date_from', 'date_to', 'source', 'template' => null,
             default => null,
         };
@@ -845,7 +753,6 @@ class ReportesController extends Controller
             'is_active' => 'Estado',
             'brand' => 'Marca',
             'model' => 'Modelo',
-            'has_head' => 'Tiene Jefe',
             default => $value,
         };
     }
