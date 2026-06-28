@@ -315,7 +315,7 @@ class ReportesController extends Controller
             $filters['group_by'] = $request->input('group_by') ?: 'none';
         }
 
-        if ($templateKey) {
+        if ($templateKey && is_numeric($templateKey)) {
             $template = ReportTemplate::find($templateKey);
             if ($template) {
                 $filters['source'] = $template->source;

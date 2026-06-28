@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { ClipboardList, FileText, Table2, Search, Download, FileSpreadsheet, Database, LayoutTemplate, Pencil, Trash2, Plus, X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -109,6 +109,8 @@ export default function Index({
     const [editingTemplate, setEditingTemplate] = useState(null);
     const [dateRangePreset, setDateRangePreset] = useState('');
 
+    const skipTemplateClear = useRef(false);
+
     const groupByOptions = useMemo(
         () => GROUP_BY_OPTIONS_BY_SOURCE[source] || DEFAULT_GROUP_BY_OPTIONS,
         [source]
@@ -121,8 +123,17 @@ export default function Index({
         }
     }, [groupByOptions, groupBy]);
 
+    useEffect(() => {
+        if (skipTemplateClear.current) {
+            skipTemplateClear.current = false;
+            return;
+        }
+        if (template) setTemplate('');
+    }, [from, to, status, priority, departmentId, categoryId, assignedId, resolution, groupBy, brand, ramMax, diskType]);
+
     const activeFilters = useMemo(() => {
-        const f = { source: source || undefined, template: template || undefined };
+        const f = { source: source || undefined };
+        if (template) f.template = template;
         if (from) f.date_from = from;
         if (to) f.date_to = to;
 
@@ -160,6 +171,7 @@ export default function Index({
     }
 
     function handleTemplateClick(tpl) {
+        skipTemplateClear.current = true;
         setSource(tpl.source);
         setTemplate(tpl.id);
         setStatus('');
@@ -216,6 +228,7 @@ export default function Index({
         setBrand('');
         setRamMax('');
         setDiskType('');
+        setTemplate('');
         router.get(route('reportes.index'), {}, { preserveState: true, replace: true });
     }
 
@@ -722,11 +735,11 @@ export default function Index({
                                                     elements.push(
                                                         <tr key={`grp-${i}`} className="bg-blue-50">
                                                             <td colSpan={columns.length} className="px-4 py-2 text-xs font-semibold text-blue-900">
-                                                                <span className="inline-flex items-center gap-2">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
-                                                                    {currentGroup}
-                                                                    <span className="text-gray-500 font-normal">({totalForGroup} ticket{totalForGroup === 1 ? '' : 's'})</span>
-                                                                </span>
+                                                                    <span className="inline-flex items-center gap-2">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
+                                                                        {currentGroup}
+                                                                        <span className="text-gray-500 font-normal">({totalForGroup} {source === 'tickets' ? (totalForGroup === 1 ? 'ticket' : 'tickets') : (totalForGroup === 1 ? 'equipo' : 'equipos')})</span>
+                                                                    </span>
                                                             </td>
                                                         </tr>
                                                     );
