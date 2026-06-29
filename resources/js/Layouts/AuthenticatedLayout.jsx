@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, User, LogOut, TrendingUp, ClipboardList, Inbox } from 'lucide-react';
+import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import { toastSuccess, toastError, showPasswordAlert } from '@/lib/sweet-alert';
@@ -194,32 +194,6 @@ export default function AuthenticatedLayout({ header, actions, children }) {
                     })}
                 </TooltipProvider>
             </nav>
-
-            <div className="border-t border-white/10 shrink-0">
-                <Link
-                    href={route('profile.edit')}
-                    onClick={closeMobileSidebar}
-                    className={`flex items-center gap-3 px-3 py-2.5 text-sm text-blue-100 hover:bg-white/10 hover:text-white transition-colors ${!sidebarExpanded ? 'justify-center px-2' : ''}`}
-                >
-                    <User className="h-5 w-5 shrink-0" />
-                    {sidebarExpanded && (
-                        <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-white truncate">{user.full_name ?? user.name}</p>
-                            <p className="text-xs text-blue-200 truncate">{auth.role_label}</p>
-                        </div>
-                    )}
-                </Link>
-                <Link
-                    href={route('logout')}
-                    method="post"
-                    as="button"
-                    onClick={closeMobileSidebar}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-blue-100 hover:bg-white/10 hover:text-white transition-colors ${!sidebarExpanded ? 'justify-center px-2' : ''}`}
-                >
-                    <LogOut className="h-5 w-5 shrink-0" />
-                    {sidebarExpanded && <span>Cerrar sesión</span>}
-                </Link>
-            </div>
         </div>
     );
 
