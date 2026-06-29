@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, TrendingUp, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users, Layers, LayoutDashboard } from 'lucide-react';
+import { Ticket, Clock, CheckCircle, AlertTriangle, Circle, Plus, AlertOctagon, Building2, ChevronUp, ChevronDown, ArrowRight, Users, LayoutDashboard } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -307,96 +307,92 @@ const statusLabelMap = {
 };
 
 function TecnicoDashboard({ extra }) {
+    const [distributionRange, setDistributionRange] = useState(extra.distribution_range || 'last_month');
+    const [priorityRange, setPriorityRange] = useState(extra.priority_range || 'last_month');
+
+    function handleDistributionRangeChange(newRange) {
+        setDistributionRange(newRange);
+        router.get(route('dashboard'), {
+            distribution_range: newRange,
+        }, { preserveState: true, replace: true });
+    }
+
+    function handlePriorityRangeChange(newRange) {
+        setPriorityRange(newRange);
+        router.get(route('dashboard'), {
+            priority_range: newRange,
+        }, { preserveState: true, replace: true });
+    }
+
     return (
         <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard icon={Ticket} label="Tickets Abiertos" value={extra.abiertos} color="blue" subtitle="Sin atender" href={route('tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Clock} label="Tickets En Proceso" value={extra.en_proceso} color="orange" subtitle="Siendo atendidos" href={route('tickets.index', { status: 'en_proceso' })} />
+                <KpiCard icon={CheckCircle} label="Tickets Cerrados" value={extra.cerrados_this_month} color="green" subtitle="Este mes" href={route('tickets.index', { status: 'cerrado' })} />
+                <KpiCard icon={AlertOctagon} label="Tickets Vencidos" value={extra.sla_expired} color="red" subtitle="Con SLA vencido" href={route('tickets.index', { overdue: 1 })} />
+            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-                <div className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden">
-                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
-                        <TrendingUp className="h-4 w-4 text-azul-institucional" />
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Progreso Actual</h3>
-                    </div>
-                    <div className="flex flex-col items-center p-5">
-                        <div className="relative w-24 h-24 mb-2">
-                            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 72 72">
-                                <circle cx="36" cy="36" r="30" fill="none" stroke="#e5e7eb" strokeWidth="6" />
-                                <circle cx="36" cy="36" r="30" fill="none"
-                                    stroke={extra.progress_pct >= 100 ? '#34d399' : extra.progress_pct >= 50 ? '#facc15' : '#f87171'}
-                                    strokeWidth="6"
-                                    strokeDasharray={2 * Math.PI * 30}
-                                    strokeDashoffset={2 * Math.PI * 30 * (1 - extra.progress_pct / 100)}
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-800">{extra.progress_pct}%</span>
-                        </div>
-                        <p className="text-sm text-slate-400 text-center mt-4 italic">
-                            {extra.progress_pct >= 100 ? (
-                                <span>¡Todos tus tickets han sido resueltos!</span>
-                            ) : extra.progress_pct >= 50 ? (
-                                <span>Más de la mitad de tus tickets han sido resueltos. ¡Buen progreso!</span>
-                            ) : (
-                                <span>Menos de la mitad de tus tickets han sido resueltos.</span>
-                            )}
-                        </p>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 rounded-lg border border-gris-borde bg-white p-5">
+                    <StackedBarChart
+                        data={extra.status_distribution}
+                        xKey="period"
+                        bars={[
+                            { dataKey: 'abierto', name: 'Abierto', fill: '#1E3A5F' },
+                            { dataKey: 'en_proceso', name: 'En Proceso', fill: '#EA580C' },
+                            { dataKey: 'pendiente_informacion', name: 'Pendiente Info', fill: '#CA8A04' },
+                            { dataKey: 'resuelto_cerrado', name: 'Resuelto+Cerrado', fill: '#166534' },
+                        ]}
+                        granularity={distributionRange}
+                        onGranularityChange={handleDistributionRangeChange}
+                    />
                 </div>
 
-                <div className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden flex flex-col">
-                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
-                        <AlertTriangle className="h-4 w-4 text-azul-institucional" />
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Urgencias</h3>
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Distribución por Prioridad</h3>
+                        <select
+                            value={priorityRange}
+                            onChange={(e) => handlePriorityRangeChange(e.target.value)}
+                            className="text-xs border border-gris-borde rounded px-2 py-1 bg-white text-gray-600 cursor-pointer"
+                        >
+                            <option value="last_week">Última semana</option>
+                            <option value="last_month">Último mes</option>
+                            <option value="last_3_months">Últimos 3 meses</option>
+                            <option value="last_year">Último año</option>
+                        </select>
                     </div>
-                    <div className="flex-1 flex flex-col justify-center px-5 pb-5">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-red-100 rounded-xl p-4">
-                                <p className="text-4xl font-black text-center" style={{ color: '#c10005' }}>{extra.sla_expired}</p>
-                                <p className="text-sm font-medium text-red-600 text-center mt-1">Vencidos</p>
-                            </div>
-                            <div className="bg-yellow-100 rounded-xl p-4">
-                                <p className="text-4xl font-black text-center" style={{ color: '#f0b100' }}>{extra.sla_at_risk}</p>
-                                <p className="text-sm font-medium text-yellow-600 text-center mt-1">En Riesgo</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-100 shadow-sm bg-white overflow-hidden">
-                    <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
-                        <Layers className="h-4 w-4 text-azul-institucional" />
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Carga de Trabajo</h3>
-                    </div>
-                    <div className="p-5">
-                        {(() => {
-                            const breakdown = extra.queue_status_breakdown || [];
-                            const total = breakdown.reduce((sum, item) => sum + (item.count || 0), 0);
-                            const barColors = {
-                                'Abiertos': 'bg-azul-institucional',
-                                'En Proceso': 'bg-amber-600',
-                                'Pendiente Info': 'bg-yellow-600',
-                            };
-                            return breakdown.map(item => {
-                                const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                    {extra.priority_distribution?.length > 0 ? (
+                        <div className="space-y-5">
+                            {extra.priority_distribution.map(p => {
+                                const barColors = {
+                                    critica: 'bg-rojo-urgencia',
+                                    alta: 'bg-amber-600',
+                                    media: 'bg-yellow-600',
+                                    baja: 'bg-azul-institucional',
+                                };
                                 return (
-                                    <div key={item.name} className="mb-4 last:mb-0">
+                                    <div key={p.priority}>
                                         <div className="flex items-center justify-between mb-1.5">
-                                            <span className="text-xs font-medium text-gray-600">{item.name}</span>
-                                            <span className="text-xs font-semibold text-gray-700">{item.count} ({pct}%)</span>
+                                            <span className="text-xs font-medium text-gray-600">{p.label}</span>
+                                            <span className="text-xs font-semibold text-gray-700">{p.pct}%</span>
                                         </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                        <div className="w-full bg-gray-100 rounded-full h-3">
                                             <div
-                                                className={`h-2.5 rounded-full transition-all duration-500 ${barColors[item.name] || 'bg-gray-400'}`}
-                                                style={{ width: `${Math.max(pct, 3)}%` }}
+                                                className={`h-3 rounded-full transition-all duration-500 ${barColors[p.priority] || 'bg-gray-400'}`}
+                                                style={{ width: `${Math.max(p.pct, 2)}%` }}
                                             />
                                         </div>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">{p.count} ticket{p.count !== 1 ? 's' : ''}</p>
                                     </div>
                                 );
-                            });
-                        })()}
-                    </div>
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-8">Sin datos este rango.</p>
+                    )}
                 </div>
-
             </div>
 
         </div>

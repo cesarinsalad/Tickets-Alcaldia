@@ -268,7 +268,84 @@ class DashboardController extends Controller
                     $resolved = (clone $assignedQuery)->whereIn('status', [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])->count();
                     return $total > 0 ? round(($resolved / $total) * 100) : 0;
                 })(),
+                'abiertos' => (clone $assignedQuery)->where('status', TicketStatus::Abierto)->count(),
+                'en_proceso' => (clone $assignedQuery)->where('status', TicketStatus::EnProceso)->count(),
+                'cerrados_this_month' => (clone $assignedQuery)
+                    ->where('status', TicketStatus::Cerrado)
+                    ->whereBetween('exit_date', [$dateFrom, $dateTo])
+                    ->count(),
             ];
+
+            $user = $request->user();
+            $activeStatusValues = array_map(fn($s) => $s->value, $activeStatuses);
+
+            // Status distribution scoped to this technician
+            $techStatusRaw = Ticket::where('entry_date', '>=', $rangeConfig['start'])
+                ->where('assigned_id', $user->id)
+                ->selectRaw("DATE_TRUNC('{$rangeConfig['trunc']}', entry_date)::date as period")
+                ->selectRaw("COUNT(CASE WHEN status = ? THEN 1 END) as abierto", [TicketStatus::Abierto->value])
+                ->selectRaw("COUNT(CASE WHEN status = ? THEN 1 END) as en_proceso", [TicketStatus::EnProceso->value])
+                ->selectRaw("COUNT(CASE WHEN status = ? THEN 1 END) as pendiente_informacion", [TicketStatus::PendienteInformacion->value])
+                ->selectRaw("COUNT(CASE WHEN status IN (?,?) THEN 1 END) as resuelto_cerrado", [TicketStatus::Resuelto->value, TicketStatus::Cerrado->value])
+                ->groupBy('period')
+                ->orderBy('period')
+                ->get()
+                ->keyBy('period');
+
+            $techPeriodCursor = $rangeConfig['start']->copy();
+            $techStatusDistribution = [];
+            while ($techPeriodCursor->lte(now())) {
+                $p = $techPeriodCursor->copy();
+                match ($rangeConfig['trunc']) {
+                    'day' => $p->startOfDay(),
+                    'week' => $p->startOfWeek(),
+                    default => $p->startOfMonth(),
+                };
+                $key = $p->format('Y-m-d');
+                $label = $p->format(match ($rangeConfig['trunc']) {
+                    'day' => 'd/m',
+                    'month' => 'm/Y',
+                    default => 'd/m',
+                });
+                $row = $techStatusRaw[$key] ?? null;
+                $techStatusDistribution[] = [
+                    'period' => $label,
+                    'abierto' => (int) ($row->abierto ?? 0),
+                    'en_proceso' => (int) ($row->en_proceso ?? 0),
+                    'pendiente_informacion' => (int) ($row->pendiente_informacion ?? 0),
+                    'resuelto_cerrado' => (int) ($row->resuelto_cerrado ?? 0),
+                ];
+                match ($rangeConfig['trunc']) {
+                    'day' => $techPeriodCursor->addDay(),
+                    'week' => $techPeriodCursor->addWeek(),
+                    default => $techPeriodCursor->addMonth(),
+                };
+            }
+
+            // Priority distribution scoped to this technician
+            $techPriorityRaw = Ticket::where('entry_date', '>=', $priorityStart)
+                ->where('assigned_id', $user->id)
+                ->selectRaw('priority, count(*) as count')
+                ->groupBy('priority')
+                ->get()
+                ->keyBy(fn($r) => $r->priority->value);
+
+            $techTotalInRange = $techPriorityRaw->sum('count');
+            $techPriorityDistribution = collect(['critica', 'alta', 'media', 'baja'])
+                ->map(fn($key) => [
+                    'priority' => $key,
+                    'label' => TicketPriority::from($key)->label(),
+                    'count' => (int) ($techPriorityRaw[$key]->count ?? 0),
+                    'pct' => $techTotalInRange > 0
+                        ? round((int) ($techPriorityRaw[$key]->count ?? 0) / $techTotalInRange * 100)
+                        : 0,
+                ])
+                ->toArray();
+
+            $extra['status_distribution'] = $techStatusDistribution;
+            $extra['priority_distribution'] = $techPriorityDistribution;
+            $extra['distribution_range'] = $distributionRange;
+            $extra['priority_range'] = $priorityRange;
         } elseif ($user->usesDashboard('admin_tickets')) {
             $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);
             $kpis = [
