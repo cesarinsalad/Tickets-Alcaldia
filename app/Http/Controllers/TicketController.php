@@ -479,4 +479,54 @@ class TicketController extends Controller
             'departments' => $departments,
         ]);
     }
+
+    public function cola(Request $request)
+    {
+        $user = $request->user();
+
+        if (! $user->hasRole('tecnico')) {
+            abort(403);
+        }
+
+        $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
+
+        $sort = $request->input('sort', 'sla_resolution_deadline');
+        $dir = $request->input('dir', 'asc');
+        $allowedSorts = ['code', 'title', 'priority', 'status', 'creator_name', 'sla_resolution_deadline', 'entry_date'];
+        if (! in_array($sort, $allowedSorts)) $sort = 'sla_resolution_deadline';
+        if (! in_array($dir, ['asc', 'desc'])) $dir = 'asc';
+
+        $tickets = Ticket::where('assigned_id', $user->id)
+            ->whereIn('status', array_map(fn ($s) => $s->value, $activeStatuses))
+            ->with(['creator.department'])
+            ->when($sort === 'creator_name', fn ($q) => $q
+                ->leftJoin('users as creator_users', 'tickets.creator_id', '=', 'creator_users.id')
+                ->reorder('creator_users.name', $dir)
+                ->select('tickets.*'),
+                fn ($q) => $q->reorder($sort, $dir)
+            )
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn ($t) => [
+                'id' => $t->id,
+                'code' => $t->code,
+                'title' => $t->title,
+                'status' => $t->status->value,
+                'status_label' => $t->status->label(),
+                'priority' => $t->priority->value,
+                'priority_label' => $t->priority->label(),
+                'creator_name' => $t->creator?->full_name ?? '—',
+                'department' => $t->creator?->department?->name ?? '—',
+                'sla_deadline' => $t->sla_resolution_deadline?->format('d/m/Y H:i'),
+                'sla_deadline_raw' => $t->sla_resolution_deadline?->toIso8601String(),
+                'entry_date_raw' => $t->entry_date?->toIso8601String(),
+                'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+            ]);
+
+        return Inertia::render('Cola/Index', [
+            'tickets' => $tickets,
+            'sort' => $sort,
+            'dir' => $dir,
+        ]);
+    }
 }

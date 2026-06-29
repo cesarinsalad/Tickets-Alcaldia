@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox } from 'lucide-react';
+import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox, ListOrdered } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import { toastSuccess, toastError, showPasswordAlert } from '@/lib/sweet-alert';
@@ -102,6 +102,12 @@ export default function AuthenticatedLayout({ header, actions, children }) {
 
     if (isAdminOrSuper) {
         navItems.push({ href: route('bandeja.index'), label: 'Bandeja', icon: Inbox, active: route().current('bandeja.*') });
+    }
+
+    const isTecnico = auth.user?.roles?.some(r => r.name === 'tecnico');
+
+    if (isTecnico) {
+        navItems.push({ href: route('cola.index'), label: 'Mi Cola', icon: ListOrdered, active: route().current('cola.*') });
     }
 
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });

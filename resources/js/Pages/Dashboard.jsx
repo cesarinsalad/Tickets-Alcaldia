@@ -307,32 +307,6 @@ const statusLabelMap = {
 };
 
 function TecnicoDashboard({ extra }) {
-    const queueSort = extra.queue_sort || 'sla_resolution_deadline';
-    const queueDir = extra.queue_dir || 'asc';
-
-    function handleQueueSort(col) {
-        const newDir = queueSort === col && queueDir === 'asc' ? 'desc' : 'asc';
-        router.get(route('dashboard'), {
-            queue_sort: col,
-            queue_dir: newDir,
-            queue_page: 1,
-        }, { preserveState: true, replace: true });
-    }
-
-    function SortIcon({ col }) {
-        if (queueSort !== col) return null;
-        return queueDir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />;
-    }
-
-    function SortHeader({ col, children }) {
-        return (
-            <th className="px-5 py-3 font-medium cursor-pointer select-none hover:text-gray-700" onClick={() => handleQueueSort(col)}>
-                {children}
-                <SortIcon col={col} />
-            </th>
-        );
-    }
-
     return (
         <div className="space-y-6">
 
@@ -394,79 +368,35 @@ function TecnicoDashboard({ extra }) {
                         <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Carga de Trabajo</h3>
                     </div>
                     <div className="p-5">
-                        {extra.queue_status_breakdown?.map((item, idx) => {
-                            const dotColor = item.name === 'Abiertos' ? '#2a4d76' : item.name === 'En Proceso' ? '#4a6741' : '#f0b100';
-                            return (
-                                <div key={item.name} className={`flex items-center justify-between py-3 ${idx < extra.queue_status_breakdown.length - 1 ? 'border-b border-slate-100' : ''}`}>
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
-                                        <span className="text-sm font-medium text-slate-500">{item.name}</span>
+                        {(() => {
+                            const breakdown = extra.queue_status_breakdown || [];
+                            const total = breakdown.reduce((sum, item) => sum + (item.count || 0), 0);
+                            const barColors = {
+                                'Abiertos': 'bg-azul-institucional',
+                                'En Proceso': 'bg-amber-600',
+                                'Pendiente Info': 'bg-yellow-600',
+                            };
+                            return breakdown.map(item => {
+                                const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                                return (
+                                    <div key={item.name} className="mb-4 last:mb-0">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-medium text-gray-600">{item.name}</span>
+                                            <span className="text-xs font-semibold text-gray-700">{item.count} ({pct}%)</span>
+                                        </div>
+                                        <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                            <div
+                                                className={`h-2.5 rounded-full transition-all duration-500 ${barColors[item.name] || 'bg-gray-400'}`}
+                                                style={{ width: `${Math.max(pct, 3)}%` }}
+                                            />
+                                        </div>
                                     </div>
-                                    <span className="text-xl font-bold text-slate-700">{item.count}</span>
-                                </div>
-                            );
-                        })}
+                                );
+                            });
+                        })()}
                     </div>
                 </div>
 
-            </div>
-
-            <div className="rounded-lg border border-gris-borde bg-white">
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
-                    <Ticket className="h-4 w-4 text-azul-institucional" />
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Mi Cola de Trabajo</h3>
-                </div>
-                {extra.my_queue.data?.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <SortHeader col="code">Código</SortHeader>
-                                    <SortHeader col="title">Título</SortHeader>
-                                    <SortHeader col="creator_name">Solicitante</SortHeader>
-                                    <SortHeader col="priority">Prioridad</SortHeader>
-                                    <SortHeader col="status">Estado</SortHeader>
-                                    <SortHeader col="sla_resolution_deadline">Vencimiento</SortHeader>
-                                    <th className="px-5 py-3 font-medium">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gris-borde">
-                                {extra.my_queue.data.map(t => (
-                                    <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-5 py-3 font-mono text-xs text-gray-500">{t.code}</td>
-                                        <td className="px-5 py-3 max-w-[180px]">
-                                            <span className="text-gray-900 text-sm truncate block">{t.title}</span>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-600">{t.creator_name}</td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={statusBadgeMap[t.status] || 'default'}>{t.status_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3"><RelativeTime deadline={t.sla_deadline_raw} entryDate={t.entry_date_raw} compact /></td>
-                                        <td className="px-5 py-3">
-                                            <Link href={route('tickets.show', t.id)}>
-                                                <Button variant="outline" size="sm">Atender</Button>
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-sm text-gray-500 text-center py-10">No tienes tickets asignados.</p>
-                )}
-                {extra.my_queue.links && extra.my_queue.links.length > 3 && (
-                    <div className="px-5 py-3 border-t border-gris-borde">
-                        <Pagination
-                            links={extra.my_queue.links}
-                            total={extra.my_queue.total}
-                            perPage={extra.my_queue.per_page || 5}
-                        />
-                    </div>
-                )}
             </div>
 
             <div className="rounded-lg border border-gris-borde bg-white">
