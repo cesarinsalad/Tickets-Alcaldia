@@ -1,4 +1,4 @@
-import { ComposedChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const GRANULARITY_OPTIONS = [
     { value: 'days', label: 'Días' },
@@ -42,17 +42,7 @@ export default function LineAreaChart({ data, granularity, onGranularityChange }
                 </select>
             </div>
             <ResponsiveContainer width="100%" height={280}>
-                <ComposedChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <defs>
-                        <linearGradient id="createdGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#1E3A5F" stopOpacity={0.25} />
-                            <stop offset="100%" stopColor="#1E3A5F" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="resolvedGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#166534" stopOpacity={0.25} />
-                            <stop offset="100%" stopColor="#166534" stopOpacity={0} />
-                        </linearGradient>
-                    </defs>
+                <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <XAxis
                         dataKey="date"
                         tick={{ fontSize: 10, fill: '#64748b' }}
@@ -66,6 +56,7 @@ export default function LineAreaChart({ data, granularity, onGranularityChange }
                         allowDecimals={false}
                     />
                     <Tooltip
+                        cursor={{ fill: '#f1f5f9' }}
                         contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}
                     />
                     <Legend
@@ -73,23 +64,18 @@ export default function LineAreaChart({ data, granularity, onGranularityChange }
                         iconType="rect"
                         iconSize={8}
                     />
-                    <Area
-                        type="monotone"
+                    <Bar
                         dataKey="created"
-                        fill="url(#createdGradient)"
-                        stroke="#1E3A5F"
-                        strokeWidth={2}
+                        fill="#1E3A5F"
                         name="Creados"
+                        radius={[4, 4, 0, 0]}
                     />
-                    <Area
-                        type="monotone"
+                    <Bar
                         dataKey="resolved"
-                        fill="url(#resolvedGradient)"
-                        stroke="#166534"
-                        strokeWidth={2}
+                        fill="#166534"
                         name="Resueltos"
                     />
-                </ComposedChart>
+                </BarChart>
             </ResponsiveContainer>
         </div>
     );

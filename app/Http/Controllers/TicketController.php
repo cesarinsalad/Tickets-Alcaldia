@@ -447,4 +447,36 @@ class TicketController extends Controller
         return redirect()->route('tickets.index')
             ->with('success', 'Ticket eliminado exitosamente.');
     }
+
+    public function bandeja(Request $request)
+    {
+        if (! $request->user()->hasAnyRole(['admin_tickets', 'super_admin'])) {
+            abort(403);
+        }
+
+        $tickets = Ticket::with(['creator.department', 'category'])
+            ->visibleTo($request->user())
+            ->where('status', TicketStatus::Abierto)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn ($t) => [
+                'id' => $t->id,
+                'code' => $t->code,
+                'title' => $t->title,
+                'priority' => $t->priority->value,
+                'priority_label' => $t->priority->label(),
+                'creator_name' => $t->creator?->full_name ?? '—',
+                'department' => $t->creator?->department?->name ?? '—',
+                'category' => $t->category?->name ?? '—',
+                'entry_date' => $t->entry_date?->format('d/m/Y H:i'),
+            ]);
+
+        $departments = Department::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Bandeja/Index', [
+            'tickets' => $tickets,
+            'departments' => $departments,
+        ]);
+    }
 }
