@@ -107,7 +107,7 @@ export default function AuthenticatedLayout({ header, actions, children }) {
     const isTecnico = auth.user?.roles?.some(r => r.name === 'tecnico');
 
     if (isTecnico) {
-        navItems.push({ href: route('cola.index'), label: 'Mi Cola', icon: ListOrdered, active: route().current('cola.*') });
+        navItems.push({ href: route('cola.index'), label: 'Bandeja', icon: ListOrdered, active: route().current('cola.*') });
     }
 
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });

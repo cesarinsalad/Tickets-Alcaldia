@@ -52,11 +52,11 @@ export default function Index({ tickets, sort: currentSort, dir: currentDir }) {
             header={
                 <div className="flex items-center gap-3 min-w-0">
                     <ListOrdered className="h-6 w-6 text-azul-institucional shrink-0" />
-                    <h2 className="text-xl font-semibold text-gray-900 truncate">Mi Cola de Trabajo</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">Mi Bandeja de Entrada</h2>
                 </div>
             }
         >
-            <Head title="Mi Cola de Trabajo" />
+            <Head title="Mi Bandeja de Entrada" />
 
             <div className="rounded-lg border border-gris-borde bg-white overflow-hidden">
                 {tickets.data?.length > 0 ? (
