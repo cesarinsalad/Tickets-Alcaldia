@@ -774,7 +774,7 @@ export default function Dashboard({ stats, unreadNotifications }) {
                     <h2 className="text-xl font-semibold text-gray-900 truncate">Dashboard</h2>
                 </div>
             }
-            actions={
+            actions={!stats.is_solicitante && (
                 <>
                     {stats.is_admin_dept && (
                         <>
@@ -801,16 +801,14 @@ export default function Dashboard({ stats, unreadNotifications }) {
                         )}
                         </>
                     )}
-                    {!stats.is_solicitante && (
                     <Link href={route('tickets.create')}>
                         <Button size="sm">
                             <Plus className="h-4 w-4" />
                             Nuevo Ticket
                         </Button>
                     </Link>
-                    )}
                 </>
-            }
+            )}
         >
             <Head title="Dashboard" />
 

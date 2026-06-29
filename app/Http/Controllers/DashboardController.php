@@ -173,6 +173,25 @@ class DashboardController extends Controller
                 'priority_range' => $priorityRange,
             ];
         } elseif ($user->usesDashboard('admin_tickets')) {
+            $ticketQuery = Ticket::query()->whereBetween('entry_date', [$dateFrom, $dateTo]);
+            $kpis = [
+                'abiertos' => (clone $ticketQuery)->where('status', TicketStatus::Abierto)->count(),
+                'en_proceso' => (clone $ticketQuery)->where('status', TicketStatus::EnProceso)->count(),
+                'pendiente_informacion' => (clone $ticketQuery)->where('status', TicketStatus::PendienteInformacion)->count(),
+                'resueltos' => (clone $ticketQuery)->where('status', TicketStatus::Resuelto)->count(),
+                'cerrados' => (clone $ticketQuery)->where('status', TicketStatus::Cerrado)->count(),
+                'resueltos_hoy' => (clone $ticketQuery)->where('status', TicketStatus::Resuelto)
+                    ->whereDate('exit_date', today())
+                    ->count(),
+            ];
+            $activeStatuses = [TicketStatus::Abierto, TicketStatus::EnProceso, TicketStatus::PendienteInformacion];
+            $criticalSort = $request->input('critical_sort', 'entry_date');
+            $criticalDir = $request->input('critical_dir', 'desc');
+            $allowedSorts = ['code', 'title', 'priority', 'status', 'entry_date', 'sla_resolution_deadline', 'assigned', 'department'];
+
+            if (! in_array($criticalSort, $allowedSorts)) {
+                $criticalSort = 'entry_date';
+            }
             if (! in_array($criticalDir, ['asc', 'desc'])) {
                 $criticalDir = 'desc';
             }
