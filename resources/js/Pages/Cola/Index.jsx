@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ListOrdered, Ticket } from 'lucide-react';
+import { Inbox, Ticket } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import Pagination from '@/Components/Pagination';
@@ -51,7 +51,7 @@ export default function Index({ tickets, sort: currentSort, dir: currentDir }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3 min-w-0">
-                    <ListOrdered className="h-6 w-6 text-azul-institucional shrink-0" />
+                    <Inbox className="h-6 w-6 text-azul-institucional shrink-0" />
                     <h2 className="text-xl font-semibold text-gray-900 truncate">Mi Bandeja de Entrada</h2>
                 </div>
             }
@@ -118,7 +118,7 @@ export default function Index({ tickets, sort: currentSort, dir: currentDir }) {
                     </>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <ListOrdered className="h-12 w-12 text-gray-300 mb-3" />
+                        <Inbox className="h-12 w-12 text-gray-300 mb-3" />
                         <h3 className="text-sm font-medium text-gray-600 mb-1">Cola vacía</h3>
                         <p className="text-xs text-gray-400 max-w-xs">
                             No tienes tickets activos asignados.
