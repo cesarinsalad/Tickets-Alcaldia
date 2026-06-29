@@ -327,10 +327,10 @@ function TecnicoDashboard({ extra }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard icon={Ticket} label="Tickets Abiertos" value={extra.abiertos} color="blue" subtitle="Sin atender" href={route('tickets.index', { status: 'abierto' })} />
-                <KpiCard icon={Clock} label="Tickets En Proceso" value={extra.en_proceso} color="orange" subtitle="Siendo atendidos" href={route('tickets.index', { status: 'en_proceso' })} />
-                <KpiCard icon={CheckCircle} label="Tickets Cerrados" value={extra.cerrados_this_month} color="green" subtitle="Este mes" href={route('tickets.index', { status: 'cerrado' })} />
-                <KpiCard icon={AlertOctagon} label="Tickets Vencidos" value={extra.sla_expired} color="red" subtitle="Con SLA vencido" href={route('tickets.index', { overdue: 1 })} />
+                <KpiCard icon={Ticket} label="Tickets Abiertos" value={extra.abiertos} color="blue" subtitle="Sin atender" href={route('mis-tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Clock} label="Tickets En Proceso" value={extra.en_proceso} color="orange" subtitle="Siendo atendidos" href={route('mis-tickets.index', { status: 'en_proceso' })} />
+                <KpiCard icon={CheckCircle} label="Tickets Cerrados" value={extra.cerrados_this_month} color="green" subtitle="Este mes" href={route('mis-tickets.index', { status: 'cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={AlertOctagon} label="Tickets Vencidos" value={extra.sla_expired} color="red" subtitle="Con SLA vencido" href={route('mis-tickets.index', { overdue: 1 })} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
