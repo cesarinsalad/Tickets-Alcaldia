@@ -399,58 +399,6 @@ function TecnicoDashboard({ extra }) {
 
             </div>
 
-            <div className="rounded-lg border border-gris-borde bg-white">
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-gris-borde bg-gray-50/50">
-                    <CheckCircle className="h-4 w-4 text-verde-exito" />
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Cerrados Recientemente</h3>
-                </div>
-                {extra.recently_closed.data?.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-gris-borde text-left text-xs text-gray-500 uppercase tracking-wide">
-                                    <th className="px-5 py-3 font-medium">Código</th>
-                                    <th className="px-5 py-3 font-medium">Título</th>
-                                    <th className="px-5 py-3 font-medium">Prioridad</th>
-                                    <th className="px-5 py-3 font-medium">Estado</th>
-                                    <th className="px-5 py-3 font-medium">Fecha Resolución</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gris-borde">
-                                {extra.recently_closed.data.map(t => (
-                                    <tr key={t.id} className="hover:bg-green-50/30 transition-colors">
-                                        <td className="px-5 py-3">
-                                            <Link href={route('tickets.show', t.id)} className="font-mono text-xs text-azul-institucional hover:underline">
-                                                {t.code}
-                                            </Link>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-900 max-w-[200px] truncate">{t.title}</td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={priorityBadgeMap[t.priority] || 'default'}>{t.priority_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant="success">{t.status_label}</Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-gray-500 text-xs">{t.exit_date}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="text-sm text-gray-500 text-center py-10">No hay tickets cerrados recientemente.</p>
-                )}
-                {extra.recently_closed.links && extra.recently_closed.links.length > 3 && (
-                    <div className="px-5 py-3 border-t border-gris-borde">
-                        <Pagination
-                            links={extra.recently_closed.links}
-                            total={extra.recently_closed.total}
-                            perPage={extra.recently_closed.per_page || 5}
-                        />
-                    </div>
-                )}
-            </div>
-
         </div>
     );
 }

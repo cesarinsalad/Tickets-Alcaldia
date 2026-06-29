@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox } from 'lucide-react';
+import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox, Sticker } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import { toastSuccess, toastError, showPasswordAlert } from '@/lib/sweet-alert';
@@ -108,6 +108,7 @@ export default function AuthenticatedLayout({ header, actions, children }) {
 
     if (isTecnico) {
         navItems.push({ href: route('cola.index'), label: 'Bandeja', icon: Inbox, active: route().current('cola.*') });
+        navItems.push({ href: route('mis-tickets.index'), label: 'Mis Tickets', icon: Sticker, active: route().current('mis-tickets.*') });
     }
 
     navItems.push({ href: route('tickets.index'), label: 'Tickets', icon: Ticket, active: route().current('tickets.*') });

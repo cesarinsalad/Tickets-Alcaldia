@@ -24,9 +24,36 @@ class TicketController extends Controller
 
     public function index(Request $request)
     {
+        return $this->ticketIndexView($request, false);
+    }
+
+    public function misTickets(Request $request)
+    {
+        if (! $request->user()->hasRole('tecnico')) {
+            abort(403);
+        }
+
+        return $this->ticketIndexView($request, true);
+    }
+
+    private function ticketIndexView(Request $request, bool $mineOnly)
+    {
+        $user = $request->user();
+
         $query = Ticket::query()
-            ->with(['creator.department', 'assigned', 'category'])
-            ->visibleTo($request->user());
+            ->with(['creator.department', 'assigned', 'category']);
+
+        if ($mineOnly) {
+            $query->visibleTo($user);
+        } elseif ($user->hasRole('tecnico')) {
+            $techIds = User::role('tecnico')->pluck('id');
+            $query->where(function ($q) use ($techIds) {
+                $q->whereIn('assigned_id', $techIds)
+                    ->orWhereIn('creator_id', $techIds);
+            });
+        } else {
+            $query->visibleTo($user);
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -159,6 +186,7 @@ class TicketController extends Controller
             'categories' => $categories,
             'departments' => $departments,
             'users' => $users,
+            'isMine' => $mineOnly,
             'filters' => $request->only([
                 'search', 'status', 'priority', 'category', 'department', 'assigned', 'creator', 'date_from', 'date_to', 'per_page', 'overdue', 'critical_overdue', 'sla', 'sort', 'dir',
             ]),

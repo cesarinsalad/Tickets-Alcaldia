@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus, Search, Ticket, FileText, AlertOctagon, AlertTriangle, CheckCircle, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Search, Ticket, FileText, AlertOctagon, AlertTriangle, CheckCircle, ChevronUp, ChevronDown, Sticker } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -41,7 +41,7 @@ const priorityLabels = {
     critica: 'Crítica',
 };
 
-export default function Index({ tickets, filters, categories, departments, users }) {
+export default function Index({ tickets, filters, categories, departments, users, isMine = false }) {
     const [search, setSearch] = useState(filters.search || '');
     const { auth } = usePage().props;
     const canFilterAll = auth.user?.roles?.some(r => ['super_admin', 'admin_tickets', 'tecnico'].includes(r.name));
@@ -93,8 +93,8 @@ export default function Index({ tickets, filters, categories, departments, users
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3 min-w-0">
-                    <Ticket className="h-6 w-6 text-azul-institucional shrink-0" />
-                    <h2 className="text-xl font-semibold text-gray-900 truncate">Tickets</h2>
+                    {isMine ? <Sticker className="h-6 w-6 text-azul-institucional shrink-0" /> : <Ticket className="h-6 w-6 text-azul-institucional shrink-0" />}
+                    <h2 className="text-xl font-semibold text-gray-900 truncate">{isMine ? 'Mis Tickets' : 'Tickets'}</h2>
                 </div>
             }
             actions={
@@ -116,7 +116,7 @@ export default function Index({ tickets, filters, categories, departments, users
                 </>
             }
         >
-            <Head title="Tickets" />
+            <Head title={isMine ? 'Mis Tickets' : 'Tickets'} />
 
             <div className="space-y-4">
                 <div className="rounded-lg border border-gris-borde bg-white p-4">

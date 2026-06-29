@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/tickets/{ticket}/receipt', [ReportController::class, 'receipt'])->name('tickets.receipt');
     });
 
+    Route::get('/mis-tickets', [TicketController::class, 'misTickets'])->name('mis-tickets.index');
     Route::resource('tickets', TicketController::class)->except(['edit', 'update']);
     Route::post('/tickets/{ticket}/comments', [CommentController::class, 'store'])->name('tickets.comments.store');
     Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
