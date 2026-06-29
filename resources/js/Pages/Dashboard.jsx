@@ -6,6 +6,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import SimpleDonutChart from '@/Components/SimpleDonutChart';
+import StackedBarChart from '@/Components/StackedBarChart';
 import Pagination from '@/Components/Pagination';
 import RelativeTime from '@/Components/RelativeTime';
 import TimeProgressBar from '@/Components/TimeProgressBar';
@@ -65,13 +66,193 @@ function KpiCard({ icon: Icon, label, value, color, href, subtitle }) {
 }
 
 function SuperAdminDashboard({ kpis, extra }) {
+    const [distributionRange, setDistributionRange] = useState(extra.distribution_range || 'last_month');
+    const [priorityRange, setPriorityRange] = useState(extra.priority_range || 'last_month');
+
+    function handleDistributionRangeChange(newRange) {
+        setDistributionRange(newRange);
+        router.get(route('dashboard'), {
+            distribution_range: newRange,
+            date_from: extra.date_from,
+            date_to: extra.date_to,
+        }, { preserveState: true, replace: true });
+    }
+
+    function handlePriorityRangeChange(newRange) {
+        setPriorityRange(newRange);
+        router.get(route('dashboard'), {
+            priority_range: newRange,
+            date_from: extra.date_from,
+            date_to: extra.date_to,
+        }, { preserveState: true, replace: true });
+    }
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard icon={Ticket} label="Tickets Activos y En Proceso" value={extra.active_tickets} color="blue" subtitle="Tickets sin resolver en el período elegido" href={route('tickets.index', { status: 'abierto,en_proceso', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={CheckCircle} label="Tickets Resueltos y Cerrados" value={extra.resolved_this_month} color="green" subtitle="Tickets resueltos en el período elegido" href={route('tickets.index', { status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={TrendingUp} label="Cumplimiento de tiempos" value={extra.sla_pct != null ? `${extra.sla_pct}%` : '—'} color="orange" subtitle="Tickets resueltos dentro de su plazo establecido" href={route('tickets.index', { sla: 'missed', status: 'resuelto,cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
-                <KpiCard icon={AlertOctagon} label="Técnicos con Tickets Vencidos" value={extra.technicians_overdue} color="red" subtitle="Cantidad de técnicos con tickets vencidos" href={route('tickets.index', { overdue: 1, date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={Ticket} label="Tickets Abiertos" value={extra.abiertos} color="blue" subtitle="Sin atender" href={route('tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Clock} label="Tickets En Proceso" value={extra.en_proceso} color="orange" subtitle="Siendo atendidos" href={route('tickets.index', { status: 'en_proceso' })} />
+                <KpiCard icon={CheckCircle} label="Tickets Cerrados" value={extra.cerrados_this_month} color="green" subtitle="Este mes" href={route('tickets.index', { status: 'cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={AlertOctagon} label="Tickets Vencidos" value={extra.sla_expired} color="red" subtitle="Con SLA vencido" href={route('tickets.index', { overdue: 1 })} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 rounded-lg border border-gris-borde bg-white p-5">
+                    <StackedBarChart
+                        data={extra.status_distribution}
+                        xKey="period"
+                        bars={[
+                            { dataKey: 'abierto', name: 'Abierto', fill: '#1E3A5F' },
+                            { dataKey: 'en_proceso', name: 'En Proceso', fill: '#EA580C' },
+                            { dataKey: 'pendiente_informacion', name: 'Pendiente Info', fill: '#CA8A04' },
+                            { dataKey: 'resuelto_cerrado', name: 'Resuelto+Cerrado', fill: '#166534' },
+                        ]}
+                        granularity={distributionRange}
+                        onGranularityChange={handleDistributionRangeChange}
+                    />
+                </div>
+
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Distribución por Prioridad</h3>
+                        <select
+                            value={priorityRange}
+                            onChange={(e) => handlePriorityRangeChange(e.target.value)}
+                            className="text-xs border border-gris-borde rounded px-2 py-1 bg-white text-gray-600 cursor-pointer"
+                        >
+                            <option value="last_week">Última semana</option>
+                            <option value="last_month">Último mes</option>
+                            <option value="last_3_months">Últimos 3 meses</option>
+                            <option value="last_year">Último año</option>
+                        </select>
+                    </div>
+                    {extra.priority_distribution?.length > 0 ? (
+                        <div className="space-y-5">
+                            {extra.priority_distribution.map(p => {
+                                const barColors = {
+                                    critica: 'bg-rojo-urgencia',
+                                    alta: 'bg-amber-600',
+                                    media: 'bg-yellow-600',
+                                    baja: 'bg-azul-institucional',
+                                };
+                                return (
+                                    <div key={p.priority}>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-medium text-gray-600">{p.label}</span>
+                                            <span className="text-xs font-semibold text-gray-700">{p.pct}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-100 rounded-full h-3">
+                                            <div
+                                                className={`h-3 rounded-full transition-all duration-500 ${barColors[p.priority] || 'bg-gray-400'}`}
+                                                style={{ width: `${Math.max(p.pct, 2)}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">{p.count} ticket{p.count !== 1 ? 's' : ''}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-8">Sin datos este mes.</p>
+                    )}
+                </div>
+            </div>
+
+        </div>
+    );
+}
+
+function AdminTicketsDashboard({ extra }) {
+    const [distributionRange, setDistributionRange] = useState(extra.distribution_range || 'last_month');
+    const [priorityRange, setPriorityRange] = useState(extra.priority_range || 'last_month');
+
+    function handleDistributionRangeChange(newRange) {
+        setDistributionRange(newRange);
+        router.get(route('dashboard'), {
+            distribution_range: newRange,
+            date_from: extra.date_from,
+            date_to: extra.date_to,
+        }, { preserveState: true, replace: true });
+    }
+
+    function handlePriorityRangeChange(newRange) {
+        setPriorityRange(newRange);
+        router.get(route('dashboard'), {
+            priority_range: newRange,
+            date_from: extra.date_from,
+            date_to: extra.date_to,
+        }, { preserveState: true, replace: true });
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard icon={Ticket} label="Tickets Abiertos" value={extra.abiertos} color="blue" subtitle="Sin atender" href={route('tickets.index', { status: 'abierto' })} />
+                <KpiCard icon={Clock} label="Tickets En Proceso" value={extra.en_proceso} color="orange" subtitle="Siendo atendidos" href={route('tickets.index', { status: 'en_proceso' })} />
+                <KpiCard icon={CheckCircle} label="Tickets Cerrados" value={extra.cerrados_this_month} color="green" subtitle="Este mes" href={route('tickets.index', { status: 'cerrado', date_from: extra.date_from, date_to: extra.date_to })} />
+                <KpiCard icon={AlertOctagon} label="Tickets Vencidos" value={extra.sla_expired} color="red" subtitle="Con SLA vencido" href={route('tickets.index', { overdue: 1 })} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 rounded-lg border border-gris-borde bg-white p-5">
+                    <StackedBarChart
+                        data={extra.status_distribution}
+                        xKey="period"
+                        bars={[
+                            { dataKey: 'abierto', name: 'Abierto', fill: '#1E3A5F' },
+                            { dataKey: 'en_proceso', name: 'En Proceso', fill: '#EA580C' },
+                            { dataKey: 'pendiente_informacion', name: 'Pendiente Info', fill: '#CA8A04' },
+                            { dataKey: 'resuelto_cerrado', name: 'Resuelto+Cerrado', fill: '#166534' },
+                        ]}
+                        granularity={distributionRange}
+                        onGranularityChange={handleDistributionRangeChange}
+                    />
+                </div>
+
+                <div className="rounded-lg border border-gris-borde bg-white p-5">
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Distribución por Prioridad</h3>
+                        <select
+                            value={priorityRange}
+                            onChange={(e) => handlePriorityRangeChange(e.target.value)}
+                            className="text-xs border border-gris-borde rounded px-2 py-1 bg-white text-gray-600 cursor-pointer"
+                        >
+                            <option value="last_week">Última semana</option>
+                            <option value="last_month">Último mes</option>
+                            <option value="last_3_months">Últimos 3 meses</option>
+                            <option value="last_year">Último año</option>
+                        </select>
+                    </div>
+                    {extra.priority_distribution?.length > 0 ? (
+                        <div className="space-y-5">
+                            {extra.priority_distribution.map(p => {
+                                const barColors = {
+                                    critica: 'bg-rojo-urgencia',
+                                    alta: 'bg-amber-600',
+                                    media: 'bg-yellow-600',
+                                    baja: 'bg-azul-institucional',
+                                };
+                                return (
+                                    <div key={p.priority}>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-medium text-gray-600">{p.label}</span>
+                                            <span className="text-xs font-semibold text-gray-700">{p.pct}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-100 rounded-full h-3">
+                                            <div
+                                                className={`h-3 rounded-full transition-all duration-500 ${barColors[p.priority] || 'bg-gray-400'}`}
+                                                style={{ width: `${Math.max(p.pct, 2)}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">{p.count} ticket{p.count !== 1 ? 's' : ''}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-8">Sin datos este mes.</p>
+                    )}
+                </div>
             </div>
 
         </div>
