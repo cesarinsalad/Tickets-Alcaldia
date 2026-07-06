@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { ClipboardList, FileText, Table2, Search, Download, FileSpreadsheet, Database, LayoutTemplate, Pencil, Trash2, Plus, X } from 'lucide-react';
+import { ClipboardList, Table2, Search, Download, FileSpreadsheet, Database, LayoutTemplate, Pencil, Trash2, Plus, X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
@@ -230,11 +230,6 @@ export default function Index({
         setDiskType('');
         setTemplate('');
         router.get(route('reportes.index'), {}, { preserveState: true, replace: true });
-    }
-
-    function handleExportPdf() {
-        const params = new URLSearchParams(activeFilters).toString();
-        window.open(route('reportes.export-pdf') + '?' + params, '_blank');
     }
 
     function handleExportExcel() {
@@ -615,28 +610,16 @@ export default function Index({
                             <Search className="h-4 w-4 mr-1.5" />
                             Vista Previa
                         </Button>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                onClick={handleExportPdf}
-                                disabled={exportDisabled}
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                            >
-                                <FileText className="h-4 w-4 mr-1" />
-                                PDF
-                            </Button>
-                            <Button
-                                onClick={handleExportExcel}
-                                disabled={exportDisabled}
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                            >
-                                <FileSpreadsheet className="h-4 w-4 mr-1" />
-                                Excel
-                            </Button>
-                        </div>
+                        <Button
+                            onClick={handleExportExcel}
+                            disabled={exportDisabled}
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                        >
+                            <FileSpreadsheet className="h-4 w-4 mr-1" />
+                            Generar Reporte en Excel
+                        </Button>
                         <Button
                             onClick={handleClearFilters}
                             variant="outline"

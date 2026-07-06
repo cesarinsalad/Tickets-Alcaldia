@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\TicketsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -106,12 +107,22 @@ class ReportController extends Controller
             'date_to' => $request->input('date_to'),
         ];
 
-        $pdf = Pdf::loadView('pdf.tickets-list', [
-            'tickets' => $tickets,
-            'filters' => $filters,
-        ]);
+        $rows = collect($tickets->map(fn ($t) => [
+            $t->code,
+            $t->title,
+            $t->creator?->full_name ?? '—',
+            $t->creator?->department?->name ?? '—',
+            $t->priority->label(),
+            $t->status->label(),
+            $t->category?->name ?? '—',
+            $t->assigned?->full_name ?? '—',
+            $t->entry_date?->format('d/m/Y H:i'),
+        ])->toArray());
 
-        return $pdf->download('reporte-tickets-' . now()->format('Ymd-His') . '.pdf');
+        return Excel::download(
+            new TicketsExport($rows),
+            'reporte-tickets-' . now()->format('Ymd-His') . '.xlsx',
+        );
     }
 
     public function show(Ticket $ticket)
