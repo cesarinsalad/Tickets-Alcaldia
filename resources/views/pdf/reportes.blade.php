@@ -31,7 +31,7 @@
     <table class="header-table" width="100%">
         <tr>
             <td width="20%" align="left" valign="middle">
-                <img src="{{ public_path('tickets-logo.jpg') }}" class="header-logo" alt="IAMENE">
+                <img src="{{ public_path('tickets-logo.png') }}" class="header-logo" alt="IAMENE">
             </td>
             <td width="55%" align="left" valign="middle">
                 <div class="header-title">{{ $title }}</div>

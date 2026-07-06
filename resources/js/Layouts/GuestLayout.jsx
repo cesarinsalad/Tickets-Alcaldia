@@ -18,7 +18,7 @@ export default function GuestLayout({ children }) {
         <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
             <div>
                 <Link href="/">
-                    <img src="/tickets-logo.jpg" alt="Sistema de Tickets" className="h-80 w-auto" />
+                    <img src="/tickets-logo.png" alt="Sistema de Tickets" className="h-80 w-auto" />
                 </Link>
             </div>
 
