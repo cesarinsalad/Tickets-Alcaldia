@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle, Wrench, Pencil, X } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle, Wrench, Pencil, X, Camera } from 'lucide-react';
 import RelativeTime from '@/Components/RelativeTime';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -186,16 +186,20 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             <InputError message={commentErrors.body} />
                             {canUploadPhoto && (
                                 <div>
-                                    <input
-                                        type="file"
-                                        accept="image/jpeg,image/png,image/webp"
-                                        onChange={e => {
-                                            const file = e.target.files?.[0];
-                                            setCommentPhoto(file || null);
-                                            setCommentPhotoPreview(file ? URL.createObjectURL(file) : null);
-                                        }}
-                                        className="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                                    />
+                                    <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-md border border-gris-borde bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gris-fondo transition-colors">
+                                        <Camera className="h-4 w-4 text-azul-institucional" />
+                                        {commentPhoto ? commentPhoto.name : 'Adjuntar imagen'}
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onChange={e => {
+                                                const file = e.target.files?.[0];
+                                                setCommentPhoto(file || null);
+                                                setCommentPhotoPreview(file ? URL.createObjectURL(file) : null);
+                                            }}
+                                            className="sr-only"
+                                        />
+                                    </label>
                                     {commentPhotoPreview && (
                                         <img src={commentPhotoPreview} alt="Vista previa" className="mt-2 max-h-32 rounded-md border border-gris-borde" />
                                     )}
