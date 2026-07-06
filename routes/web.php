@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/{ticket}/transition', [TicketController::class, 'transition'])->name('tickets.transition');
     Route::post('/tickets/{ticket}/change-priority', [TicketController::class, 'changePriority'])->name('tickets.change-priority');
     Route::post('/tickets/{ticket}/change-category', [TicketController::class, 'changeCategory'])->name('tickets.change-category');
+    Route::post('/tickets/{ticket}/edit', [TicketController::class, 'editTicket'])->name('tickets.edit');
 
     Route::middleware(['permission:gestionar usuarios'])->group(function () {
         Route::resource('users', UserManagementController::class)->except(['show']);

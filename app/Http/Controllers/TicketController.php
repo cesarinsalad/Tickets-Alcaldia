@@ -466,6 +466,40 @@ class TicketController extends Controller
         return back()->with('success', 'Categoría actualizada correctamente.');
     }
 
+    public function editTicket(Ticket $ticket, Request $request)
+    {
+        if (! $request->user()->hasAnyRole(['admin_tickets', 'super_admin'])) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'priority' => ['nullable', 'string', 'in:baja,media,alta,critica'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+        ]);
+
+        $changed = [];
+
+        if (isset($validated['priority'])) {
+            $ticket->priority = TicketPriority::from($validated['priority']);
+            $ticket->sla_response_deadline = $this->slaCalculator->calculateResponseDeadline($ticket);
+            $ticket->sla_resolution_deadline = $this->slaCalculator->recalculateResolutionDeadline($ticket, $ticket->priority);
+            $changed[] = 'prioridad';
+        }
+
+        if (isset($validated['category_id'])) {
+            $ticket->category_id = $validated['category_id'];
+            $changed[] = 'categoría';
+        }
+
+        if (empty($changed)) {
+            return back()->with('error', 'No se seleccionaron cambios.');
+        }
+
+        $ticket->save();
+
+        return back()->with('success', 'Ticket actualizado: ' . implode(' y ', $changed) . '.');
+    }
+
     public function destroy(Ticket $ticket)
     {
         Gate::authorize('delete', $ticket);

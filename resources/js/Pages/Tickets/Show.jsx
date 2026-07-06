@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle, Wrench } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, ArrowRight, RotateCcw, UserPlus, FileText, Printer, FolderTree, HelpCircle, Wrench, Pencil, X } from 'lucide-react';
 import RelativeTime from '@/Components/RelativeTime';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -50,6 +50,7 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
     const [newCategory, setNewCategory] = useState('');
     const [errors, setErrors] = useState({});
     const [showInterventionModal, setShowInterventionModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     function submitComment(e) {
         e.preventDefault();
@@ -83,23 +84,14 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
         });
     }
 
-    function handleChangePriority() {
-        if (!newPriority) return;
-        router.post(route('tickets.change-priority', ticket.id), {
-            priority: newPriority,
+    function handleEditTicket() {
+        if (!newPriority && !newCategory) return;
+        router.post(route('tickets.edit', ticket.id), {
+            priority: newPriority || undefined,
+            category_id: newCategory || undefined,
         }, {
             onError: (err) => setErrors(err),
-            onSuccess: () => { setNewPriority(''); setErrors({}); },
-        });
-    }
-
-    function handleChangeCategory() {
-        if (!newCategory) return;
-        router.post(route('tickets.change-category', ticket.id), {
-            category_id: newCategory,
-        }, {
-            onError: (err) => setErrors(err),
-            onSuccess: () => { setNewCategory(''); setErrors({}); },
+            onSuccess: () => { setNewPriority(''); setNewCategory(''); setErrors({}); setShowEditModal(false); },
         });
     }
 
@@ -137,54 +129,17 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                             <Wrench className="h-4 w-4" />
                             Retiro de Equipo
                         </Button>
+                        {(canChangePriority || canChangeCategory) && (
+                            <Button size="sm" onClick={() => setShowEditModal(true)}>
+                                <Pencil className="h-4 w-4" />
+                                Editar
+                            </Button>
+                        )}
                     </>
                 ) : null
             }
         >
             <Head title={`${ticket.code} - ${ticket.title}`} />
-
-                    {(canChangePriority || canChangeCategory) && (
-                        <div className="rounded-lg border border-gris-borde bg-white p-6 mb-6">
-                            <div className={`grid ${canChangePriority && canChangeCategory ? 'grid-cols-1 sm:grid-cols-2 gap-4' : 'grid-cols-1'}`}>
-                                {canChangePriority && (
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                            <AlertTriangle className="h-4 w-4" />
-                                            Cambiar Prioridad
-                                        </h3>
-                                        <Select value={newPriority} onChange={e => setNewPriority(e.target.value)}>
-                                            <option value="">Seleccionar prioridad</option>
-                                            {Object.entries(priorityLabels).map(([val, desc]) => (
-                                                <option key={val} value={val}>
-                                                    {val.charAt(0).toUpperCase() + val.slice(1)} — {desc}
-                                                </option>
-                                            ))}
-                                        </Select>
-                                        <Button size="sm" className="mt-2 w-full" onClick={handleChangePriority} disabled={!newPriority}>
-                                            Cambiar Prioridad
-                                        </Button>
-                                    </div>
-                                )}
-                                {canChangeCategory && (
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                            <FolderTree className="h-4 w-4" />
-                                            Cambiar Categoría
-                                        </h3>
-                                        <Select value={newCategory} onChange={e => setNewCategory(e.target.value)}>
-                                            <option value="">Seleccionar categoría</option>
-                                            {categories?.map(c => (
-                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                            ))}
-                                        </Select>
-                                        <Button size="sm" className="mt-2 w-full" onClick={handleChangeCategory} disabled={!newCategory}>
-                                            Cambiar Categoría
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
 
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -532,6 +487,51 @@ export default function Show({ ticket, sla, transitions, technicians, canAssign,
                     )}
                 </div>
             </div>
+            {showEditModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowEditModal(false)}>
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-6" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-semibold text-gray-900">Editar Ticket</h2>
+                        <button onClick={() => setShowEditModal(false)} className="p-1 text-gray-400 hover:text-gray-600 rounded-md">
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    <div className="mb-6 pb-6 border-b border-gris-borde">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            Cambiar Prioridad
+                        </h3>
+                        <Select value={newPriority} onChange={e => setNewPriority(e.target.value)} className="w-full">
+                            <option value="">Seleccionar prioridad</option>
+                            {Object.entries(priorityLabels).map(([val, desc]) => (
+                                <option key={val} value={val}>{val.charAt(0).toUpperCase() + val.slice(1)} — {desc}</option>
+                            ))}
+                        </Select>
+                    </div>
+
+                    <div className="mb-6 pb-6 border-b border-gris-borde">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                            <FolderTree className="h-4 w-4" />
+                            Cambiar Categoría
+                        </h3>
+                        <Select value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full">
+                            <option value="">Seleccionar categoría</option>
+                            {categories?.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2 justify-end">
+                        {errors.priority && <p className="text-xs text-red-600 mr-auto">{errors.priority}</p>}
+                        {errors.category_id && <p className="text-xs text-red-600 mr-auto">{errors.category_id}</p>}
+                        <Button variant="outline" onClick={() => setShowEditModal(false)}>Cancelar</Button>
+                        <Button onClick={handleEditTicket} disabled={!newPriority && !newCategory}>Guardar Cambios</Button>
+                    </div>
+                </div>
+                </div>
+            )}
             {showInterventionModal && (
                 <GenerateReportModal
                     ticket={ticket}
