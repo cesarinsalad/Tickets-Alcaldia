@@ -1,9 +1,10 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox, Sticker } from 'lucide-react';
+import { Bell, ChevronDown, ChevronLeft, ChevronRight, Menu, X, Monitor, Ticket, Users, FolderTree, LayoutDashboard, Building2, Shield, Clock, BookOpen, TrendingUp, ClipboardList, Inbox, Sticker, HelpCircle } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/Components/ui/tooltip';
 import { toastSuccess, toastError, showPasswordAlert } from '@/lib/sweet-alert';
+import { startFullTour } from '@/Components/Tour';
 
 function useFlash() {
     const { flash } = usePage().props;
@@ -201,6 +202,18 @@ export default function AuthenticatedLayout({ header, actions, children }) {
                     })}
                 </TooltipProvider>
             </nav>
+            {auth.user?.roles?.some(r => r.name === 'super_admin') && (
+            <div className="border-t border-white/10 shrink-0 py-2 px-2">
+                <button
+                    onClick={() => startFullTour()}
+                    className="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm text-blue-100 hover:bg-white/10 hover:text-white transition-colors"
+                    title="Iniciar tour guiado"
+                >
+                    <HelpCircle className="h-5 w-5 shrink-0" />
+                    {sidebarExpanded && <span>Tour del Sistema</span>}
+                </button>
+            </div>
+            )}
         </div>
     );
 
